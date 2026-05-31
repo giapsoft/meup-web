@@ -85,8 +85,8 @@ function SortableFieldRow({ row, fieldTypeKeys, onUpdate, onRemove, t }: Sortabl
       </button>
       <input
         type="text"
-        value={row.label}
-        onChange={(e) => onUpdate(row.id, { label: e.target.value })}
+        value={row.name}
+        onChange={(e) => onUpdate(row.id, { name: e.target.value })}
         placeholder={t('createProgram.stepSchema.fieldLabel')}
         className="min-w-0 flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text"
       />

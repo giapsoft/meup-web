@@ -2,15 +2,18 @@
 export type SchemaFieldUiType = 'text' | 'image' | 'text+audio'
 
 export type SchemaFieldRow = {
+  /** Stable row id for React / drag-and-drop. */
   id: string
-  label: string
+  /** User-facing label (maps to ItemSchema `name`). */
+  name: string
   uiType: SchemaFieldUiType
-  /** Stable attribute key for text/image; audio uses `{keyBase}Audio`. */
-  keyBase: string
+  /** Auto-generated stable key; audio pair uses `{key}Audio`. */
+  key: string
 }
 
 export type ItemSchemaAttribute = {
   key: string
+  name: string
   type: 'text' | 'image' | 'audio'
 }
 

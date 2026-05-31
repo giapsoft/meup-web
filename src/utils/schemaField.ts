@@ -15,50 +15,33 @@ export function slugProgramId(name: string): string {
   return base || 'program'
 }
 
-export function slugFieldKey(label: string): string {
-  const words = label
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s]+/g, ' ')
-    .split(/\s+/)
-    .filter(Boolean)
-
-  if (words.length === 0) {
-    return 'field'
-  }
-
-  const camel =
-    words[0] +
-    words
-      .slice(1)
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join('')
-
-  return camel.replace(/[^a-zA-Z0-9]/g, '') || 'field'
+/** Stable machine id for one schema attribute (independent of display name). */
+export function generateSchemaKey(): string {
+  const hex = crypto.randomUUID().replace(/-/g, '').slice(0, 8)
+  return `attr_${hex}`
 }
 
-export function audioKeyForBase(keyBase: string): string {
-  if (keyBase.endsWith('Audio')) {
-    return keyBase
+export function audioKeyForBase(key: string): string {
+  if (key.endsWith('Audio')) {
+    return key
   }
-  return `${keyBase}Audio`
+  return `${key}Audio`
 }
 
 /** Expand one UI row into backend `ItemSchema.attributes` entries. */
 export function expandSchemaField(row: SchemaFieldRow): ItemSchemaAttribute[] {
-  const keyBase = row.keyBase.trim() || slugFieldKey(row.label)
+  const key = row.key.trim() || generateSchemaKey()
+  const name = row.name.trim()
 
   switch (row.uiType) {
     case 'text':
-      return [{ key: keyBase, type: 'text' }]
+      return [{ key, name, type: 'text' }]
     case 'image':
-      return [{ key: keyBase, type: 'image' }]
+      return [{ key, name, type: 'image' }]
     case 'text+audio':
       return [
-        { key: keyBase, type: 'text' },
-        { key: audioKeyForBase(keyBase), type: 'audio' },
+        { key, name, type: 'text' },
+        { key: audioKeyForBase(key), name: '', type: 'audio' },
       ]
   }
 }
@@ -68,30 +51,34 @@ export function expandSchemaFields(rows: SchemaFieldRow[]): ItemSchemaAttribute[
 }
 
 export function createSchemaRow(
-  partial: Partial<SchemaFieldRow> & Pick<SchemaFieldRow, 'label' | 'uiType'>,
+  partial: Partial<SchemaFieldRow> & Pick<SchemaFieldRow, 'name' | 'uiType'>,
 ): SchemaFieldRow {
-  const label = partial.label.trim()
-  const keyBase = partial.keyBase?.trim() || slugFieldKey(label)
+  const name = partial.name.trim()
+  const key = partial.key?.trim() || generateSchemaKey()
   return {
     id: partial.id ?? crypto.randomUUID(),
-    label,
+    name,
     uiType: partial.uiType,
-    keyBase,
+    key,
   }
 }
 
-/** Default row specs — labels come from i18n at runtime. */
+/** Default row specs — names come from i18n at runtime; keys are stable presets. */
 export const PRESET_SCHEMA_ROW_SPECS: Array<{
   labelKey: TranslationKey
   uiType: SchemaFieldUiType
-  keyBase: string
+  key: string
 }> = [
-  { labelKey: 'createProgram.preset.studyText', uiType: 'text+audio', keyBase: 'studyText' },
-  { labelKey: 'createProgram.preset.ipa', uiType: 'text', keyBase: 'ipa' },
-  { labelKey: 'createProgram.preset.nativeText', uiType: 'text+audio', keyBase: 'nativeText' },
-  { labelKey: 'createProgram.preset.image', uiType: 'image', keyBase: 'image' },
+  { labelKey: 'createProgram.preset.studyText', uiType: 'text+audio', key: 'studyText' },
+  { labelKey: 'createProgram.preset.ipa', uiType: 'text', key: 'ipa' },
+  {
+    labelKey: 'createProgram.preset.nativeText',
+    uiType: 'text+audio',
+    key: 'nativeText',
+  },
+  { labelKey: 'createProgram.preset.image', uiType: 'image', key: 'image' },
 ]
 
 export function newEmptySchemaRow(): SchemaFieldRow {
-  return createSchemaRow({ label: '', uiType: 'text', keyBase: '' })
+  return createSchemaRow({ name: '', uiType: 'text' })
 }

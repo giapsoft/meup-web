@@ -9,7 +9,6 @@ import {
   createSchemaRow,
   expandSchemaFields,
   newEmptySchemaRow,
-  slugFieldKey,
   slugProgramId,
 } from '../../utils/schemaField'
 import { SchemaFieldList } from './SchemaFieldList'
@@ -25,9 +24,9 @@ const FIELD_TYPE_KEYS: Record<SchemaFieldUiType, TranslationKey> = {
 function buildPresetFields(t: (key: TranslationKey) => string): SchemaFieldRow[] {
   return PRESET_SCHEMA_ROW_SPECS.map((spec) =>
     createSchemaRow({
-      label: t(spec.labelKey),
+      name: t(spec.labelKey),
       uiType: spec.uiType,
-      keyBase: spec.keyBase,
+      key: spec.key,
     }),
   )
 }
@@ -52,7 +51,7 @@ export function CreateProgramWizard() {
   }
 
   function handleContinueSchema() {
-    const valid = fields.every((f) => f.label.trim())
+    const valid = fields.every((f) => f.name.trim())
     if (!valid || fields.length === 0) {
       window.alert(t('createProgram.validation.fieldsRequired'))
       return
@@ -74,9 +73,6 @@ export function CreateProgramWizard() {
           return row
         }
         const next = { ...row, ...patch }
-        if (patch.label !== undefined && patch.keyBase === undefined) {
-          next.keyBase = slugFieldKey(patch.label)
-        }
         return next
       }),
     )
@@ -194,10 +190,11 @@ export function CreateProgramWizard() {
                 {expandedAttributes.map((attr) => (
                   <div
                     key={attr.key}
-                    className="flex items-center justify-between rounded-lg border border-border bg-surface-card px-3 py-2 font-mono text-xs"
+                    className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface-card px-3 py-2 text-xs"
                   >
-                    <span className="text-text">{attr.key}</span>
-                    <span className="text-text-muted">{attr.type}</span>
+                    <span className="min-w-0 truncate text-text">{attr.name || '—'}</span>
+                    <span className="shrink-0 font-mono text-text-muted">{attr.key}</span>
+                    <span className="shrink-0 text-text-muted">{attr.type}</span>
                   </div>
                 ))}
               </dd>
