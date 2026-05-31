@@ -1,14 +1,21 @@
 import { useMemo, useState } from 'react'
 import type { MessageParams, TranslationKey } from '../../i18n/types'
-import type { ItemSchemaAttribute, LevelRangeDraft, SideDraft, VocabItemDraft } from '../../types/program'
+import type { ItemSchemaAttribute, LevelRangeDraft, VocabItemDraft } from '../../types/program'
 import { sideNumberLabel } from '../../utils/programConfig'
+import {
+  allProgramPreviewSides,
+  buildConfigLevelItems,
+  configLevelItemLabel,
+} from '../../utils/levelConfig'
 import {
   addVocabItem,
   removeVocabItem,
   textAttributes,
   updateVocabItemValue,
 } from '../../utils/vocabItems'
+import { itemMediaObjectUrls } from '../../utils/vocabMedia'
 import { SidePreview } from './SidePreview'
+import { VocabMediaPanel } from './VocabMediaPanel'
 import {
   WIZARD_ACTION_PRIMARY,
   WIZARD_ACTION_SECONDARY,
@@ -30,14 +37,6 @@ type VocabEntryStepProps = {
   t: (key: TranslationKey, params?: MessageParams) => string
 }
 
-function previewSides(levels: LevelRangeDraft[]): SideDraft[] {
-  const level = levels[0]
-  if (!level) {
-    return []
-  }
-  return [...level.sides].sort((a, b) => a.playOrder - b.playOrder)
-}
-
 export function VocabEntryStep({
   programName,
   attributes,
@@ -49,12 +48,39 @@ export function VocabEntryStep({
   t,
 }: VocabEntryStepProps) {
   const textAttrs = useMemo(() => textAttributes(attributes), [attributes])
-  const sides = useMemo(() => previewSides(levels), [levels])
+  const previewEntries = useMemo(() => allProgramPreviewSides(levels), [levels])
+  const levelItems = useMemo(() => buildConfigLevelItems(levels), [levels])
   const [selectedItemId, setSelectedItemId] = useState<string | null>(items[0]?.id ?? null)
   const [previewSideIndex, setPreviewSideIndex] = useState(0)
 
   const selectedItem = items.find((item) => item.id === selectedItemId) ?? items[0]
-  const previewSide = sides[previewSideIndex] ?? sides[0]
+  const previewEntry = previewEntries[previewSideIndex] ?? previewEntries[0]
+  const previewSide = previewEntry?.side
+  const canCycleFaces = previewEntries.length > 1
+  const showLevelInPreview = levels.length > 1
+
+  function previewFaceCaption(index: number): string {
+    const entry = previewEntries[index]
+    if (!entry) {
+      return ''
+    }
+    const face = sideNumberLabel(entry.side.playOrder, t)
+    const position = `${index + 1}/${previewEntries.length}`
+    if (!showLevelInPreview) {
+      return `${face} (${position})`
+    }
+    const levelItem = levelItems[entry.levelIndex]
+    const levelLabel = levelItem ? configLevelItemLabel(levelItem, t) : ''
+    return levelLabel ? `${levelLabel} · ${face} (${position})` : `${face} (${position})`
+  }
+
+  function showPrevFace() {
+    setPreviewSideIndex((index) => (index - 1 + previewEntries.length) % previewEntries.length)
+  }
+
+  function showNextFace() {
+    setPreviewSideIndex((index) => (index + 1) % previewEntries.length)
+  }
 
   function selectItem(id: string) {
     setSelectedItemId(id)
@@ -104,32 +130,46 @@ export function VocabEntryStep({
 
       <div className={WIZARD_EDITOR_GRID}>
         <div className={WIZARD_PREVIEW_COLUMN}>
-          {sides.length > 1 && (
-            <div className="mb-3 flex flex-wrap gap-2">
-              {sides.map((side, index) => (
-                <button
-                  key={side.id}
-                  type="button"
-                  onClick={() => setPreviewSideIndex(index)}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
-                    index === previewSideIndex
-                      ? 'bg-accent text-surface'
-                      : 'border border-border text-text-muted hover:bg-surface-hover'
-                  }`}
-                >
-                  {sideNumberLabel(side.playOrder, t)}
-                </button>
-              ))}
-            </div>
-          )}
           {previewSide && selectedItem ? (
-            <SidePreview
-              side={previewSide}
-              attributes={attributes}
-              itemValues={selectedItem.values}
-              readOnly
-              hint={t('createProgram.stepVocab.previewHint')}
-            />
+            <div>
+              <p className="mb-2 text-xs text-text-muted">{t('createProgram.stepVocab.previewHint')}</p>
+              <div className="flex items-center justify-center gap-1 sm:gap-2">
+                {canCycleFaces && (
+                  <button
+                    type="button"
+                    onClick={showPrevFace}
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border text-lg text-text-muted hover:bg-surface-hover"
+                    aria-label={t('createProgram.stepVocab.previewPrevFace')}
+                  >
+                    ‹
+                  </button>
+                )}
+                <div className="min-w-0 flex-1">
+                  <SidePreview
+                    side={previewSide}
+                    attributes={attributes}
+                    itemValues={selectedItem.values}
+                    itemMediaUrls={itemMediaObjectUrls(selectedItem)}
+                    readOnly
+                  />
+                </div>
+                {canCycleFaces && (
+                  <button
+                    type="button"
+                    onClick={showNextFace}
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border text-lg text-text-muted hover:bg-surface-hover"
+                    aria-label={t('createProgram.stepVocab.previewNextFace')}
+                  >
+                    ›
+                  </button>
+                )}
+              </div>
+              {canCycleFaces && (
+                <p className="mt-2 text-center text-xs text-text-muted">
+                  {previewFaceCaption(previewSideIndex)}
+                </p>
+              )}
+            </div>
           ) : (
             <p className="text-sm text-text-muted">{t('createProgram.stepVocab.previewEmpty')}</p>
           )}
@@ -200,6 +240,16 @@ export function VocabEntryStep({
           >
             + {t('createProgram.stepVocab.addRow')}
           </button>
+
+          {selectedItem && (
+            <VocabMediaPanel
+              attributes={attributes}
+              item={selectedItem}
+              items={items}
+              onItemsChange={onItemsChange}
+              t={t}
+            />
+          )}
 
           <div className={`${WIZARD_ACTIONS} sm:justify-between`}>
             <button type="button" onClick={onBack} className={WIZARD_ACTION_SECONDARY}>

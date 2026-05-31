@@ -1,4 +1,10 @@
-import type { ItemSchemaAttribute, LevelRangeDraft, VocabItemDraft } from '../types/program'
+import type {
+  ItemSchemaAttribute,
+  LevelRangeDraft,
+  VocabItemDraft,
+  VocabMediaExportMeta,
+} from '../types/program'
+import { revokeVocabItemMedia } from './vocabMedia'
 
 export function textAttributes(attributes: ItemSchemaAttribute[]): ItemSchemaAttribute[] {
   return attributes.filter((a) => a.type === 'text')
@@ -6,7 +12,7 @@ export function textAttributes(attributes: ItemSchemaAttribute[]): ItemSchemaAtt
 
 export function createEmptyVocabItem(attributes: ItemSchemaAttribute[]): VocabItemDraft {
   const values: Record<string, string> = {}
-  for (const attr of textAttributes(attributes)) {
+  for (const attr of attributes) {
     values[attr.key] = ''
   }
   return { id: crypto.randomUUID(), values }
@@ -17,6 +23,10 @@ export function addVocabItem(items: VocabItemDraft[], attributes: ItemSchemaAttr
 }
 
 export function removeVocabItem(items: VocabItemDraft[], itemId: string): VocabItemDraft[] {
+  const removed = items.find((item) => item.id === itemId)
+  if (removed) {
+    revokeVocabItemMedia(removed)
+  }
   return items.filter((item) => item.id !== itemId)
 }
 
@@ -50,32 +60,100 @@ export function requiredTextKeysForDisplay(
   return [...keys]
 }
 
+export function requiredImageKeysForDisplay(
+  levels: LevelRangeDraft[],
+  attributes: ItemSchemaAttribute[],
+): string[] {
+  const keys = new Set<string>()
+  for (const level of levels) {
+    for (const side of level.sides) {
+      for (const el of side.display) {
+        const attr = attributes[el.attributeIndex]
+        if (attr?.type === 'image') {
+          keys.add(attr.key)
+        }
+      }
+    }
+  }
+  return [...keys]
+}
+
+export function requiredAudioKeysForPlaySteps(
+  levels: LevelRangeDraft[],
+  attributes: ItemSchemaAttribute[],
+): string[] {
+  const keys = new Set<string>()
+  for (const level of levels) {
+    for (const side of level.sides) {
+      for (const step of side.playSteps) {
+        if (step.kind !== 'play' || !step.attributeKey) {
+          continue
+        }
+        const attr = attributes.find((a) => a.key === step.attributeKey)
+        if (attr?.type === 'audio') {
+          keys.add(attr.key)
+        }
+      }
+    }
+  }
+  return [...keys]
+}
+
+function hasMediaFile(item: VocabItemDraft, key: string): boolean {
+  return Boolean(item.media?.[key]?.file)
+}
+
 export function validateVocabItems(
   items: VocabItemDraft[],
   levels: LevelRangeDraft[],
   attributes: ItemSchemaAttribute[],
-): { ok: true } | { ok: false; reason: 'empty' | 'missingRequired'; keys?: string[] } {
+): { ok: true } | { ok: false; reason: 'empty' | 'missingRequired' | 'missingMedia'; keys?: string[] } {
   if (items.length === 0) {
     return { ok: false, reason: 'empty' }
   }
-  const required = requiredTextKeysForDisplay(levels, attributes)
-  if (required.length === 0) {
-    return { ok: true }
-  }
+  const requiredText = requiredTextKeysForDisplay(levels, attributes)
   for (const item of items) {
-    for (const key of required) {
+    for (const key of requiredText) {
       if (!item.values[key]?.trim()) {
-        return { ok: false, reason: 'missingRequired', keys: required }
+        return { ok: false, reason: 'missingRequired', keys: requiredText }
+      }
+    }
+  }
+  const requiredImages = requiredImageKeysForDisplay(levels, attributes)
+  const requiredAudio = requiredAudioKeysForPlaySteps(levels, attributes)
+  const requiredMedia = [...requiredImages, ...requiredAudio]
+  for (const item of items) {
+    for (const key of requiredMedia) {
+      if (!hasMediaFile(item, key)) {
+        return { ok: false, reason: 'missingMedia', keys: requiredMedia }
       }
     }
   }
   return { ok: true }
 }
 
-export function toExportItems(items: VocabItemDraft[]): Array<{ values: Record<string, string> }> {
-  return items.map((item) => ({
-    values: { ...item.values },
-  }))
+export function toExportItems(
+  items: VocabItemDraft[],
+): Array<{ values: Record<string, string>; mediaFiles?: Record<string, VocabMediaExportMeta> }> {
+  return items.map((item) => {
+    const mediaFiles = item.media
+      ? Object.fromEntries(
+          Object.entries(item.media).map(([key, entry]) => [
+            key,
+            {
+              fileName: entry.file.name,
+              mimeType: entry.file.type,
+              size: entry.file.size,
+              localResourceId: entry.localResourceId,
+            },
+          ]),
+        )
+      : undefined
+    return {
+      values: { ...item.values },
+      ...(mediaFiles && Object.keys(mediaFiles).length > 0 ? { mediaFiles } : {}),
+    }
+  })
 }
 
 export function primaryTextAttributeKey(attributes: ItemSchemaAttribute[]): string | undefined {

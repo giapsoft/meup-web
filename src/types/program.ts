@@ -75,12 +75,31 @@ export type ProgramConfigPayload = {
   }>
 }
 
-/** One vocabulary row — values keyed by `ItemSchemaAttribute.key` (MVP: text fields). */
+/** Local file staged for preview — replaced by server resource id after upload. */
+export type VocabMediaFile = {
+  file: File
+  objectUrl: string
+  /** Placeholder 32-char id for mock export until API assigns real resource id. */
+  localResourceId: string
+}
+
+/** One vocabulary row — values keyed by `ItemSchemaAttribute.key`. */
 export type VocabItemDraft = {
   id: string
   values: Record<string, string>
+  media?: Record<string, VocabMediaFile>
+}
+
+export type VocabMediaExportMeta = {
+  fileName: string
+  mimeType: string
+  size: number
+  localResourceId: string
 }
 
 export type ProgramExportPayload = ProgramConfigPayload & {
-  items: Array<{ values: Record<string, string> }>
+  items: Array<{
+    values: Record<string, string>
+    mediaFiles?: Record<string, VocabMediaExportMeta>
+  }>
 }

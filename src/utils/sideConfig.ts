@@ -40,16 +40,45 @@ export function audioAttributeIndexes(attributes: ItemSchemaAttribute[]): number
   return out
 }
 
-export function attributeLabel(attributes: ItemSchemaAttribute[], attributeIndex: number): string {
+export type AttributeLabelOptions = {
+  /** Appended to paired text name for audio attrs, e.g. "(audio)". */
+  audioSuffix?: string
+  /** Shown when no display name exists — internal keys are never shown. */
+  fallback?: string
+}
+
+export function attributeLabel(
+  attributes: ItemSchemaAttribute[],
+  attributeIndex: number,
+  options?: AttributeLabelOptions,
+): string {
   const attr = attributes[attributeIndex]
   if (!attr) {
-    return '?'
+    return options?.fallback ?? '?'
   }
-  if (attr.name) {
-    return attr.name
+  const name = attr.name.trim()
+  if (name) {
+    return name
   }
-  if (attr.key) {
-    return attr.key
+  if (attr.type === 'audio' && attr.key.endsWith('Audio')) {
+    const baseKey = attr.key.slice(0, -'Audio'.length)
+    const textAttr = attributes.find((a) => a.key === baseKey && a.type === 'text')
+    if (textAttr?.name.trim()) {
+      const suffix = options?.audioSuffix?.trim()
+      return suffix ? `${textAttr.name.trim()} ${suffix}` : textAttr.name.trim()
+    }
+  }
+  if (options?.fallback) {
+    return options.fallback
+  }
+  if (attr.type === 'image') {
+    return 'Image'
+  }
+  if (attr.type === 'audio') {
+    return 'Audio'
+  }
+  if (attr.type === 'text') {
+    return 'Text'
   }
   return '?'
 }
@@ -463,6 +492,10 @@ export function adjustBorderRadius(current: number | undefined, delta: number): 
 
 export function isTextAttribute(attributes: ItemSchemaAttribute[], attributeIndex: number): boolean {
   return attributes[attributeIndex]?.type === 'text'
+}
+
+export function isImageAttribute(attributes: ItemSchemaAttribute[], attributeIndex: number): boolean {
+  return attributes[attributeIndex]?.type === 'image'
 }
 
 export function createDefaultDisplayElement(

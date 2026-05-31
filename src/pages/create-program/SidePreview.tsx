@@ -8,6 +8,7 @@ import { parseDisplayTextWithHighlights } from '../../utils/textHighlight'
 import {
   attributeLabel,
   displayElementContentText,
+  isImageAttribute,
   isTextAttribute,
   moveDisplayByPreviewDelta,
   previewTextBackgroundStyle,
@@ -28,6 +29,8 @@ type SidePreviewProps = {
   hint?: string
   /** Live vocabulary row — overrides wizard placeholder text. */
   itemValues?: Record<string, string>
+  /** Object URLs for staged image/audio files keyed by attribute key. */
+  itemMediaUrls?: Record<string, string>
   readOnly?: boolean
 }
 
@@ -89,6 +92,7 @@ export function SidePreview({
   onElementChange,
   hint,
   itemValues,
+  itemMediaUrls,
   readOnly = false,
 }: SidePreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -211,12 +215,15 @@ export function SidePreview({
         }}
       >
         {sorted.map(({ el, index }, stackIndex) => {
+          const attr = attributes[el.attributeIndex]
           const isText = isTextAttribute(attributes, el.attributeIndex)
+          const isImage = isImageAttribute(attributes, el.attributeIndex)
           const isSelected = selectedIndex === index
           const isEditable = !readOnly && draggableIndex === index
           const label = isText
             ? displayElementContentText(el, attributes, itemValues)
             : attributeLabel(attributes, el.attributeIndex)
+          const imageUrl = isImage && attr ? itemMediaUrls?.[attr.key] : undefined
           const bodyHandlers = pointerHandlers(index)
 
           return (
@@ -313,7 +320,20 @@ export function SidePreview({
                       </span>
                     </span>
                   )
-                })() : (
+                })() : isImage ? (
+                  imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      alt=""
+                      className="pointer-events-none h-full w-full object-cover"
+                      draggable={false}
+                    />
+                  ) : (
+                    <span className="pointer-events-none flex h-full w-full items-center justify-center bg-surface-card text-xs text-text-muted">
+                      {label}
+                    </span>
+                  )
+                ) : (
                   <span className="pointer-events-none flex h-full w-full items-center justify-center bg-surface-card text-xs text-text-muted">
                     {label}
                   </span>

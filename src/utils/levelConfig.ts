@@ -2,7 +2,7 @@
  * Level band logic ported from tach `ConfigLevelItem.h`.
  * Storage uses breakpoint `maxLvl` only (same as tach JSON / ProgramConfig.h).
  */
-import type { LevelRangeDraft } from '../types/program'
+import type { LevelRangeDraft, SideDraft } from '../types/program'
 import type { MessageParams, TranslationKey } from '../i18n/types'
 import { cloneSides } from './programConfig'
 
@@ -104,6 +104,23 @@ export function insertedLevelId(
     return after[1]?.id
   }
   return after[after.length - 2]?.id
+}
+
+export type ProgramPreviewSide = {
+  side: SideDraft
+  levelIndex: number
+}
+
+/** All card faces across every level band, in level order then playOrder. */
+export function allProgramPreviewSides(levels: LevelRangeDraft[]): ProgramPreviewSide[] {
+  const out: ProgramPreviewSide[] = []
+  for (let levelIndex = 0; levelIndex < levels.length; levelIndex++) {
+    const sorted = [...levels[levelIndex].sides].sort((a, b) => a.playOrder - b.playOrder)
+    for (const side of sorted) {
+      out.push({ side, levelIndex })
+    }
+  }
+  return out
 }
 
 /**

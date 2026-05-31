@@ -99,7 +99,9 @@ function SortablePlayStepRow({
               >
                 {audioIndexes.map((idx) => (
                   <option key={attributes[idx].key} value={attributes[idx].key}>
-                    {attributeLabel(attributes, idx)}
+                    {attributeLabel(attributes, idx, {
+                      fallback: t('createProgram.fieldType.audio'),
+                    })}
                   </option>
                 ))}
               </select>
