@@ -11,7 +11,7 @@ export function Header({ onLogout }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-surface/95 backdrop-blur-md">
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
         <Link to="/" className="flex min-w-0 items-center gap-2.5 no-underline">
           <span
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-lg font-bold text-accent"

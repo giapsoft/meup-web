@@ -33,8 +33,8 @@ export function WizardProgress({ current, t }: WizardProgressProps) {
   const currentIndex = PHASES.findIndex((p) => p.id === current)
 
   return (
-    <nav aria-label={t('createProgram.wizard.progress')} className="mt-4">
-      <ol className="flex items-center gap-1">
+    <nav aria-label={t('createProgram.wizard.progress')} className="mt-4 lg:mt-6">
+      <ol className="flex items-center gap-1 lg:gap-2">
         {PHASES.map((phase, index) => {
           const done = index < currentIndex
           const active = index === currentIndex
@@ -46,7 +46,7 @@ export function WizardProgress({ current, t }: WizardProgressProps) {
                 }`}
               >
                 <span
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold lg:h-8 lg:w-8 lg:text-sm ${
                     active
                       ? 'bg-accent text-surface'
                       : done
@@ -56,13 +56,13 @@ export function WizardProgress({ current, t }: WizardProgressProps) {
                 >
                   {done ? '✓' : index + 1}
                 </span>
-                <span className="w-full truncate text-center text-[10px] leading-tight sm:text-xs">
+                <span className="w-full text-center text-[10px] leading-tight sm:text-xs lg:text-sm lg:leading-snug">
                   {t(phase.labelKey)}
                 </span>
               </div>
               {index < PHASES.length - 1 && (
                 <span
-                  className={`mb-4 h-px w-2 shrink-0 sm:w-3 ${
+                  className={`mb-4 h-px w-2 shrink-0 sm:w-4 lg:mb-5 lg:w-8 ${
                     index < currentIndex ? 'bg-accent/50' : 'bg-border'
                   }`}
                   aria-hidden="true"

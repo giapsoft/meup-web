@@ -18,6 +18,13 @@ import { DisplayElementEditorStep } from './DisplayElementEditorStep'
 import { SchemaFieldList } from './SchemaFieldList'
 import { SideEditorStep } from './SideEditorStep'
 import { WizardProgress, wizardPhaseFromStep } from './WizardProgress'
+import {
+  WIZARD_ACTION_PRIMARY,
+  WIZARD_ACTION_SECONDARY,
+  WIZARD_ACTIONS,
+  WIZARD_MAIN,
+  WIZARD_NARROW_SECTION,
+} from './wizardLayout'
 
 type WizardStep = 'name' | 'schema' | 'cardSetup' | 'sideEdit' | 'displayEdit' | 'done'
 
@@ -133,14 +140,14 @@ export function CreateProgramWizard() {
   }
 
   return (
-    <main className="mx-auto max-w-lg px-4 py-8 sm:px-6 sm:py-10">
-      <p className="text-xs text-text-muted">{t('createProgram.pairHint', { pair: langPair })}</p>
+    <main className={WIZARD_MAIN}>
+      <p className="text-xs text-text-muted lg:text-sm">{t('createProgram.pairHint', { pair: langPair })}</p>
       {step !== 'name' && (
         <WizardProgress current={wizardPhaseFromStep(step)} t={t} />
       )}
 
       {step === 'name' && (
-        <section className="mt-4 rounded-2xl border border-border bg-surface-raised p-5 sm:p-6">
+        <section className={WIZARD_NARROW_SECTION}>
           <h1 className="text-xl font-semibold text-text sm:text-2xl">
             {t('createProgram.stepName.title')}
           </h1>
@@ -159,7 +166,7 @@ export function CreateProgramWizard() {
           <button
             type="button"
             onClick={handleStart}
-            className="mt-6 w-full rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-surface transition hover:opacity-90 sm:text-base"
+            className={`mt-6 w-full sm:w-auto lg:max-w-xs ${WIZARD_ACTION_PRIMARY}`}
           >
             {t('createProgram.stepName.start')}
           </button>
@@ -167,7 +174,7 @@ export function CreateProgramWizard() {
       )}
 
       {step === 'schema' && (
-        <section className="mt-4 rounded-2xl border border-border bg-surface-raised p-5 sm:p-6">
+        <section className={WIZARD_NARROW_SECTION}>
           <h1 className="text-xl font-semibold text-text sm:text-2xl">
             {t('createProgram.stepSchema.title')}
           </h1>
@@ -198,18 +205,18 @@ export function CreateProgramWizard() {
             ))}
           </div>
 
-          <div className="mt-6 flex gap-3">
+          <div className={`${WIZARD_ACTIONS} sm:justify-between`}>
             <button
               type="button"
               onClick={() => setStep('name')}
-              className="flex-1 rounded-xl border border-border bg-surface-card px-4 py-3 text-sm font-medium text-text-muted hover:bg-surface-hover"
+              className={WIZARD_ACTION_SECONDARY}
             >
               {t('createProgram.stepSchema.back')}
             </button>
             <button
               type="button"
               onClick={handleContinueSchema}
-              className="flex-1 rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-surface hover:opacity-90"
+              className={WIZARD_ACTION_PRIMARY}
             >
               {t('createProgram.stepSchema.continue')}
             </button>
@@ -273,7 +280,7 @@ export function CreateProgramWizard() {
         )}
 
       {step === 'done' && (
-        <section className="mt-4 rounded-2xl border border-border bg-surface-raised p-5 sm:p-6">
+        <section className={WIZARD_NARROW_SECTION}>
           <h1 className="text-xl font-semibold text-text sm:text-2xl">
             {t('createProgram.stepDone.title')}
           </h1>
@@ -318,7 +325,7 @@ export function CreateProgramWizard() {
 
           <Link
             to="/"
-            className="mt-6 inline-flex w-full items-center justify-center rounded-xl border border-border bg-surface-card px-4 py-3 text-sm font-medium text-text no-underline hover:bg-surface-hover"
+            className={`mt-6 lg:max-w-xs ${WIZARD_ACTION_SECONDARY} inline-flex items-center justify-center no-underline`}
           >
             {t('createProgram.stepDone.backHome')}
           </Link>

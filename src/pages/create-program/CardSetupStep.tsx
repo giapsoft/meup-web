@@ -26,6 +26,12 @@ import {
   insertedLevelId,
 } from '../../utils/levelConfig'
 import { createEmptySide, normalizePlayOrder, sideNumberLabel } from '../../utils/programConfig'
+import {
+  WIZARD_ACTION_PRIMARY,
+  WIZARD_ACTION_SECONDARY,
+  WIZARD_ACTIONS,
+  WIZARD_STEP_SECTION,
+} from './wizardLayout'
 
 type CardSetupStepProps = {
   programName: string
@@ -204,110 +210,114 @@ export function CardSetupStep({
   }
 
   return (
-    <section className="mt-4 rounded-2xl border border-border bg-surface-raised p-5 sm:p-6">
-      <h1 className="text-xl font-semibold text-text sm:text-2xl">
+    <section className={WIZARD_STEP_SECTION}>
+      <h1 className="text-xl font-semibold text-text sm:text-2xl lg:text-3xl">
         {t('createProgram.stepCardSetup.title')}
       </h1>
-      <p className="mt-2 text-sm text-text-muted">{t('createProgram.stepCardSetup.hint')}</p>
-      <p className="mt-1 text-xs text-text-muted">{programName}</p>
+      <p className="mt-2 text-sm text-text-muted lg:text-base">{t('createProgram.stepCardSetup.hint')}</p>
+      <p className="mt-1 text-xs text-text-muted lg:text-sm">{programName}</p>
 
-      <div className="mt-5 flex flex-wrap items-center gap-2">
-        {levelItems.map((item) => {
-          const level = levels[item.index]
-          if (!level) {
-            return null
-          }
-          return (
-            <button
-              key={level.id}
-              type="button"
-              onClick={() => onActiveLevelChange(level.id)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
-                level.id === activeLevel.id
-                  ? 'bg-accent text-surface'
-                  : 'border border-border text-text-muted hover:bg-surface-hover'
-              }`}
-            >
-              {configLevelItemLabel(item, t)}
-            </button>
-          )
-        })}
-        <button
-          type="button"
-          onClick={handleAddLevel}
-          className="rounded-lg border border-dashed border-border px-3 py-1.5 text-xs text-text-muted hover:border-accent hover:text-accent"
-        >
-          + {t('createProgram.stepCardSetup.addLevel')}
-        </button>
-      </div>
-
-      {levels.length > 1 && activeLevelItem && (
-        <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-border bg-surface-card p-3">
-          <p className="text-sm text-text">{configLevelItemLabel(activeLevelItem, t)}</p>
-          <div className="flex shrink-0 gap-2">
+      <div className="mt-5 lg:grid lg:grid-cols-2 lg:items-start lg:gap-8 xl:gap-10">
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            {levelItems.map((item) => {
+              const level = levels[item.index]
+              if (!level) {
+                return null
+              }
+              return (
+                <button
+                  key={level.id}
+                  type="button"
+                  onClick={() => onActiveLevelChange(level.id)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-medium lg:text-sm ${
+                    level.id === activeLevel.id
+                      ? 'bg-accent text-surface'
+                      : 'border border-border text-text-muted hover:bg-surface-hover'
+                  }`}
+                >
+                  {configLevelItemLabel(item, t)}
+                </button>
+              )
+            })}
             <button
               type="button"
-              disabled={activeLevelIndex <= 0}
-              onClick={() => adjustBoundary(-1)}
-              className="rounded-lg border border-border px-3 py-1.5 text-xs text-text-muted hover:bg-surface-hover disabled:opacity-30"
-              aria-label={t('createProgram.stepCardSetup.adjustLeft')}
+              onClick={handleAddLevel}
+              className="rounded-lg border border-dashed border-border px-3 py-1.5 text-xs text-text-muted hover:border-accent hover:text-accent lg:text-sm"
             >
-              ←
-            </button>
-            <button
-              type="button"
-              disabled={activeLevelIndex + 1 >= levels.length}
-              onClick={() => adjustBoundary(1)}
-              className="rounded-lg border border-border px-3 py-1.5 text-xs text-text-muted hover:bg-surface-hover disabled:opacity-30"
-              aria-label={t('createProgram.stepCardSetup.adjustRight')}
-            >
-              →
+              + {t('createProgram.stepCardSetup.addLevel')}
             </button>
           </div>
-        </div>
-      )}
 
-      <div className="mt-5">
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSideDragEnd}>
-          <SortableContext
-            items={activeLevel.sides.map((s) => s.id)}
-            strategy={verticalListSortingStrategy}
+          {levels.length > 1 && activeLevelItem && (
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface-card p-3">
+              <p className="text-sm text-text">{configLevelItemLabel(activeLevelItem, t)}</p>
+              <div className="flex shrink-0 gap-2">
+                <button
+                  type="button"
+                  disabled={activeLevelIndex <= 0}
+                  onClick={() => adjustBoundary(-1)}
+                  className="rounded-lg border border-border px-3 py-1.5 text-xs text-text-muted hover:bg-surface-hover disabled:opacity-30"
+                  aria-label={t('createProgram.stepCardSetup.adjustLeft')}
+                >
+                  ←
+                </button>
+                <button
+                  type="button"
+                  disabled={activeLevelIndex + 1 >= levels.length}
+                  onClick={() => adjustBoundary(1)}
+                  className="rounded-lg border border-border px-3 py-1.5 text-xs text-text-muted hover:bg-surface-hover disabled:opacity-30"
+                  aria-label={t('createProgram.stepCardSetup.adjustRight')}
+                >
+                  →
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSideDragEnd}>
+            <SortableContext
+              items={activeLevel.sides.map((s) => s.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <ul className="space-y-3">
+                {activeLevel.sides.map((side) => (
+                  <SortableSideRow
+                    key={side.id}
+                    side={side}
+                    onEdit={() => onEditSide(side.id)}
+                    onRemove={() => removeSide(side.id)}
+                    t={t}
+                  />
+                ))}
+              </ul>
+            </SortableContext>
+          </DndContext>
+
+          <button
+            type="button"
+            onClick={addSide}
+            className="mt-4 rounded-lg border border-dashed border-border px-3 py-2 text-xs text-text-muted hover:border-accent hover:text-accent lg:text-sm"
           >
-            <ul className="space-y-3">
-              {activeLevel.sides.map((side) => (
-                <SortableSideRow
-                  key={side.id}
-                  side={side}
-                  onEdit={() => onEditSide(side.id)}
-                  onRemove={() => removeSide(side.id)}
-                  t={t}
-                />
-              ))}
-            </ul>
-          </SortableContext>
-        </DndContext>
+            + {t('createProgram.stepCardSetup.addSide')}
+          </button>
+        </div>
       </div>
 
-      <button
-        type="button"
-        onClick={addSide}
-        className="mt-4 rounded-lg border border-dashed border-border px-3 py-2 text-xs text-text-muted hover:border-accent hover:text-accent"
-      >
-        + {t('createProgram.stepCardSetup.addSide')}
-      </button>
-
-      <div className="mt-6 flex gap-3">
+      <div className={`${WIZARD_ACTIONS} sm:justify-between`}>
         <button
           type="button"
           onClick={onBack}
-          className="flex-1 rounded-xl border border-border bg-surface-card px-4 py-3 text-sm font-medium text-text-muted hover:bg-surface-hover"
+          className={WIZARD_ACTION_SECONDARY}
         >
           {t('createProgram.stepSchema.back')}
         </button>
         <button
           type="button"
           onClick={onContinue}
-          className="flex-1 rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-surface hover:opacity-90"
+          className={WIZARD_ACTION_PRIMARY}
         >
           {t('createProgram.stepSchema.continue')}
         </button>

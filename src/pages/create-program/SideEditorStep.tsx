@@ -14,6 +14,14 @@ import { sideNumberLabel } from '../../utils/programConfig'
 import { ColorPickerField } from './ColorPickerField'
 import { PlayStepEditor } from './PlayStepEditor'
 import { SidePreview } from './SidePreview'
+import {
+  WIZARD_ACTION_PRIMARY,
+  WIZARD_ACTIONS,
+  WIZARD_EDITOR_GRID,
+  WIZARD_FORM_COLUMN,
+  WIZARD_PREVIEW_COLUMN,
+  WIZARD_STEP_SECTION,
+} from './wizardLayout'
 
 type SideEditorStepProps = {
   programName: string
@@ -39,111 +47,111 @@ export function SideEditorStep({
   const bgColor = displayColorOr(side.backgroundColor, defaultPaletteColor())
 
   return (
-    <section className="mt-4 rounded-2xl border border-border bg-surface-raised p-5 sm:p-6">
-      <h1 className="text-xl font-semibold text-text sm:text-2xl">
+    <section className={WIZARD_STEP_SECTION}>
+      <h1 className="text-xl font-semibold text-text sm:text-2xl lg:text-3xl">
         {sideNumberLabel(side.playOrder, t)}
       </h1>
-      <p className="mt-1 text-xs text-text-muted">{programName}</p>
+      <p className="mt-1 text-xs text-text-muted lg:text-sm">{programName}</p>
 
-      <div className="mt-5">
-        <SidePreview
-          side={side}
-          attributes={attributes}
-          onSelectIndex={onEditDisplay}
-          hint={t('createProgram.preview.tapToEdit')}
-        />
-      </div>
-
-      <div className="mt-5">
-        <ColorPickerField
-          label={t('createProgram.stepSide.background')}
-          value={bgColor}
-          onChange={(backgroundColor) => onChange({ ...side, backgroundColor })}
-          customLabel={t('createProgram.color.custom')}
-          chooseLabel={t('createProgram.color.choose')}
-          doneLabel={t('createProgram.color.done')}
-          cancelLabel={t('createProgram.color.cancel')}
-        />
-      </div>
-
-      <div className="mt-6">
-        <h2 className="text-sm font-semibold text-text">{t('createProgram.stepSide.displaySection')}</h2>
-        <ul className="mt-3 space-y-2">
-          {side.display.map((el, index) => (
-            <li
-              key={`display-${index}`}
-              className="flex items-center gap-2 rounded-xl border border-border bg-surface-card p-2"
-            >
-              <select
-                value={el.attributeIndex}
-                onChange={(e) =>
-                  onChange(
-                    updateDisplayElement(side, index, {
-                      ...el,
-                      attributeIndex: Number(e.target.value),
-                    }),
-                  )
-                }
-                className="min-h-11 min-w-0 flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text"
-              >
-                {displayIndexes.map((idx) => (
-                  <option key={idx} value={idx}>
-                    {attributeLabel(attributes, idx)}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => onEditDisplay(index)}
-                className="shrink-0 rounded-lg px-3 py-2.5 text-xs font-medium text-accent active:opacity-80"
-              >
-                {t('createProgram.config.open')} →
-              </button>
-            </li>
-          ))}
-        </ul>
-        <button
-          type="button"
-          onClick={() => onChange(addDisplayElement(side, attributes))}
-          className="mt-2 w-full min-h-11 rounded-xl border border-dashed border-border px-3 py-3 text-sm text-accent active:border-accent"
-        >
-          + {t('createProgram.stepSide.addDisplay')}
-        </button>
-      </div>
-
-      <div className="mt-6">
-        <h2 className="text-sm font-semibold text-text">{t('createProgram.stepSide.playbackSection')}</h2>
-        <p className="mt-1 text-xs text-text-muted">{t('createProgram.stepSide.playbackHint')}</p>
-        <div className="mt-3">
-          <PlayStepEditor side={side} attributes={attributes} onChange={onChange} t={t} />
+      <div className={WIZARD_EDITOR_GRID}>
+        <div className={WIZARD_PREVIEW_COLUMN}>
+          <SidePreview
+            side={side}
+            attributes={attributes}
+            onSelectIndex={onEditDisplay}
+            hint={t('createProgram.preview.tapToEdit')}
+          />
         </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {hasAudio && (
+
+        <div className={WIZARD_FORM_COLUMN}>
+          <ColorPickerField
+            label={t('createProgram.stepSide.background')}
+            value={bgColor}
+            onChange={(backgroundColor) => onChange({ ...side, backgroundColor })}
+            customLabel={t('createProgram.color.custom')}
+            chooseLabel={t('createProgram.color.choose')}
+            doneLabel={t('createProgram.color.done')}
+            cancelLabel={t('createProgram.color.cancel')}
+          />
+
+          <div className="mt-3 lg:mt-4">
+            <h2 className="text-sm font-semibold text-text">{t('createProgram.stepSide.displaySection')}</h2>
+            <ul className="mt-3 space-y-2">
+              {side.display.map((el, index) => (
+                <li
+                  key={`display-${index}`}
+                  className="flex items-center gap-2 rounded-xl border border-border bg-surface-card p-2"
+                >
+                  <select
+                    value={el.attributeIndex}
+                    onChange={(e) =>
+                      onChange(
+                        updateDisplayElement(side, index, {
+                          ...el,
+                          attributeIndex: Number(e.target.value),
+                        }),
+                      )
+                    }
+                    className="min-h-11 min-w-0 flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text"
+                  >
+                    {displayIndexes.map((idx) => (
+                      <option key={idx} value={idx}>
+                        {attributeLabel(attributes, idx)}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => onEditDisplay(index)}
+                    className="shrink-0 rounded-lg px-3 py-2.5 text-xs font-medium text-accent hover:opacity-80"
+                  >
+                    {t('createProgram.config.open')} →
+                  </button>
+                </li>
+              ))}
+            </ul>
             <button
               type="button"
-              onClick={() => onChange(addPlayStep(side, attributes))}
-              className="min-h-11 flex-1 rounded-xl border border-dashed border-border px-4 py-3 text-sm text-accent active:border-accent"
+              onClick={() => onChange(addDisplayElement(side, attributes))}
+              className="mt-2 w-full min-h-11 rounded-xl border border-dashed border-border px-3 py-3 text-sm text-accent hover:border-accent"
             >
-              + {t('createProgram.stepSide.addPlay')}
+              + {t('createProgram.stepSide.addDisplay')}
             </button>
-          )}
-          <button
-            type="button"
-            onClick={() => onChange(addPauseStep(side))}
-            className="min-h-11 flex-1 rounded-xl border border-dashed border-border px-4 py-3 text-sm text-accent active:border-accent"
-          >
-            + {t('createProgram.stepSide.addPause')}
-          </button>
+          </div>
+
+          <div className="mt-6">
+            <h2 className="text-sm font-semibold text-text">{t('createProgram.stepSide.playbackSection')}</h2>
+            <p className="mt-1 text-xs text-text-muted">{t('createProgram.stepSide.playbackHint')}</p>
+            <div className="mt-3">
+              <PlayStepEditor side={side} attributes={attributes} onChange={onChange} t={t} />
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {hasAudio && (
+                <button
+                  type="button"
+                  onClick={() => onChange(addPlayStep(side, attributes))}
+                  className="min-h-11 flex-1 rounded-xl border border-dashed border-border px-4 py-3 text-sm text-accent hover:border-accent"
+                >
+                  + {t('createProgram.stepSide.addPlay')}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => onChange(addPauseStep(side))}
+                className="min-h-11 flex-1 rounded-xl border border-dashed border-border px-4 py-3 text-sm text-accent hover:border-accent"
+              >
+                + {t('createProgram.stepSide.addPause')}
+              </button>
+            </div>
+          </div>
+
+          <div className={WIZARD_ACTIONS}>
+            <button type="button" onClick={onBack} className={WIZARD_ACTION_PRIMARY}>
+              {t('createProgram.stepSide.backToSides')}
+            </button>
+          </div>
         </div>
       </div>
-
-      <button
-        type="button"
-        onClick={onBack}
-        className="mt-6 w-full min-h-12 rounded-xl border border-border bg-surface-card px-4 py-3 text-sm font-medium text-text-muted active:bg-surface-hover"
-      >
-        {t('createProgram.stepSide.backToSides')}
-      </button>
     </section>
   )
 }

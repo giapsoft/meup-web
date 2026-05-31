@@ -15,6 +15,17 @@ import { defaultPaletteColor, displayColorOr } from '../../utils/colorPalette'
 import { ColorPickerField } from './ColorPickerField'
 import { SidePreview } from './SidePreview'
 import { SliderField } from './SliderField'
+import {
+  WIZARD_ACTION_DANGER,
+  WIZARD_ACTION_PRIMARY,
+  WIZARD_ACTIONS,
+  WIZARD_COLOR_GRID,
+  WIZARD_EDITOR_GRID,
+  WIZARD_FORM_COLUMN,
+  WIZARD_LAYOUT_SLIDERS,
+  WIZARD_PREVIEW_COLUMN,
+  WIZARD_STEP_SECTION,
+} from './wizardLayout'
 
 type DisplayElementEditorStepProps = {
   side: SideDraft
@@ -72,26 +83,27 @@ export function DisplayElementEditorStep({
   }
 
   return (
-    <section className="mt-4 rounded-2xl border border-border bg-surface-raised p-5 sm:p-6">
-      <h1 className="text-xl font-semibold text-text sm:text-2xl">{title}</h1>
+    <section className={WIZARD_STEP_SECTION}>
+      <h1 className="text-xl font-semibold text-text sm:text-2xl lg:text-3xl">{title}</h1>
 
-      <div className="sticky top-2 z-10 -mx-1 mt-4 rounded-xl bg-surface-raised/95 px-1 py-2 backdrop-blur-sm">
-        <SidePreview
-          side={side}
-          attributes={attributes}
-          selectedIndex={displayIndex}
-          draggableIndex={displayIndex}
-          onSelectIndex={onSelectDisplayIndex}
-          onElementChange={(index, next) => onChange(updateDisplayElement(side, index, next))}
-          hint={t('createProgram.preview.dragHint')}
-        />
-      </div>
+      <div className={WIZARD_EDITOR_GRID}>
+        <div className={WIZARD_PREVIEW_COLUMN}>
+          <SidePreview
+            side={side}
+            attributes={attributes}
+            selectedIndex={displayIndex}
+            draggableIndex={displayIndex}
+            onSelectIndex={onSelectDisplayIndex}
+            onElementChange={(index, next) => onChange(updateDisplayElement(side, index, next))}
+            hint={t('createProgram.preview.dragHint')}
+          />
+        </div>
 
-      <div className="mt-5 space-y-3">
+        <div className={WIZARD_FORM_COLUMN}>
         <p className="text-xs font-medium uppercase tracking-wide text-text-muted">
           {t('createProgram.stepDisplay.sectionLayout')}
         </p>
-        <label className="block rounded-xl border border-border bg-surface-card p-3">
+        <label className="block rounded-xl border border-border bg-surface-card p-3 lg:col-span-2">
           <span className="text-sm font-medium text-text">{t('createProgram.stepDisplay.attributeType')}</span>
           <select
             value={el.attributeIndex}
@@ -110,6 +122,7 @@ export function DisplayElementEditorStep({
           </select>
         </label>
 
+        <div className={WIZARD_LAYOUT_SLIDERS}>
         <SliderField
           label={t('createProgram.stepDisplay.top')}
           value={bounds.top}
@@ -154,6 +167,7 @@ export function DisplayElementEditorStep({
           unit=" px"
           onChange={(borderRadius) => patch({ ...el, borderRadius })}
         />
+        </div>
 
         {isText && (
           <>
@@ -185,6 +199,7 @@ export function DisplayElementEditorStep({
               onChange={(maxLines) => patch({ ...el, maxLines })}
             />
 
+            <div className={WIZARD_COLOR_GRID}>
             <ColorPickerField
               label={t('createProgram.stepDisplay.textColor')}
               value={displayColorOr(el.color, defaultPaletteColor())}
@@ -213,6 +228,7 @@ export function DisplayElementEditorStep({
               doneLabel={t('createProgram.color.done')}
               cancelLabel={t('createProgram.color.cancel')}
             />
+            </div>
 
             <SliderField
               label={t('createProgram.stepDisplay.bgOpacity')}
@@ -245,23 +261,25 @@ export function DisplayElementEditorStep({
             </div>
           </>
         )}
+
+        <div className={WIZARD_ACTIONS}>
+          <button
+            type="button"
+            onClick={confirmDelete}
+            className={WIZARD_ACTION_DANGER}
+          >
+            {t('createProgram.stepDisplay.delete')}
+          </button>
+          <button
+            type="button"
+            onClick={onBack}
+            className={WIZARD_ACTION_PRIMARY}
+          >
+            {t('createProgram.stepDisplay.backToSide')}
+          </button>
+        </div>
+        </div>
       </div>
-
-      <button
-        type="button"
-        onClick={confirmDelete}
-        className="mt-6 w-full min-h-11 rounded-xl border border-dashed border-border px-3 py-3 text-sm text-red-400 active:border-red-400"
-      >
-        {t('createProgram.stepDisplay.delete')}
-      </button>
-
-      <button
-        type="button"
-        onClick={onBack}
-        className="mt-3 w-full min-h-12 rounded-xl border border-border bg-surface-card px-4 py-3 text-sm font-medium text-text-muted active:bg-surface-hover"
-      >
-        {t('createProgram.stepDisplay.backToSide')}
-      </button>
     </section>
   )
 }

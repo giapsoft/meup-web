@@ -198,7 +198,7 @@ export function SidePreview({
       {hint && <p className="mb-2 text-xs text-text-muted">{hint}</p>}
       <div
         ref={containerRef}
-        className="relative mx-auto w-full max-w-[240px] overflow-hidden border border-border shadow-lg"
+        className="relative mx-auto w-full max-w-[240px] overflow-hidden border border-border shadow-lg sm:max-w-[260px] lg:max-w-[280px] xl:max-w-[320px]"
         style={{
           aspectRatio: '240 / 320',
           backgroundColor: parseBgColor(side.backgroundColor),
