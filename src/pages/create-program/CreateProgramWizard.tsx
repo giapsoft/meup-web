@@ -17,6 +17,7 @@ import { CardSetupStep } from './CardSetupStep'
 import { DisplayElementEditorStep } from './DisplayElementEditorStep'
 import { SchemaFieldList } from './SchemaFieldList'
 import { SideEditorStep } from './SideEditorStep'
+import { WizardProgress, wizardPhaseFromStep } from './WizardProgress'
 
 type WizardStep = 'name' | 'schema' | 'cardSetup' | 'sideEdit' | 'displayEdit' | 'done'
 
@@ -134,6 +135,9 @@ export function CreateProgramWizard() {
   return (
     <main className="mx-auto max-w-lg px-4 py-8 sm:px-6 sm:py-10">
       <p className="text-xs text-text-muted">{t('createProgram.pairHint', { pair: langPair })}</p>
+      {step !== 'name' && (
+        <WizardProgress current={wizardPhaseFromStep(step)} t={t} />
+      )}
 
       {step === 'name' && (
         <section className="mt-4 rounded-2xl border border-border bg-surface-raised p-5 sm:p-6">

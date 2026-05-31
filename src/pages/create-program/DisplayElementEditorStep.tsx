@@ -73,7 +73,7 @@ export function DisplayElementEditorStep({
     <section className="mt-4 rounded-2xl border border-border bg-surface-raised p-5 sm:p-6">
       <h1 className="text-xl font-semibold text-text sm:text-2xl">{title}</h1>
 
-      <div className="mt-5">
+      <div className="sticky top-2 z-10 -mx-1 mt-4 rounded-xl bg-surface-raised/95 px-1 py-2 backdrop-blur-sm">
         <SidePreview
           side={side}
           attributes={attributes}
@@ -85,6 +85,9 @@ export function DisplayElementEditorStep({
       </div>
 
       <div className="mt-5 space-y-3">
+        <p className="text-xs font-medium uppercase tracking-wide text-text-muted">
+          {t('createProgram.stepDisplay.sectionLayout')}
+        </p>
         <label className="block rounded-xl border border-border bg-surface-card p-3">
           <span className="text-sm font-medium text-text">{t('createProgram.stepDisplay.attributeType')}</span>
           <select
@@ -150,7 +153,11 @@ export function DisplayElementEditorStep({
         />
 
         {isText && (
-          <>
+          <details className="rounded-xl border border-border bg-surface-card p-3">
+            <summary className="cursor-pointer text-sm font-medium text-text">
+              {t('createProgram.stepDisplay.sectionStyle')}
+            </summary>
+            <div className="mt-3 space-y-3">
             <SliderField
               label={t('createProgram.stepDisplay.maxLines')}
               value={el.maxLines ?? 0}
@@ -197,7 +204,7 @@ export function DisplayElementEditorStep({
               onChange={(pct) => patch({ ...el, backgroundOpacity: percentToOpacity(pct) })}
             />
 
-            <div className="rounded-xl border border-border bg-surface-card p-3">
+            <div className="rounded-xl border border-border bg-surface p-3">
               <p className="text-sm font-medium text-text">{t('createProgram.stepDisplay.textAlign')}</p>
               <div className="mt-2 grid grid-cols-3 gap-2">
                 {TEXT_ALIGN_OPTIONS.map((key) => (
@@ -216,7 +223,8 @@ export function DisplayElementEditorStep({
                 ))}
               </div>
             </div>
-          </>
+            </div>
+          </details>
         )}
       </div>
 

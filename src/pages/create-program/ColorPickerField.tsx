@@ -40,6 +40,24 @@ export function ColorPickerField({
     }
   }, [open, value])
 
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setOpen(false)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.body.style.overflow = prevOverflow
+      window.removeEventListener('keydown', onKeyDown)
+    }
+  }, [open])
+
   function closeDialog() {
     setOpen(false)
   }
