@@ -1,6 +1,8 @@
 {
   "nav.credits": "Credit",
   "nav.creditsTitle": "Credit còn lại trên thiết bị",
+  "nav.accountMenu": "Menu tài khoản",
+  "nav.darkMode": "Dark mode",
   "nav.logout": "Đăng xuất",
   "auth.loggedOut": "Đã đăng xuất.",
   "auth.logoutMock": "Mockup: đã đăng xuất. (Chưa có auth thật.)",

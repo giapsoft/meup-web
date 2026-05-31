@@ -1,6 +1,8 @@
 {
   "nav.credits": "크레딧",
   "nav.creditsTitle": "기기 남은 크레딧",
+  "nav.accountMenu": "계정 메뉴",
+  "nav.darkMode": "다크 모드",
   "nav.logout": "로그아웃",
   "auth.loggedOut": "로그아웃되었습니다.",
   "auth.logoutMock": "목업: 로그아웃됨. (실제 인증 없음)",

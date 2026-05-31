@@ -1,6 +1,8 @@
 {
   "nav.credits": "Crédits",
   "nav.creditsTitle": "Crédits restants sur l'appareil",
+  "nav.accountMenu": "Menu du compte",
+  "nav.darkMode": "Mode sombre",
   "nav.logout": "Se déconnecter",
   "auth.loggedOut": "Vous êtes déconnecté.",
   "auth.logoutMock": "Maquette : déconnecté. (Pas d'authentification réelle.)",

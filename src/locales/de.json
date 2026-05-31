@@ -1,6 +1,8 @@
 {
   "nav.credits": "Credits",
   "nav.creditsTitle": "Verbleibende Geräte-Credits",
+  "nav.accountMenu": "Kontomenü",
+  "nav.darkMode": "Dunkelmodus",
   "nav.logout": "Abmelden",
   "auth.loggedOut": "Sie wurden abgemeldet.",
   "auth.logoutMock": "Mockup: abgemeldet. (Noch keine echte Anmeldung.)",

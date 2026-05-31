@@ -1,6 +1,8 @@
 {
   "nav.credits": "Credits",
   "nav.creditsTitle": "Remaining device credits",
+  "nav.accountMenu": "Account menu",
+  "nav.darkMode": "Dark mode",
   "nav.logout": "Log out",
   "auth.loggedOut": "You have been logged out.",
   "auth.logoutMock": "Mockup: logged out. (No real auth yet.)",

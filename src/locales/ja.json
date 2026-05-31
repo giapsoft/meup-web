@@ -1,6 +1,8 @@
 {
   "nav.credits": "クレジット",
   "nav.creditsTitle": "デバイスの残りクレジット",
+  "nav.accountMenu": "アカウントメニュー",
+  "nav.darkMode": "ダークモード",
   "nav.logout": "ログアウト",
   "auth.loggedOut": "ログアウトしました。",
   "auth.logoutMock": "モックアップ：ログアウトしました。（認証は未実装）",

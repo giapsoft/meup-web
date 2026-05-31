@@ -329,7 +329,7 @@ export function SidePreview({
                       draggable={false}
                     />
                   ) : (
-                    <span className="pointer-events-none flex h-full w-full items-center justify-center bg-surface-card text-xs text-text-muted">
+                    <span className="pointer-events-none flex h-full w-full items-center justify-center border border-dashed border-text-muted/40 bg-transparent text-xs text-text-muted">
                       {label}
                     </span>
                   )

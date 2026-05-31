@@ -3,6 +3,8 @@ export type UiLocale = 'vi' | 'en' | 'ja' | 'ko' | 'zh' | 'fr' | 'de'
 export type TranslationKey =
   | 'nav.credits'
   | 'nav.creditsTitle'
+  | 'nav.accountMenu'
+  | 'nav.darkMode'
   | 'nav.logout'
   | 'auth.loggedOut'
   | 'auth.logoutMock'
