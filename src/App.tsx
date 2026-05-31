@@ -9,7 +9,7 @@ import { PlaceholderPage, type PlaceholderPageKey } from './pages/PlaceholderPag
 
 function AppShell() {
   const [loggedIn, setLoggedIn] = useState(true)
-  const { t } = useLanguagePair()
+  const { t, uiLocale } = useLanguagePair()
 
   const handleLogout = useCallback(() => {
     setLoggedIn(false)
@@ -36,7 +36,7 @@ function AppShell() {
       <Header onLogout={handleLogout} />
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/programs/new" element={<CreateProgramWizard />} />
+        <Route path="/programs/new" element={<CreateProgramWizard key={uiLocale} />} />
         {placeholders.map(({ path, page }) => (
           <Route key={path} path={path} element={<PlaceholderPage page={page} />} />
         ))}

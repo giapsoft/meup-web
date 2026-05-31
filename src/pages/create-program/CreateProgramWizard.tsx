@@ -12,6 +12,7 @@ import {
   slugFieldKey,
   slugProgramId,
 } from '../../utils/schemaField'
+import { SchemaFieldList } from './SchemaFieldList'
 
 type WizardStep = 'name' | 'schema' | 'done'
 
@@ -89,23 +90,6 @@ export function CreateProgramWizard() {
     setFields((prev) => [...prev, { ...newEmptySchemaRow(), uiType }])
   }
 
-  function moveField(id: string, delta: number) {
-    setFields((prev) => {
-      const index = prev.findIndex((r) => r.id === id)
-      if (index < 0) {
-        return prev
-      }
-      const nextIndex = index + delta
-      if (nextIndex < 0 || nextIndex >= prev.length) {
-        return prev
-      }
-      const copy = [...prev]
-      const [item] = copy.splice(index, 1)
-      copy.splice(nextIndex, 0, item)
-      return copy
-    })
-  }
-
   return (
     <main className="mx-auto max-w-lg px-4 py-8 sm:px-6 sm:py-10">
       <p className="text-xs text-text-muted">{t('createProgram.pairHint', { pair: langPair })}</p>
@@ -145,63 +129,16 @@ export function CreateProgramWizard() {
           <p className="mt-2 text-sm text-text-muted">{t('createProgram.stepSchema.hint')}</p>
           <p className="mt-1 text-xs text-text-muted">{name}</p>
 
-          <ul className="mt-5 space-y-3">
-            {fields.map((row, index) => (
-              <li
-                key={row.id}
-                className="flex flex-col gap-2 rounded-xl border border-border bg-surface-card p-3 sm:flex-row sm:items-center"
-              >
-                <div className="flex shrink-0 items-center gap-1">
-                  <button
-                    type="button"
-                    disabled={index === 0}
-                    onClick={() => moveField(row.id, -1)}
-                    className="rounded-lg border border-border px-2 py-1 text-xs text-text-muted disabled:opacity-30"
-                    aria-label={t('createProgram.stepSchema.moveUp')}
-                  >
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    disabled={index === fields.length - 1}
-                    onClick={() => moveField(row.id, 1)}
-                    className="rounded-lg border border-border px-2 py-1 text-xs text-text-muted disabled:opacity-30"
-                    aria-label={t('createProgram.stepSchema.moveDown')}
-                  >
-                    ↓
-                  </button>
-                </div>
-                <input
-                  type="text"
-                  value={row.label}
-                  onChange={(e) => updateField(row.id, { label: e.target.value })}
-                  placeholder={t('createProgram.stepSchema.fieldLabel')}
-                  className="min-w-0 flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text"
-                />
-                <select
-                  value={row.uiType}
-                  onChange={(e) =>
-                    updateField(row.id, { uiType: e.target.value as SchemaFieldUiType })
-                  }
-                  className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text"
-                >
-                  {SCHEMA_UI_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {t(FIELD_TYPE_KEYS[type])}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => removeField(row.id)}
-                  className="shrink-0 rounded-lg px-2 py-1 text-sm text-red-400 hover:bg-red-500/10"
-                  aria-label={t('createProgram.stepSchema.remove')}
-                >
-                  ✕
-                </button>
-              </li>
-            ))}
-          </ul>
+          <div className="mt-5">
+            <SchemaFieldList
+              fields={fields}
+              fieldTypeKeys={FIELD_TYPE_KEYS}
+              onReorder={setFields}
+              onUpdate={updateField}
+              onRemove={removeField}
+              t={t}
+            />
+          </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
             {SCHEMA_UI_TYPES.map((type) => (
