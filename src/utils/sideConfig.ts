@@ -520,6 +520,66 @@ export function removeDisplayElement(side: SideDraft, displayIndex: number): Sid
   return { ...side, display }
 }
 
+/** Stack position 0 = back, n-1 = front — matches tach `ItemPlayer` sort by `order`. */
+export function displayStackPosition(side: SideDraft, displayIndex: number): {
+  position: number
+  count: number
+} {
+  if (displayIndex < 0 || displayIndex >= side.display.length) {
+    return { position: 0, count: side.display.length }
+  }
+  const indexed = side.display
+    .map((el, i) => ({ el, i }))
+    .sort((a, b) => a.el.order - b.el.order)
+  const pos = indexed.findIndex((x) => x.i === displayIndex)
+  return { position: pos < 0 ? 0 : pos, count: indexed.length }
+}
+
+function reorderDisplayElementInStack(
+  side: SideDraft,
+  displayIndex: number,
+  target: 'front' | 'back',
+): SideDraft {
+  if (displayIndex < 0 || displayIndex >= side.display.length || side.display.length < 2) {
+    return side
+  }
+  const indexed = side.display
+    .map((el, i) => ({ el, i }))
+    .sort((a, b) => a.el.order - b.el.order)
+  const stackPos = indexed.findIndex((x) => x.i === displayIndex)
+  if (stackPos < 0) {
+    return side
+  }
+  if (target === 'front' && stackPos === indexed.length - 1) {
+    return side
+  }
+  if (target === 'back' && stackPos === 0) {
+    return side
+  }
+
+  const reordered = [...indexed]
+  const [item] = reordered.splice(stackPos, 1)
+  if (target === 'front') {
+    reordered.push(item)
+  } else {
+    reordered.unshift(item)
+  }
+
+  const display = [...side.display]
+  reordered.forEach(({ i }, order) => {
+    display[i] = { ...display[i], order }
+  })
+  return { ...side, display }
+}
+
+export function bringDisplayElementToFront(side: SideDraft, displayIndex: number): SideDraft {
+  return reorderDisplayElementInStack(side, displayIndex, 'front')
+}
+
+export function sendDisplayElementToBack(side: SideDraft, displayIndex: number): SideDraft {
+  return reorderDisplayElementInStack(side, displayIndex, 'back')
+}
+
 export function updateDisplayElement(
   side: SideDraft,
   displayIndex: number,

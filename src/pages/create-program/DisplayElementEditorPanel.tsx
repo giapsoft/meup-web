@@ -2,12 +2,15 @@ import type { MessageParams, TranslationKey } from '../../i18n/types'
 import type { DisplayElement, ItemSchemaAttribute, SideDraft } from '../../types/program'
 import {
   attributeLabel,
+  bringDisplayElementToFront,
   displayLayoutBounds,
+  displayStackPosition,
   displayableAttributeIndexes,
   isTextAttribute,
   opacityToPercent,
   percentToOpacity,
   removeDisplayElement,
+  sendDisplayElementToBack,
   setDisplayLayoutPx,
   updateDisplayElement,
 } from '../../utils/sideConfig'
@@ -67,6 +70,9 @@ export function DisplayElementEditorPanel({
   const displayIndexes = displayableAttributeIndexes(attributes)
   const bounds = displayLayoutBounds(el)
   const title = attributeLabel(attributes, el.attributeIndex)
+  const stack = displayStackPosition(side, displayIndex)
+  const canSendBack = stack.count > 1 && stack.position > 0
+  const canBringFront = stack.count > 1 && stack.position < stack.count - 1
 
   function patch(next: DisplayElement) {
     onChange(updateDisplayElement(side, displayIndex, next))
@@ -106,6 +112,34 @@ export function DisplayElementEditorPanel({
           ))}
         </select>
       </label>
+
+      <div className="rounded-xl border border-border bg-surface-card p-3">
+        <p className="text-sm font-medium text-text">{t('createProgram.stepDisplay.displayOrder')}</p>
+        <p className="mt-1 text-xs text-text-muted">
+          {t('createProgram.stepDisplay.displayOrderHint', {
+            current: stack.position + 1,
+            total: stack.count,
+          })}
+        </p>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            disabled={!canSendBack}
+            onClick={() => onChange(sendDisplayElementToBack(side, displayIndex))}
+            className="min-h-11 rounded-lg border border-border px-2 py-2 text-sm font-medium text-text transition hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {t('createProgram.stepDisplay.sendToBack')}
+          </button>
+          <button
+            type="button"
+            disabled={!canBringFront}
+            onClick={() => onChange(bringDisplayElementToFront(side, displayIndex))}
+            className="min-h-11 rounded-lg border border-border px-2 py-2 text-sm font-medium text-text transition hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {t('createProgram.stepDisplay.bringToFront')}
+          </button>
+        </div>
+      </div>
 
       <div className={WIZARD_LAYOUT_SLIDERS}>
         <SliderField

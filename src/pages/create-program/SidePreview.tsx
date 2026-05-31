@@ -309,7 +309,7 @@ export function SidePreview({
                     </span>
                   )
                 })() : (
-                  <span className="pointer-events-none flex h-full w-full items-center justify-center bg-black/30 text-[10px] text-white/80">
+                  <span className="pointer-events-none flex h-full w-full items-center justify-center bg-surface-card text-xs text-text-muted">
                     {label}
                   </span>
                 )}
