@@ -54,6 +54,17 @@ export function attributeLabel(attributes: ItemSchemaAttribute[], attributeIndex
   return '?'
 }
 
+export function displayElementPreviewText(
+  el: DisplayElement,
+  attributes: ItemSchemaAttribute[],
+): string {
+  const custom = el.label?.trim()
+  if (custom) {
+    return custom
+  }
+  return attributeLabel(attributes, el.attributeIndex)
+}
+
 export function cycleInIndexList(indexes: number[], currentIndex: number, delta: number): number {
   if (indexes.length === 0) {
     return currentIndex
@@ -277,6 +288,46 @@ export function moveDisplayByPreviewDelta(
   })
 }
 
+export type ResizeCorner = 'nw' | 'ne' | 'sw' | 'se'
+
+export function resizeDisplayByPreviewDelta(
+  el: DisplayElement,
+  corner: ResizeCorner,
+  deltaXRatio: number,
+  deltaYRatio: number,
+): DisplayElement {
+  const layout = getDisplayLayoutPx(el)
+  const dx = Math.round(deltaXRatio * SCREEN_WIDTH)
+  const dy = Math.round(deltaYRatio * SCREEN_HEIGHT)
+
+  switch (corner) {
+    case 'se':
+      return setDisplayLayoutPx(el, {
+        width: layout.width + dx,
+        height: layout.height + dy,
+      })
+    case 'sw':
+      return setDisplayLayoutPx(el, {
+        left: layout.left + dx,
+        width: layout.width - dx,
+        height: layout.height + dy,
+      })
+    case 'ne':
+      return setDisplayLayoutPx(el, {
+        top: layout.top + dy,
+        width: layout.width + dx,
+        height: layout.height - dy,
+      })
+    case 'nw':
+      return setDisplayLayoutPx(el, {
+        top: layout.top + dy,
+        left: layout.left + dx,
+        width: layout.width - dx,
+        height: layout.height - dy,
+      })
+  }
+}
+
 export function updatePlayStep(
   side: SideDraft,
   stepIndex: number,
@@ -311,6 +362,42 @@ export function opacityToPercent(backgroundOpacity: number | undefined): number 
     return 0
   }
   return Math.floor((backgroundOpacity * 100 + 127) / 255)
+}
+
+/** Background layer only — opacity must not be applied to text (matches tach DisplayElementView). */
+export function previewTextBackgroundStyle(el: DisplayElement): {
+  backgroundColor: string
+  opacity?: number
+} {
+  const bg = el.backgroundColor ?? ''
+  let rgb = '#333333'
+  let alpha = 0.53
+
+  if (/^#[0-9a-fA-F]{6}$/i.test(bg)) {
+    rgb = bg
+    alpha = 1
+  } else if (/^#[0-9a-fA-F]{8}$/i.test(bg)) {
+    rgb = bg.slice(0, 7)
+    alpha = parseInt(bg.slice(7, 9), 16) / 255
+  } else if (bg) {
+    rgb = bg
+    alpha = 1
+  }
+
+  if (el.backgroundOpacity !== undefined && el.backgroundOpacity >= 0) {
+    alpha = el.backgroundOpacity / 255
+    if (/^#[0-9a-fA-F]{6}$/i.test(bg)) {
+      rgb = bg
+    } else if (/^#[0-9a-fA-F]{8}$/i.test(bg)) {
+      rgb = bg.slice(0, 7)
+    }
+  }
+
+  if (alpha <= 0) {
+    return { backgroundColor: 'transparent' }
+  }
+
+  return { backgroundColor: rgb, opacity: alpha }
 }
 
 export function percentToOpacity(percent: number): number {

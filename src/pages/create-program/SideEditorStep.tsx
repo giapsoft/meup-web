@@ -72,38 +72,33 @@ export function SideEditorStep({
           {side.display.map((el, index) => (
             <li
               key={`display-${index}`}
-              className="rounded-xl border border-border bg-surface-card p-3"
+              className="flex items-center gap-2 rounded-xl border border-border bg-surface-card p-2"
             >
+              <select
+                value={el.attributeIndex}
+                onChange={(e) =>
+                  onChange(
+                    updateDisplayElement(side, index, {
+                      ...el,
+                      attributeIndex: Number(e.target.value),
+                    }),
+                  )
+                }
+                className="min-h-11 min-w-0 flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text"
+              >
+                {displayIndexes.map((idx) => (
+                  <option key={idx} value={idx}>
+                    {attributeLabel(attributes, idx)}
+                  </option>
+                ))}
+              </select>
               <button
                 type="button"
                 onClick={() => onEditDisplay(index)}
-                className="flex w-full items-center gap-3 text-left active:opacity-80"
+                className="shrink-0 rounded-lg px-3 py-2.5 text-xs font-medium text-accent active:opacity-80"
               >
-                <span className="min-w-0 flex-1 truncate text-sm font-medium text-text">
-                  {attributeLabel(attributes, el.attributeIndex)}
-                </span>
-                <span className="shrink-0 text-xs text-accent">{t('createProgram.config.open')} →</span>
+                {t('createProgram.config.open')} →
               </button>
-              {displayIndexes.length > 1 && (
-                <select
-                  value={el.attributeIndex}
-                  onChange={(e) =>
-                    onChange(
-                      updateDisplayElement(side, index, {
-                        ...el,
-                        attributeIndex: Number(e.target.value),
-                      }),
-                    )
-                  }
-                  className="mt-2 w-full min-h-11 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text"
-                >
-                  {displayIndexes.map((idx) => (
-                    <option key={idx} value={idx}>
-                      {attributeLabel(attributes, idx)}
-                    </option>
-                  ))}
-                </select>
-              )}
             </li>
           ))}
         </ul>

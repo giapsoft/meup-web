@@ -74,41 +74,43 @@ function SortableFieldRow({ row, fieldTypeKeys, onUpdate, onRemove, t }: Sortabl
         isDragging ? 'z-10 opacity-60 shadow-lg' : ''
       }`}
     >
-      <button
-        type="button"
-        className="flex shrink-0 cursor-grab touch-none items-center justify-center rounded-lg border border-border px-2 py-2 active:cursor-grabbing"
-        aria-label={t('createProgram.stepSchema.dragHandle')}
-        {...attributes}
-        {...listeners}
-      >
-        <DragHandleIcon />
-      </button>
       <input
         type="text"
         value={row.name}
         onChange={(e) => onUpdate(row.id, { name: e.target.value })}
         placeholder={t('createProgram.stepSchema.fieldLabel')}
-        className="min-w-0 flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text"
+        className="order-1 min-w-0 w-full flex-1 rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-text sm:order-2"
       />
-      <select
-        value={row.uiType}
-        onChange={(e) => onUpdate(row.id, { uiType: e.target.value as SchemaFieldUiType })}
-        className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text"
-      >
-        {SCHEMA_UI_TYPES.map((type) => (
-          <option key={type} value={type}>
-            {t(fieldTypeKeys[type])}
-          </option>
-        ))}
-      </select>
-      <button
-        type="button"
-        onClick={() => onRemove(row.id)}
-        className="shrink-0 rounded-lg px-2 py-1 text-sm text-red-400 hover:bg-red-500/10"
-        aria-label={t('createProgram.stepSchema.remove')}
-      >
-        ✕
-      </button>
+      <div className="order-2 flex items-center gap-2 sm:contents">
+        <button
+          type="button"
+          className="order-1 flex min-h-11 min-w-11 shrink-0 cursor-grab touch-none items-center justify-center rounded-lg border border-border active:cursor-grabbing sm:order-1"
+          aria-label={t('createProgram.stepSchema.dragHandle')}
+          {...attributes}
+          {...listeners}
+        >
+          <DragHandleIcon />
+        </button>
+        <select
+          value={row.uiType}
+          onChange={(e) => onUpdate(row.id, { uiType: e.target.value as SchemaFieldUiType })}
+          className="order-2 min-h-11 min-w-0 flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text sm:order-3 sm:w-auto sm:flex-none"
+        >
+          {SCHEMA_UI_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {t(fieldTypeKeys[type])}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          onClick={() => onRemove(row.id)}
+          className="order-3 flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-red-400 active:bg-red-500/10 sm:order-4"
+          aria-label={t('createProgram.stepSchema.remove')}
+        >
+          ✕
+        </button>
+      </div>
     </li>
   )
 }

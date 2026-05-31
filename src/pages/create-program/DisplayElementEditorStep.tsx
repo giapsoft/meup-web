@@ -21,6 +21,7 @@ type DisplayElementEditorStepProps = {
   displayIndex: number
   attributes: ItemSchemaAttribute[]
   onChange: (side: SideDraft) => void
+  onSelectDisplayIndex: (index: number) => void
   onBack: () => void
   t: (key: TranslationKey, params?: MessageParams) => string
 }
@@ -45,6 +46,7 @@ export function DisplayElementEditorStep({
   displayIndex,
   attributes,
   onChange,
+  onSelectDisplayIndex,
   onBack,
   t,
 }: DisplayElementEditorStepProps) {
@@ -79,6 +81,7 @@ export function DisplayElementEditorStep({
           attributes={attributes}
           selectedIndex={displayIndex}
           draggableIndex={displayIndex}
+          onSelectIndex={onSelectDisplayIndex}
           onElementChange={(index, next) => onChange(updateDisplayElement(side, index, next))}
           hint={t('createProgram.preview.dragHint')}
         />
@@ -153,11 +156,27 @@ export function DisplayElementEditorStep({
         />
 
         {isText && (
-          <details className="rounded-xl border border-border bg-surface-card p-3">
-            <summary className="cursor-pointer text-sm font-medium text-text">
+          <>
+            <p className="pt-1 text-xs font-medium uppercase tracking-wide text-text-muted">
               {t('createProgram.stepDisplay.sectionStyle')}
-            </summary>
-            <div className="mt-3 space-y-3">
+            </p>
+            <label className="block rounded-xl border border-border bg-surface-card p-3">
+              <span className="text-sm font-medium text-text">
+                {t('createProgram.stepDisplay.previewLabel')}
+              </span>
+              <input
+                type="text"
+                value={el.label ?? ''}
+                onChange={(e) =>
+                  patch({ ...el, label: e.target.value.trim() ? e.target.value : undefined })
+                }
+                placeholder={attributeLabel(attributes, el.attributeIndex)}
+                className="mt-2 w-full min-h-11 rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-text"
+              />
+              <p className="mt-1 text-xs text-text-muted">
+                {t('createProgram.stepDisplay.previewLabelHint')}
+              </p>
+            </label>
             <SliderField
               label={t('createProgram.stepDisplay.maxLines')}
               value={el.maxLines ?? 0}
@@ -179,6 +198,7 @@ export function DisplayElementEditorStep({
               label={t('createProgram.stepDisplay.outstandingColor')}
               value={displayColorOr(el.outstandingColor, defaultPaletteColor())}
               onChange={(outstandingColor) => patch({ ...el, outstandingColor })}
+              hint={t('createProgram.stepDisplay.outstandingColorHint')}
               customLabel={t('createProgram.color.custom')}
               chooseLabel={t('createProgram.color.choose')}
               doneLabel={t('createProgram.color.done')}
@@ -204,7 +224,7 @@ export function DisplayElementEditorStep({
               onChange={(pct) => patch({ ...el, backgroundOpacity: percentToOpacity(pct) })}
             />
 
-            <div className="rounded-xl border border-border bg-surface p-3">
+            <div className="rounded-xl border border-border bg-surface-card p-3">
               <p className="text-sm font-medium text-text">{t('createProgram.stepDisplay.textAlign')}</p>
               <div className="mt-2 grid grid-cols-3 gap-2">
                 {TEXT_ALIGN_OPTIONS.map((key) => (
@@ -223,8 +243,7 @@ export function DisplayElementEditorStep({
                 ))}
               </div>
             </div>
-            </div>
-          </details>
+          </>
         )}
       </div>
 

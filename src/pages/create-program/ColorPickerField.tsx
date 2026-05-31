@@ -9,6 +9,7 @@ type ColorPickerFieldProps = {
   chooseLabel: string
   doneLabel: string
   cancelLabel: string
+  hint?: string
 }
 
 function colorInputValue(hex: string): string {
@@ -29,6 +30,7 @@ export function ColorPickerField({
   chooseLabel,
   doneLabel,
   cancelLabel,
+  hint,
 }: ColorPickerFieldProps) {
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState(value)
@@ -85,6 +87,7 @@ export function ColorPickerField({
           <span className="min-w-0 flex-1 truncate text-left font-mono text-xs text-text">{value}</span>
           <span className="shrink-0 text-xs text-accent">{chooseLabel}</span>
         </button>
+        {hint && <p className="mt-1 text-xs text-text-muted">{hint}</p>}
       </div>
 
       {open && (

@@ -31,6 +31,8 @@ export type DisplayElement = {
   maxLines?: number
   textAlign?: string
   borderRadius?: number
+  /** Preview placeholder in wizard; empty falls back to attribute name. */
+  label?: string
 }
 
 export type PlayStepDraft = {

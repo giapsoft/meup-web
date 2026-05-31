@@ -263,6 +263,7 @@ export function CreateProgramWizard() {
             displayIndex={editingDisplayIndex}
             attributes={expandedAttributes}
             onChange={(next) => updateSide(editingSide.id, next)}
+            onSelectDisplayIndex={setEditingDisplayIndex}
             onBack={() => {
               setEditingDisplayIndex(null)
               setStep('sideEdit')
