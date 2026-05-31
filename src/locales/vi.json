@@ -103,6 +103,7 @@
   "createProgram.wizard.phaseName": "Tên",
   "createProgram.wizard.phaseSchema": "Schema",
   "createProgram.wizard.phaseCards": "Thẻ",
+  "createProgram.wizard.phaseVocab": "Từ",
   "createProgram.wizard.phaseDone": "Xong",
   "createProgram.stepDisplay.sectionLayout": "Vị trí & kích thước",
   "createProgram.stepDisplay.displayOrder": "Thứ tự hiển thị",
@@ -137,6 +138,19 @@
   "createProgram.stepDisplay.backToSideList": "← Danh sách hiển thị",
   "createProgram.side.numbered": "Mặt thẻ {n}",
   "createProgram.validation.sidesRequired": "Mỗi level cần ít nhất một mặt thẻ.",
+  "createProgram.validation.vocabEmpty": "Thêm ít nhất một từ vựng.",
+  "createProgram.validation.vocabRequiredFields": "Mỗi dòng cần điền đủ các trường chữ đang hiển thị trên thẻ.",
+  "createProgram.stepVocab.title": "Nhập từ vựng",
+  "createProgram.stepVocab.hint": "Mỗi dòng là một thẻ từ. Chọn dòng để xem preview — hỗ trợ [[nổi bật]] trong ô chữ.",
+  "createProgram.stepVocab.previewHint": "Preview theo dòng đang chọn",
+  "createProgram.stepVocab.previewEmpty": "Thêm dòng để xem preview thẻ.",
+  "createProgram.stepVocab.addRow": "Thêm dòng",
+  "createProgram.stepVocab.removeRow": "Xóa dòng",
+  "createProgram.stepVocab.noTextFields": "Schema không có trường chữ — quay lại bước schema để thêm.",
   "createProgram.stepDone.levelsTitle": "Level & mặt thẻ",
-  "createProgram.stepDone.levelsSummary": "{levels} level · {sides} mặt thẻ"
+  "createProgram.stepDone.levelsSummary": "{levels} level · {sides} mặt thẻ",
+  "createProgram.stepDone.vocabTitle": "Từ vựng",
+  "createProgram.stepDone.vocabSummary": "{count} dòng",
+  "createProgram.stepDone.vocabRowEmpty": "Dòng {n} (trống)",
+  "createProgram.stepDone.vocabMore": "… và {count} dòng nữa"
 }

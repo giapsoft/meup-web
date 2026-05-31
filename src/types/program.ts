@@ -74,3 +74,13 @@ export type ProgramConfigPayload = {
     }>
   }>
 }
+
+/** One vocabulary row — values keyed by `ItemSchemaAttribute.key` (MVP: text fields). */
+export type VocabItemDraft = {
+  id: string
+  values: Record<string, string>
+}
+
+export type ProgramExportPayload = ProgramConfigPayload & {
+  items: Array<{ values: Record<string, string> }>
+}

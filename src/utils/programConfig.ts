@@ -4,8 +4,11 @@ import type {
   LevelRangeDraft,
   PlayStepDraft,
   ProgramConfigPayload,
+  ProgramExportPayload,
   SideDraft,
+  VocabItemDraft,
 } from '../types/program'
+import { toExportItems } from './vocabItems'
 import type { MessageParams, TranslationKey } from '../i18n/types'
 
 /** Matches capygo-api `DefaultLevelRangeMax` / tach `kDefaultLevelRangeMax`. */
@@ -149,6 +152,28 @@ export function createEmptySide(attributes: ItemSchemaAttribute[], playOrder: nu
   }
 }
 
+function mapLevelsToPayload(levels: LevelRangeDraft[]) {
+  return levels.map((level) => ({
+    maxLvl: level.maxLvl,
+    sides: level.sides.map((side) => ({
+      backgroundColor: side.backgroundColor,
+      display: side.display,
+      playSteps: side.playSteps.map((step) => {
+        if (step.kind === 'pause') {
+          return {
+            kind: 'pause' as const,
+            durationSeconds: step.durationSeconds ?? 1,
+          }
+        }
+        return {
+          kind: 'play' as const,
+          attributeKey: step.attributeKey ?? '',
+        }
+      }),
+    })),
+  }))
+}
+
 export function toProgramConfigPayload(
   id: string,
   name: string,
@@ -159,24 +184,19 @@ export function toProgramConfigPayload(
     id,
     name,
     itemSchema: { attributes },
-    levels: levels.map((level) => ({
-      maxLvl: level.maxLvl,
-      sides: level.sides.map((side) => ({
-        backgroundColor: side.backgroundColor,
-        display: side.display,
-        playSteps: side.playSteps.map((step) => {
-          if (step.kind === 'pause') {
-            return {
-              kind: 'pause' as const,
-              durationSeconds: step.durationSeconds ?? 1,
-            }
-          }
-          return {
-            kind: 'play' as const,
-            attributeKey: step.attributeKey ?? '',
-          }
-        }),
-      })),
-    })),
+    levels: mapLevelsToPayload(levels),
+  }
+}
+
+export function toProgramExportPayload(
+  id: string,
+  name: string,
+  attributes: ItemSchemaAttribute[],
+  levels: LevelRangeDraft[],
+  items: VocabItemDraft[],
+): ProgramExportPayload {
+  return {
+    ...toProgramConfigPayload(id, name, attributes, levels),
+    items: toExportItems(items),
   }
 }

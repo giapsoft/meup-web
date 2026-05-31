@@ -65,6 +65,22 @@ export function displayElementPreviewText(
   return attributeLabel(attributes, el.attributeIndex)
 }
 
+/** Preview label from item row when editing vocabulary; falls back to wizard placeholder. */
+export function displayElementContentText(
+  el: DisplayElement,
+  attributes: ItemSchemaAttribute[],
+  itemValues?: Record<string, string>,
+): string {
+  const attr = attributes[el.attributeIndex]
+  if (attr && itemValues) {
+    const value = itemValues[attr.key]?.trim()
+    if (value) {
+      return value
+    }
+  }
+  return displayElementPreviewText(el, attributes)
+}
+
 export function cycleInIndexList(indexes: number[], currentIndex: number, delta: number): number {
   if (indexes.length === 0) {
     return currentIndex

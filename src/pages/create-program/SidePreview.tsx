@@ -7,7 +7,7 @@ import {
 import { parseDisplayTextWithHighlights } from '../../utils/textHighlight'
 import {
   attributeLabel,
-  displayElementPreviewText,
+  displayElementContentText,
   isTextAttribute,
   moveDisplayByPreviewDelta,
   previewTextBackgroundStyle,
@@ -26,6 +26,9 @@ type SidePreviewProps = {
   onSelectIndex?: (index: number) => void
   onElementChange?: (index: number, element: DisplayElement) => void
   hint?: string
+  /** Live vocabulary row — overrides wizard placeholder text. */
+  itemValues?: Record<string, string>
+  readOnly?: boolean
 }
 
 type PointerInteraction = {
@@ -85,6 +88,8 @@ export function SidePreview({
   onSelectIndex,
   onElementChange,
   hint,
+  itemValues,
+  readOnly = false,
 }: SidePreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const pointerRef = useRef<PointerInteraction | null>(null)
@@ -208,9 +213,9 @@ export function SidePreview({
         {sorted.map(({ el, index }, stackIndex) => {
           const isText = isTextAttribute(attributes, el.attributeIndex)
           const isSelected = selectedIndex === index
-          const isEditable = draggableIndex === index
+          const isEditable = !readOnly && draggableIndex === index
           const label = isText
-            ? displayElementPreviewText(el, attributes)
+            ? displayElementContentText(el, attributes, itemValues)
             : attributeLabel(attributes, el.attributeIndex)
           const bodyHandlers = pointerHandlers(index)
 

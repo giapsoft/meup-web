@@ -1,27 +1,38 @@
 import type { MessageParams, TranslationKey } from '../../i18n/types'
 
-export type WizardPhase = 'name' | 'schema' | 'cards' | 'done'
+export type WizardPhase = 'name' | 'schema' | 'cards' | 'vocab' | 'done'
 
 const PHASES: Array<{ id: WizardPhase; labelKey: TranslationKey }> = [
   { id: 'name', labelKey: 'createProgram.wizard.phaseName' },
   { id: 'schema', labelKey: 'createProgram.wizard.phaseSchema' },
   { id: 'cards', labelKey: 'createProgram.wizard.phaseCards' },
+  { id: 'vocab', labelKey: 'createProgram.wizard.phaseVocab' },
   { id: 'done', labelKey: 'createProgram.wizard.phaseDone' },
 ]
+
+export type WizardStepId =
+  | 'name'
+  | 'schema'
+  | 'cardSetup'
+  | 'sideEdit'
+  | 'displayEdit'
+  | 'vocabEntry'
+  | 'done'
 
 type WizardProgressProps = {
   current: WizardPhase
   t: (key: TranslationKey, params?: MessageParams) => string
 }
 
-export function wizardPhaseFromStep(
-  step: 'name' | 'schema' | 'cardSetup' | 'sideEdit' | 'displayEdit' | 'done',
-): WizardPhase {
+export function wizardPhaseFromStep(step: WizardStepId): WizardPhase {
   if (step === 'name') {
     return 'name'
   }
   if (step === 'schema') {
     return 'schema'
+  }
+  if (step === 'vocabEntry') {
+    return 'vocab'
   }
   if (step === 'done') {
     return 'done'
@@ -34,12 +45,12 @@ export function WizardProgress({ current, t }: WizardProgressProps) {
 
   return (
     <nav aria-label={t('createProgram.wizard.progress')} className="mt-4 lg:mt-6">
-      <ol className="flex items-center gap-1 lg:gap-2">
+      <ol className="flex items-center gap-0.5 sm:gap-1 lg:gap-2">
         {PHASES.map((phase, index) => {
           const done = index < currentIndex
           const active = index === currentIndex
           return (
-            <li key={phase.id} className="flex min-w-0 flex-1 items-center gap-1">
+            <li key={phase.id} className="flex min-w-0 flex-1 items-center gap-0.5 sm:gap-1">
               <div
                 className={`flex min-w-0 flex-1 flex-col items-center gap-1 ${
                   active ? 'text-accent' : done ? 'text-text' : 'text-text-muted'
@@ -56,13 +67,13 @@ export function WizardProgress({ current, t }: WizardProgressProps) {
                 >
                   {done ? '✓' : index + 1}
                 </span>
-                <span className="w-full text-center text-[10px] leading-tight sm:text-xs lg:text-sm lg:leading-snug">
+                <span className="w-full truncate text-center text-[10px] leading-tight sm:text-xs lg:text-sm lg:leading-snug">
                   {t(phase.labelKey)}
                 </span>
               </div>
               {index < PHASES.length - 1 && (
                 <span
-                  className={`mb-4 h-px w-2 shrink-0 sm:w-4 lg:mb-5 lg:w-8 ${
+                  className={`mb-4 h-px w-1 shrink-0 sm:w-3 lg:mb-5 lg:w-6 ${
                     index < currentIndex ? 'bg-accent/50' : 'bg-border'
                   }`}
                   aria-hidden="true"

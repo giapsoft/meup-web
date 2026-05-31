@@ -103,6 +103,7 @@
   "createProgram.wizard.phaseName": "Name",
   "createProgram.wizard.phaseSchema": "Schema",
   "createProgram.wizard.phaseCards": "Cards",
+  "createProgram.wizard.phaseVocab": "Words",
   "createProgram.wizard.phaseDone": "Done",
   "createProgram.stepDisplay.sectionLayout": "Position & size",
   "createProgram.stepDisplay.displayOrder": "Display order",
@@ -137,6 +138,19 @@
   "createProgram.stepDisplay.backToSideList": "← Display list",
   "createProgram.side.numbered": "Face {n}",
   "createProgram.validation.sidesRequired": "Each level needs at least one card face.",
+  "createProgram.validation.vocabEmpty": "Add at least one vocabulary row.",
+  "createProgram.validation.vocabRequiredFields": "Each row must fill all text fields shown on the card.",
+  "createProgram.stepVocab.title": "Enter vocabulary",
+  "createProgram.stepVocab.hint": "Each row is one card item. Select a row to preview — use [[highlights]] in text cells.",
+  "createProgram.stepVocab.previewHint": "Preview for the selected row",
+  "createProgram.stepVocab.previewEmpty": "Add a row to preview the card.",
+  "createProgram.stepVocab.addRow": "Add row",
+  "createProgram.stepVocab.removeRow": "Remove row",
+  "createProgram.stepVocab.noTextFields": "No text fields in schema — go back and add text columns.",
   "createProgram.stepDone.levelsTitle": "Levels & faces",
-  "createProgram.stepDone.levelsSummary": "{levels} level(s) · {sides} face(s)"
+  "createProgram.stepDone.levelsSummary": "{levels} level(s) · {sides} face(s)",
+  "createProgram.stepDone.vocabTitle": "Vocabulary",
+  "createProgram.stepDone.vocabSummary": "{count} row(s)",
+  "createProgram.stepDone.vocabRowEmpty": "Row {n} (empty)",
+  "createProgram.stepDone.vocabMore": "… and {count} more"
 }

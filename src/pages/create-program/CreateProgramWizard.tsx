@@ -3,9 +3,14 @@ import { Link } from 'react-router-dom'
 import { useLanguagePair } from '../../context/LanguagePairProvider'
 import { useWizardWideLayout } from '../../hooks/useMediaQuery'
 import type { TranslationKey } from '../../i18n/types'
-import type { LevelRangeDraft, SchemaFieldRow, SchemaFieldUiType, SideDraft } from '../../types/program'
+import type { LevelRangeDraft, SchemaFieldRow, SchemaFieldUiType, SideDraft, VocabItemDraft } from '../../types/program'
 import { buildDefaultLevels } from '../../utils/defaultSides'
-import { toProgramConfigPayload } from '../../utils/programConfig'
+import { toProgramExportPayload } from '../../utils/programConfig'
+import {
+  createEmptyVocabItem,
+  primaryTextAttributeKey,
+  validateVocabItems,
+} from '../../utils/vocabItems'
 import {
   PRESET_SCHEMA_ROW_SPECS,
   SCHEMA_UI_TYPES,
@@ -18,6 +23,7 @@ import { CardSetupStep } from './CardSetupStep'
 import { DisplayElementEditorStep } from './DisplayElementEditorStep'
 import { SchemaFieldList } from './SchemaFieldList'
 import { SideEditorStep } from './SideEditorStep'
+import { VocabEntryStep } from './VocabEntryStep'
 import { WizardProgress, wizardPhaseFromStep } from './WizardProgress'
 import {
   WIZARD_ACTION_PRIMARY,
@@ -27,7 +33,7 @@ import {
   WIZARD_NARROW_SECTION,
 } from './wizardLayout'
 
-type WizardStep = 'name' | 'schema' | 'cardSetup' | 'sideEdit' | 'displayEdit' | 'done'
+type WizardStep = 'name' | 'schema' | 'cardSetup' | 'sideEdit' | 'displayEdit' | 'vocabEntry' | 'done'
 
 const FIELD_TYPE_KEYS: Record<SchemaFieldUiType, TranslationKey> = {
   text: 'createProgram.fieldType.text',
@@ -66,6 +72,7 @@ export function CreateProgramWizard() {
   const [activeLevelId, setActiveLevelId] = useState('')
   const [editingSideId, setEditingSideId] = useState<string | null>(null)
   const [editingDisplayIndex, setEditingDisplayIndex] = useState<number | null>(null)
+  const [vocabItems, setVocabItems] = useState<VocabItemDraft[]>([])
 
   const programId = useMemo(() => slugProgramId(name), [name])
   const expandedAttributes = useMemo(() => expandSchemaFields(fields), [fields])
@@ -74,9 +81,9 @@ export function CreateProgramWizard() {
     [levels, editingSideId],
   )
 
-  const programPayload = useMemo(
-    () => toProgramConfigPayload(programId, name.trim(), expandedAttributes, levels),
-    [programId, name, expandedAttributes, levels],
+  const exportPayload = useMemo(
+    () => toProgramExportPayload(programId, name.trim(), expandedAttributes, levels, vocabItems),
+    [programId, name, expandedAttributes, levels, vocabItems],
   )
 
   const totalSides = levels.reduce((n, l) => n + l.sides.length, 0)
@@ -129,7 +136,23 @@ export function CreateProgramWizard() {
       window.alert(t('createProgram.validation.sidesRequired'))
       return
     }
-    console.info('[tach-web mock] create program', { langPair, ...programPayload })
+    if (vocabItems.length === 0) {
+      setVocabItems([createEmptyVocabItem(expandedAttributes)])
+    }
+    setStep('vocabEntry')
+  }
+
+  function handleContinueVocab() {
+    const result = validateVocabItems(vocabItems, levels, expandedAttributes)
+    if (!result.ok) {
+      if (result.reason === 'empty') {
+        window.alert(t('createProgram.validation.vocabEmpty'))
+      } else {
+        window.alert(t('createProgram.validation.vocabRequiredFields'))
+      }
+      return
+    }
+    console.info('[tach-web mock] create program', { langPair, ...exportPayload })
     setStep('done')
   }
 
@@ -298,6 +321,19 @@ export function CreateProgramWizard() {
           />
         )}
 
+      {step === 'vocabEntry' && (
+        <VocabEntryStep
+          programName={name}
+          attributes={expandedAttributes}
+          levels={levels}
+          items={vocabItems}
+          onItemsChange={setVocabItems}
+          onBack={() => setStep('cardSetup')}
+          onContinue={handleContinueVocab}
+          t={t}
+        />
+      )}
+
       {step === 'done' && (
         <section className={WIZARD_NARROW_SECTION}>
           <h1 className="text-xl font-semibold text-text sm:text-2xl">
@@ -328,6 +364,30 @@ export function CreateProgramWizard() {
                   </div>
                 ))}
               </dd>
+            </div>
+            <div>
+              <dt className="text-text-muted">{t('createProgram.stepDone.vocabTitle')}</dt>
+              <dd className="font-medium text-text">
+                {t('createProgram.stepDone.vocabSummary', { count: vocabItems.length })}
+              </dd>
+              {vocabItems.length > 0 && (
+                <ul className="mt-2 max-h-40 space-y-1 overflow-y-auto text-xs text-text-muted">
+                  {vocabItems.slice(0, 8).map((item, index) => {
+                    const key = primaryTextAttributeKey(expandedAttributes)
+                    const label = key ? item.values[key]?.trim() : ''
+                    return (
+                      <li key={item.id} className="truncate rounded-lg bg-surface-card px-2 py-1">
+                        {label || t('createProgram.stepDone.vocabRowEmpty', { n: index + 1 })}
+                      </li>
+                    )
+                  })}
+                  {vocabItems.length > 8 && (
+                    <li className="px-2 py-1 italic">
+                      {t('createProgram.stepDone.vocabMore', { count: vocabItems.length - 8 })}
+                    </li>
+                  )}
+                </ul>
+              )}
             </div>
             <div>
               <dt className="text-text-muted">{t('createProgram.stepDone.levelsTitle')}</dt>
