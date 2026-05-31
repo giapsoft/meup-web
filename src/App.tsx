@@ -4,6 +4,7 @@ import { Header } from './components/Header'
 import { clearDeviceSession } from './utils/deviceSessionStorage'
 import { useLanguagePair } from './context/LanguagePairProvider'
 import { HomePage } from './pages/HomePage'
+import { CreateProgramWizard } from './pages/create-program/CreateProgramWizard'
 import { PlaceholderPage, type PlaceholderPageKey } from './pages/PlaceholderPage'
 
 function AppShell() {
@@ -27,7 +28,6 @@ function AppShell() {
 
   const placeholders: { path: string; page: PlaceholderPageKey }[] = [
     { path: '/programs', page: 'programs' },
-    { path: '/programs/new', page: 'programsNew' },
     { path: '/explore', page: 'explore' },
   ]
 
@@ -36,6 +36,7 @@ function AppShell() {
       <Header onLogout={handleLogout} />
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/programs/new" element={<CreateProgramWizard />} />
         {placeholders.map(({ path, page }) => (
           <Route key={path} path={path} element={<PlaceholderPage page={page} />} />
         ))}
