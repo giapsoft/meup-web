@@ -15,8 +15,9 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { MessageParams, TranslationKey } from '../../i18n/types'
+import { useWizardWideLayout } from '../../hooks/useMediaQuery'
 import type { ItemSchemaAttribute, LevelRangeDraft, SideDraft } from '../../types/program'
 import {
   adjustLevelRangeMaxLvl,
@@ -26,6 +27,8 @@ import {
   insertedLevelId,
 } from '../../utils/levelConfig'
 import { createEmptySide, normalizePlayOrder, sideNumberLabel } from '../../utils/programConfig'
+import { previewTapHintKey } from './previewHints'
+import { SidePreview } from './SidePreview'
 import {
   WIZARD_ACTION_PRIMARY,
   WIZARD_ACTION_SECONDARY,
@@ -61,12 +64,21 @@ function DragHandleIcon() {
 
 type SortableSideRowProps = {
   side: SideDraft
+  isPreviewSelected: boolean
+  onPreviewSelect: () => void
   onEdit: () => void
   onRemove: () => void
   t: (key: TranslationKey, params?: MessageParams) => string
 }
 
-function SortableSideRow({ side, onEdit, onRemove, t }: SortableSideRowProps) {
+function SortableSideRow({
+  side,
+  isPreviewSelected,
+  onPreviewSelect,
+  onEdit,
+  onRemove,
+  t,
+}: SortableSideRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: side.id,
   })
@@ -78,9 +90,9 @@ function SortableSideRow({ side, onEdit, onRemove, t }: SortableSideRowProps) {
         transform: CSS.Transform.toString(transform),
         transition,
       }}
-      className={`flex items-center gap-2 rounded-xl border border-border bg-surface-card p-3 ${
-        isDragging ? 'z-10 opacity-60 shadow-lg' : ''
-      }`}
+      className={`flex items-center gap-2 rounded-xl border bg-surface-card p-3 ${
+        isPreviewSelected ? 'border-accent ring-1 ring-accent/30' : 'border-border'
+      } ${isDragging ? 'z-10 opacity-60 shadow-lg' : ''}`}
     >
       <button
         type="button"
@@ -91,7 +103,11 @@ function SortableSideRow({ side, onEdit, onRemove, t }: SortableSideRowProps) {
       >
         <DragHandleIcon />
       </button>
-      <div className="min-w-0 flex-1">
+      <button
+        type="button"
+        onClick={onPreviewSelect}
+        className="min-w-0 flex-1 rounded-lg text-left hover:bg-surface-hover/50"
+      >
         <p className="truncate text-sm font-medium text-text">
           {sideNumberLabel(side.playOrder, t)}
         </p>
@@ -101,7 +117,7 @@ function SortableSideRow({ side, onEdit, onRemove, t }: SortableSideRowProps) {
             steps: side.playSteps.length,
           })}
         </p>
-      </div>
+      </button>
       <button
         type="button"
         onClick={onEdit}
@@ -133,11 +149,39 @@ export function CardSetupStep({
   onContinue,
   t,
 }: CardSetupStepProps) {
+  const isWideLayout = useWizardWideLayout()
+  const [previewSideId, setPreviewSideId] = useState<string | null>(null)
   const levelItems = useMemo(() => buildConfigLevelItems(levels), [levels])
   const activeLevel = levels.find((l) => l.id === activeLevelId) ?? levels[0]
   const activeLevelIndex = levels.findIndex((l) => l.id === activeLevel?.id)
   const activeLevelItem =
     activeLevelIndex >= 0 ? levelItems[activeLevelIndex] : undefined
+
+  const previewSide = useMemo(() => {
+    if (!activeLevel) {
+      return undefined
+    }
+    if (previewSideId) {
+      const selected = activeLevel.sides.find((s) => s.id === previewSideId)
+      if (selected) {
+        return selected
+      }
+    }
+    return activeLevel.sides[0]
+  }, [activeLevel, previewSideId])
+
+  useEffect(() => {
+    if (!activeLevel) {
+      setPreviewSideId(null)
+      return
+    }
+    setPreviewSideId((prev) => {
+      if (prev && activeLevel.sides.some((s) => s.id === prev)) {
+        return prev
+      }
+      return activeLevel.sides[0]?.id ?? null
+    })
+  }, [activeLevel?.id, activeLevel?.sides.length])
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -274,6 +318,19 @@ export function CardSetupStep({
               </div>
             </div>
           )}
+
+          {previewSide && (
+            <div className="hidden lg:block">
+              <SidePreview
+                side={previewSide}
+                attributes={attributes}
+                hint={t(previewTapHintKey(isWideLayout))}
+              />
+              <p className="mt-2 text-xs text-text-muted">
+                {t('createProgram.stepCardSetup.previewHint')}
+              </p>
+            </div>
+          )}
         </div>
 
         <div>
@@ -287,6 +344,8 @@ export function CardSetupStep({
                   <SortableSideRow
                     key={side.id}
                     side={side}
+                    isPreviewSelected={side.id === previewSide?.id}
+                    onPreviewSelect={() => setPreviewSideId(side.id)}
                     onEdit={() => onEditSide(side.id)}
                     onRemove={() => removeSide(side.id)}
                     t={t}

@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLanguagePair } from '../../context/LanguagePairProvider'
+import { useWizardWideLayout } from '../../hooks/useMediaQuery'
 import type { TranslationKey } from '../../i18n/types'
 import type { LevelRangeDraft, SchemaFieldRow, SchemaFieldUiType, SideDraft } from '../../types/program'
 import { buildDefaultLevels } from '../../utils/defaultSides'
@@ -56,6 +57,7 @@ function findSide(levels: LevelRangeDraft[], sideId: string): SideDraft | undefi
 
 export function CreateProgramWizard() {
   const { t, langPair } = useLanguagePair()
+  const isWideLayout = useWizardWideLayout()
   const [step, setStep] = useState<WizardStep>('name')
   const [name, setName] = useState('')
   const [nameError, setNameError] = useState('')
@@ -78,6 +80,26 @@ export function CreateProgramWizard() {
   )
 
   const totalSides = levels.reduce((n, l) => n + l.sides.length, 0)
+
+  useEffect(() => {
+    if (isWideLayout && step === 'displayEdit') {
+      setStep('sideEdit')
+    }
+  }, [isWideLayout, step])
+
+  function openDisplayEditor(index: number) {
+    setEditingDisplayIndex(index)
+    if (!isWideLayout) {
+      setStep('displayEdit')
+    }
+  }
+
+  function closeDisplayEditor() {
+    setEditingDisplayIndex(null)
+    if (step === 'displayEdit') {
+      setStep('sideEdit')
+    }
+  }
 
   function handleStart() {
     if (!name.trim()) {
@@ -247,11 +269,10 @@ export function CreateProgramWizard() {
           programName={name}
           side={editingSide}
           attributes={expandedAttributes}
+          editingDisplayIndex={isWideLayout ? editingDisplayIndex : null}
           onChange={(next) => updateSide(editingSide.id, next)}
-          onEditDisplay={(index) => {
-            setEditingDisplayIndex(index)
-            setStep('displayEdit')
-          }}
+          onEditDisplay={openDisplayEditor}
+          onCloseDisplayEdit={closeDisplayEditor}
           onBack={() => {
             setEditingSideId(null)
             setEditingDisplayIndex(null)
@@ -262,6 +283,7 @@ export function CreateProgramWizard() {
       )}
 
       {step === 'displayEdit' &&
+        !isWideLayout &&
         editingSide &&
         editingDisplayIndex !== null &&
         editingSide.display[editingDisplayIndex] && (
@@ -270,11 +292,8 @@ export function CreateProgramWizard() {
             displayIndex={editingDisplayIndex}
             attributes={expandedAttributes}
             onChange={(next) => updateSide(editingSide.id, next)}
-            onSelectDisplayIndex={setEditingDisplayIndex}
-            onBack={() => {
-              setEditingDisplayIndex(null)
-              setStep('sideEdit')
-            }}
+            onSelectDisplayIndex={openDisplayEditor}
+            onBack={closeDisplayEditor}
             t={t}
           />
         )}
