@@ -14,6 +14,7 @@ import {
   updateVocabItemValue,
 } from '../../utils/vocabItems'
 import { itemMediaObjectUrls } from '../../utils/vocabMedia'
+import { VocabCsvImportBar } from './VocabCsvImportBar'
 import { SidePreview } from './SidePreview'
 import { VocabMediaPanel } from './VocabMediaPanel'
 import {
@@ -175,6 +176,15 @@ export function VocabEntryStep({
         </div>
 
         <div className="space-y-3 lg:mt-0">
+          <VocabCsvImportBar
+            programName={programName}
+            attributes={attributes}
+            items={items}
+            onItemsChange={onItemsChange}
+            onImported={setSelectedItemId}
+            t={t}
+          />
+
           <div className="overflow-x-auto rounded-xl border border-border">
             <table className="w-full min-w-[480px] border-collapse text-sm">
               <thead>
