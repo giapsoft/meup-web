@@ -15,7 +15,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import type { TranslationKey } from '../../i18n/types'
+import type { MessageParams, TranslationKey } from '../../i18n/types'
 import type { SchemaFieldRow, SchemaFieldUiType } from '../../types/program'
 import { SCHEMA_UI_TYPES } from '../../utils/schemaField'
 
@@ -25,7 +25,7 @@ type SchemaFieldListProps = {
   onReorder: (fields: SchemaFieldRow[]) => void
   onUpdate: (id: string, patch: Partial<SchemaFieldRow>) => void
   onRemove: (id: string) => void
-  t: (key: TranslationKey) => string
+  t: (key: TranslationKey, params?: MessageParams) => string
 }
 
 function DragHandleIcon() {
@@ -53,7 +53,7 @@ type SortableFieldRowProps = {
   fieldTypeKeys: Record<SchemaFieldUiType, TranslationKey>
   onUpdate: (id: string, patch: Partial<SchemaFieldRow>) => void
   onRemove: (id: string) => void
-  t: (key: TranslationKey) => string
+  t: (key: TranslationKey, params?: MessageParams) => string
 }
 
 function SortableFieldRow({ row, fieldTypeKeys, onUpdate, onRemove, t }: SortableFieldRowProps) {

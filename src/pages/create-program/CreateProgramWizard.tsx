@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLanguagePair } from '../../context/LanguagePairProvider'
 import type { TranslationKey } from '../../i18n/types'
-import type { SchemaFieldRow, SchemaFieldUiType } from '../../types/program'
+import type { LevelRangeDraft, SchemaFieldRow, SchemaFieldUiType, SideDraft } from '../../types/program'
+import { buildDefaultLevels } from '../../utils/defaultSides'
+import { toProgramConfigPayload } from '../../utils/programConfig'
 import {
   PRESET_SCHEMA_ROW_SPECS,
   SCHEMA_UI_TYPES,
@@ -11,9 +13,12 @@ import {
   newEmptySchemaRow,
   slugProgramId,
 } from '../../utils/schemaField'
+import { CardSetupStep } from './CardSetupStep'
+import { DisplayElementEditorStep } from './DisplayElementEditorStep'
 import { SchemaFieldList } from './SchemaFieldList'
+import { SideEditorStep } from './SideEditorStep'
 
-type WizardStep = 'name' | 'schema' | 'done'
+type WizardStep = 'name' | 'schema' | 'cardSetup' | 'sideEdit' | 'displayEdit' | 'done'
 
 const FIELD_TYPE_KEYS: Record<SchemaFieldUiType, TranslationKey> = {
   text: 'createProgram.fieldType.text',
@@ -31,15 +36,40 @@ function buildPresetFields(t: (key: TranslationKey) => string): SchemaFieldRow[]
   )
 }
 
+function findSide(levels: LevelRangeDraft[], sideId: string): SideDraft | undefined {
+  for (const level of levels) {
+    const side = level.sides.find((s) => s.id === sideId)
+    if (side) {
+      return side
+    }
+  }
+  return undefined
+}
+
 export function CreateProgramWizard() {
   const { t, langPair } = useLanguagePair()
   const [step, setStep] = useState<WizardStep>('name')
   const [name, setName] = useState('')
   const [nameError, setNameError] = useState('')
   const [fields, setFields] = useState<SchemaFieldRow[]>(() => buildPresetFields(t))
+  const [levels, setLevels] = useState<LevelRangeDraft[]>([])
+  const [activeLevelId, setActiveLevelId] = useState('')
+  const [editingSideId, setEditingSideId] = useState<string | null>(null)
+  const [editingDisplayIndex, setEditingDisplayIndex] = useState<number | null>(null)
 
   const programId = useMemo(() => slugProgramId(name), [name])
   const expandedAttributes = useMemo(() => expandSchemaFields(fields), [fields])
+  const editingSide = useMemo(
+    () => (editingSideId ? findSide(levels, editingSideId) : undefined),
+    [levels, editingSideId],
+  )
+
+  const programPayload = useMemo(
+    () => toProgramConfigPayload(programId, name.trim(), expandedAttributes, levels),
+    [programId, name, expandedAttributes, levels],
+  )
+
+  const totalSides = levels.reduce((n, l) => n + l.sides.length, 0)
 
   function handleStart() {
     if (!name.trim()) {
@@ -57,12 +87,19 @@ export function CreateProgramWizard() {
       return
     }
     const attributes = expandSchemaFields(fields)
-    console.info('[tach-web mock] create program', {
-      id: slugProgramId(name),
-      name: name.trim(),
-      langPair,
-      itemSchema: { attributes },
-    })
+    const defaultLevels = buildDefaultLevels(attributes)
+    setLevels(defaultLevels)
+    setActiveLevelId(defaultLevels[0].id)
+    setStep('cardSetup')
+  }
+
+  function handleContinueCardSetup() {
+    const hasSides = levels.every((l) => l.sides.length > 0)
+    if (!hasSides) {
+      window.alert(t('createProgram.validation.sidesRequired'))
+      return
+    }
+    console.info('[tach-web mock] create program', { langPair, ...programPayload })
     setStep('done')
   }
 
@@ -72,8 +109,7 @@ export function CreateProgramWizard() {
         if (row.id !== id) {
           return row
         }
-        const next = { ...row, ...patch }
-        return next
+        return { ...row, ...patch }
       }),
     )
   }
@@ -84,6 +120,15 @@ export function CreateProgramWizard() {
 
   function addField(uiType: SchemaFieldUiType) {
     setFields((prev) => [...prev, { ...newEmptySchemaRow(), uiType }])
+  }
+
+  function updateSide(sideId: string, nextSide: SideDraft) {
+    setLevels((prev) =>
+      prev.map((level) => ({
+        ...level,
+        sides: level.sides.map((s) => (s.id === sideId ? nextSide : s)),
+      })),
+    )
   }
 
   return (
@@ -168,6 +213,60 @@ export function CreateProgramWizard() {
         </section>
       )}
 
+      {step === 'cardSetup' && (
+        <CardSetupStep
+          programName={name}
+          attributes={expandedAttributes}
+          levels={levels}
+          activeLevelId={activeLevelId}
+          onLevelsChange={setLevels}
+          onActiveLevelChange={setActiveLevelId}
+          onEditSide={(sideId) => {
+            setEditingSideId(sideId)
+            setStep('sideEdit')
+          }}
+          onBack={() => setStep('schema')}
+          onContinue={handleContinueCardSetup}
+          t={t}
+        />
+      )}
+
+      {step === 'sideEdit' && editingSide && (
+        <SideEditorStep
+          programName={name}
+          side={editingSide}
+          attributes={expandedAttributes}
+          onChange={(next) => updateSide(editingSide.id, next)}
+          onEditDisplay={(index) => {
+            setEditingDisplayIndex(index)
+            setStep('displayEdit')
+          }}
+          onBack={() => {
+            setEditingSideId(null)
+            setEditingDisplayIndex(null)
+            setStep('cardSetup')
+          }}
+          t={t}
+        />
+      )}
+
+      {step === 'displayEdit' &&
+        editingSide &&
+        editingDisplayIndex !== null &&
+        editingSide.display[editingDisplayIndex] && (
+          <DisplayElementEditorStep
+            side={editingSide}
+            displayIndex={editingDisplayIndex}
+            attributes={expandedAttributes}
+            onChange={(next) => updateSide(editingSide.id, next)}
+            onBack={() => {
+              setEditingDisplayIndex(null)
+              setStep('sideEdit')
+            }}
+            t={t}
+          />
+        )}
+
       {step === 'done' && (
         <section className="mt-4 rounded-2xl border border-border bg-surface-raised p-5 sm:p-6">
           <h1 className="text-xl font-semibold text-text sm:text-2xl">
@@ -197,6 +296,15 @@ export function CreateProgramWizard() {
                     <span className="shrink-0 text-text-muted">{attr.type}</span>
                   </div>
                 ))}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-text-muted">{t('createProgram.stepDone.levelsTitle')}</dt>
+              <dd className="font-medium text-text">
+                {t('createProgram.stepDone.levelsSummary', {
+                  levels: levels.length,
+                  sides: totalSides,
+                })}
               </dd>
             </div>
           </dl>
