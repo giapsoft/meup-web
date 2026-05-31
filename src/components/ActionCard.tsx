@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { ReactNode } from 'react'
+import { useLanguagePair } from '../context/LanguagePairProvider'
 
 type ActionCardProps = {
   to: string
@@ -18,6 +19,7 @@ export function ActionCard({
   variant = 'default',
   className = '',
 }: ActionCardProps) {
+  const { t } = useLanguagePair()
   const isPrimary = variant === 'primary'
 
   return (
@@ -52,7 +54,7 @@ export function ActionCard({
         <p className="mt-1 text-sm leading-relaxed text-text-muted">{description}</p>
       </div>
       <span className="mt-auto text-xs font-medium text-accent opacity-0 transition group-hover:opacity-100">
-        Mở →
+        {t('actionCard.open')}
       </span>
     </Link>
   )

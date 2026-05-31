@@ -1,11 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { ActionCard } from '../components/ActionCard'
 import { LanguagePicker } from '../components/LanguagePicker'
+import { useLanguagePair } from '../context/LanguagePairProvider'
 import { LANGUAGES, findLanguage } from '../data/mock'
 
 export function HomePage() {
-  const [nativeLang, setNativeLang] = useState('vi')
-  const [studyLang, setStudyLang] = useState('en')
+  const { nativeLang, studyLang, langPair, setNativeLang, setStudyLang, t } = useLanguagePair()
 
   const pairLabel = useMemo(() => {
     const native = findLanguage(nativeLang)
@@ -19,33 +19,32 @@ export function HomePage() {
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
       <section className="mb-8 sm:mb-10">
-        <p className="text-sm font-medium text-accent">Chào mừng trở lại</p>
+        <p className="text-sm font-medium text-accent">{t('home.welcome')}</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight text-text sm:text-3xl">
-          Quản lý từ vựng trên Tach
+          {t('home.title')}
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-text-muted sm:text-base">
-          Chọn cặp ngôn ngữ và truy cập chương trình học. Đây là mockup — dữ liệu và đăng nhập
-          sẽ được nối sau.
+          {t('home.subtitle')}
         </p>
       </section>
 
       <section className="mb-8 rounded-2xl border border-border bg-surface-raised p-4 sm:p-6">
-        <h2 className="text-base font-semibold text-text sm:text-lg">Cặp ngôn ngữ</h2>
-        <p className="mt-1 text-sm text-text-muted">
-          Ngôn ngữ nguồn (bạn đang biết) và ngôn ngữ học (bạn muốn luyện).
-        </p>
+        <h2 className="text-base font-semibold text-text sm:text-lg">{t('languagePair.title')}</h2>
+        <p className="mt-1 text-sm text-text-muted">{t('languagePair.subtitle')}</p>
 
         <div className="mt-5 grid gap-5 sm:grid-cols-2 sm:gap-6">
           <LanguagePicker
-            label="Ngôn ngữ nguồn"
-            hint="Ngôn ngữ bạn dùng để hiểu nghĩa"
+            id="native-lang"
+            label={t('languagePair.nativeLabel')}
+            hint={t('languagePair.nativeHint')}
             value={nativeLang}
             languages={LANGUAGES}
             onChange={setNativeLang}
           />
           <LanguagePicker
-            label="Ngôn ngữ học"
-            hint="Ngôn ngữ bạn muốn học từ vựng"
+            id="study-lang"
+            label={t('languagePair.studyLabel')}
+            hint={t('languagePair.studyHint')}
             value={studyLang}
             languages={LANGUAGES}
             onChange={setStudyLang}
@@ -61,13 +60,12 @@ export function HomePage() {
           ].join(' ')}
         >
           {sameLanguage ? (
-            <>Hai ngôn ngữ đang trùng nhau — hãy chọn cặp khác nhau để học hiệu quả.</>
+            t('languagePair.sameWarning')
           ) : (
             <>
-              Cặp đang chọn:{' '}
-              <span className="font-medium text-text">{pairLabel}</span>
+              {t('languagePair.currentPair', { pair: pairLabel })}
               <span className="ml-2 rounded-md bg-surface-raised px-2 py-0.5 text-xs tabular-nums">
-                {nativeLang}_{studyLang}
+                {langPair}
               </span>
             </>
           )}
@@ -75,26 +73,28 @@ export function HomePage() {
       </section>
 
       <section>
-        <h2 className="mb-4 text-base font-semibold text-text sm:text-lg">Chương trình học</h2>
+        <h2 className="mb-4 text-base font-semibold text-text sm:text-lg">
+          {t('programs.sectionTitle')}
+        </h2>
         <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           <ActionCard
             to="/programs"
             icon="📚"
-            title="Chương trình của tôi"
-            description="Xem và quản lý các bộ từ vựng bạn đã tạo hoặc đang học."
+            title={t('programs.my.title')}
+            description={t('programs.my.description')}
           />
           <ActionCard
             to="/programs/new"
             icon="✨"
-            title="Tạo chương trình mới"
-            description="Thiết kế bộ từ vựng mới với mẫu thẻ và trình tự phát."
+            title={t('programs.new.title')}
+            description={t('programs.new.description')}
             variant="primary"
           />
           <ActionCard
             to="/explore"
             icon="🧭"
-            title="Khám phá chương trình"
-            description="Duyệt thư viện chương trình cộng đồng và gói hệ thống."
+            title={t('programs.explore.title')}
+            description={t('programs.explore.description')}
             className="sm:col-span-2 lg:col-span-1"
           />
         </div>

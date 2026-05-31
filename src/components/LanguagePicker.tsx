@@ -1,6 +1,8 @@
-import { findLanguage, type Language } from '../data/mock'
+import { findLanguage, formatLanguageOption, type Language } from '../data/mock'
+import { useLanguagePair } from '../context/LanguagePairProvider'
 
 type LanguagePickerProps = {
+  id: string
   label: string
   hint: string
   value: string
@@ -9,18 +11,20 @@ type LanguagePickerProps = {
 }
 
 export function LanguagePicker({
+  id,
   label,
   hint,
   value,
   languages,
   onChange,
 }: LanguagePickerProps) {
+  const { t } = useLanguagePair()
   const selected = findLanguage(value)
 
   return (
     <div className="flex flex-col gap-2">
       <div>
-        <label htmlFor={`lang-${label}`} className="block text-sm font-medium text-text">
+        <label htmlFor={id} className="block text-sm font-medium text-text">
           {label}
         </label>
         <p className="mt-0.5 text-xs text-text-muted">{hint}</p>
@@ -28,14 +32,14 @@ export function LanguagePicker({
 
       <div className="relative">
         <select
-          id={`lang-${label}`}
+          id={id}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className="w-full appearance-none rounded-xl border border-border bg-surface-card py-3 pl-4 pr-10 text-sm text-text shadow-sm transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25 sm:text-base"
         >
           {languages.map((lang) => (
             <option key={lang.code} value={lang.code} className="bg-surface-card">
-              {lang.flag} {lang.nativeName}
+              {formatLanguageOption(lang)}
             </option>
           ))}
         </select>
@@ -49,7 +53,10 @@ export function LanguagePicker({
 
       {selected && (
         <p className="text-xs text-text-muted">
-          Đang chọn: <span className="text-text">{selected.nativeName}</span> ({selected.name})
+          {t('languagePicker.selected', {
+            name: selected.nativeName,
+            englishName: selected.name,
+          })}
         </p>
       )}
     </div>
