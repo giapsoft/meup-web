@@ -209,7 +209,7 @@ export function CreateProgramWizard() {
             placeholder={t('createProgram.stepName.placeholder')}
             className="mt-2 w-full rounded-xl border border-border bg-surface-card px-4 py-3 text-sm text-text focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25 sm:text-base"
           />
-          {nameError && <p className="mt-2 text-sm text-amber-300">{nameError}</p>}
+          {nameError && <p className="mt-2 text-sm text-warning">{nameError}</p>}
           <button
             type="button"
             onClick={handleStart}

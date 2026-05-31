@@ -55,7 +55,7 @@ export function HomePage() {
           className={[
             'mt-5 rounded-xl border px-4 py-3 text-sm',
             sameLanguage
-              ? 'border-amber-500/40 bg-amber-500/10 text-amber-200'
+              ? 'border-warning/40 bg-warning-muted text-warning'
               : 'border-border bg-surface-card text-text-muted',
           ].join(' ')}
         >

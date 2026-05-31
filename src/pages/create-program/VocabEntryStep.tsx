@@ -21,7 +21,6 @@ import {
   WIZARD_ACTION_SECONDARY,
   WIZARD_ACTIONS,
   WIZARD_EDITOR_GRID,
-  WIZARD_FORM_COLUMN,
   WIZARD_PREVIEW_COLUMN,
   WIZARD_STEP_SECTION,
 } from './wizardLayout'
@@ -110,7 +109,7 @@ export function VocabEntryStep({
         <h1 className="text-xl font-semibold text-text sm:text-2xl lg:text-3xl">
           {t('createProgram.stepVocab.title')}
         </h1>
-        <p className="mt-2 text-sm text-amber-300">{t('createProgram.stepVocab.noTextFields')}</p>
+        <p className="mt-2 text-sm text-warning">{t('createProgram.stepVocab.noTextFields')}</p>
         <div className={WIZARD_ACTIONS}>
           <button type="button" onClick={onBack} className={WIZARD_ACTION_SECONDARY}>
             {t('createProgram.stepSchema.back')}
@@ -129,7 +128,7 @@ export function VocabEntryStep({
       <p className="mt-1 text-xs text-text-muted lg:text-sm">{programName}</p>
 
       <div className={WIZARD_EDITOR_GRID}>
-        <div className={WIZARD_PREVIEW_COLUMN}>
+        <div className={`${WIZARD_PREVIEW_COLUMN} hidden lg:block`}>
           {previewSide && selectedItem ? (
             <div>
               <p className="mb-2 text-xs text-text-muted">{t('createProgram.stepVocab.previewHint')}</p>
@@ -175,7 +174,7 @@ export function VocabEntryStep({
           )}
         </div>
 
-        <div className={WIZARD_FORM_COLUMN}>
+        <div className="space-y-3 lg:mt-0">
           <div className="overflow-x-auto rounded-xl border border-border">
             <table className="w-full min-w-[480px] border-collapse text-sm">
               <thead>

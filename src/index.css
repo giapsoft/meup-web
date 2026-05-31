@@ -12,6 +12,8 @@
   --color-text: #e8e8f0;
   --color-text-muted: #9898b0;
   --color-credit: #7ee787;
+  --color-warning: #fcd34d;
+  --color-warning-muted: rgb(252 211 77 / 14%);
   --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
@@ -32,6 +34,8 @@
     --color-text: #18182a;
     --color-text-muted: #5a5a72;
     --color-credit: #1a7f37;
+    --color-warning: #b45309;
+    --color-warning-muted: rgb(180 83 9 / 12%);
   }
 
   body {
