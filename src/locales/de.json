@@ -15,7 +15,7 @@
   "languagePair.title": "Sprachpaar",
   "languagePair.subtitle": "Ausgangssprache (die Sie beherrschen) und Lernsprache (die Sie lernen möchten).",
   "languagePair.nativeLabel": "Ausgangssprache",
-  "languagePair.nativeHint": "Sprache zum Verstehen der Bedeutungen — die Website-Oberfläche folgt dieser Wahl.",
+  "languagePair.nativeHint": "Zum Verstehen; Oberfläche folgt",
   "languagePair.studyLabel": "Lernsprache",
   "languagePair.studyHint": "Sprache, in der Sie Vokabeln lernen möchten",
   "languagePicker.selected": "Gewählt: {name} ({englishName})",

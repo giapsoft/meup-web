@@ -15,7 +15,7 @@
   "languagePair.title": "语言对",
   "languagePair.subtitle": "源语言（您已掌握的）和学习语言（您想学的）。",
   "languagePair.nativeLabel": "源语言",
-  "languagePair.nativeHint": "用于理解含义的语言 — 网站界面也随此选择切换。",
+  "languagePair.nativeHint": "理解含义；界面随之切换",
   "languagePair.studyLabel": "学习语言",
   "languagePair.studyHint": "您想学习词汇的语言",
   "languagePicker.selected": "已选：{name}（{englishName}）",

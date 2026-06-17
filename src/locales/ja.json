@@ -15,7 +15,7 @@
   "languagePair.title": "言語ペア",
   "languagePair.subtitle": "母語（理解に使う言語）と学習言語（覚えたい言語）。",
   "languagePair.nativeLabel": "母語",
-  "languagePair.nativeHint": "意味を理解するための言語 — サイトの表示言語もこれに合わせます。",
+  "languagePair.nativeHint": "意味の理解用・表示言語も連動",
   "languagePair.studyLabel": "学習言語",
   "languagePair.studyHint": "語彙を学びたい言語",
   "languagePicker.selected": "選択中: {name} ({englishName})",

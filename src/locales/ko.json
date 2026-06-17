@@ -15,7 +15,7 @@
   "languagePair.title": "언어 쌍",
   "languagePair.subtitle": "모국어(이해하는 언어)와 학습 언어(배우고 싶은 언어).",
   "languagePair.nativeLabel": "모국어",
-  "languagePair.nativeHint": "의미를 이해하는 언어 — 웹사이트 UI도 이 선택을 따릅니다.",
+  "languagePair.nativeHint": "의미 이해용; UI도 함께 변경",
   "languagePair.studyLabel": "학습 언어",
   "languagePair.studyHint": "어휘를 배우고 싶은 언어",
   "languagePicker.selected": "선택됨: {name} ({englishName})",

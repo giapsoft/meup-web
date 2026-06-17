@@ -15,7 +15,7 @@
   "languagePair.title": "Paire de langues",
   "languagePair.subtitle": "Langue source (que vous maîtrisez) et langue d'étude (que vous voulez apprendre).",
   "languagePair.nativeLabel": "Langue source",
-  "languagePair.nativeHint": "Langue pour comprendre les sens — l'interface du site suit ce choix.",
+  "languagePair.nativeHint": "Pour comprendre; l'interface suit",
   "languagePair.studyLabel": "Langue d'étude",
   "languagePair.studyHint": "Langue dans laquelle vous voulez apprendre le vocabulaire",
   "languagePicker.selected": "Sélection : {name} ({englishName})",

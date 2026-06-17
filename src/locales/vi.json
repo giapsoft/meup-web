@@ -15,7 +15,7 @@
   "languagePair.title": "Cặp ngôn ngữ",
   "languagePair.subtitle": "Ngôn ngữ nguồn (bạn đang biết) và ngôn ngữ học (bạn muốn luyện).",
   "languagePair.nativeLabel": "Ngôn ngữ nguồn",
-  "languagePair.nativeHint": "Ngôn ngữ bạn dùng để hiểu nghĩa — giao diện web cũng đổi theo lựa chọn này.",
+  "languagePair.nativeHint": "Hiểu nghĩa; giao diện theo ngôn ngữ này",
   "languagePair.studyLabel": "Ngôn ngữ học",
   "languagePair.studyHint": "Ngôn ngữ bạn muốn học từ vựng",
   "languagePicker.selected": "Đang chọn: {name} ({englishName})",
