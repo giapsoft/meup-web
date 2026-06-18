@@ -5,7 +5,7 @@ export function createLocalResourceId(): string {
   return crypto.randomUUID().replace(/-/g, '').slice(0, 32)
 }
 
-export function attachVocabItemMedia(
+export function atmeupVocabItemMedia(
   items: VocabItemDraft[],
   itemId: string,
   attrKey: string,
@@ -32,7 +32,7 @@ export function attachVocabItemMedia(
   })
 }
 
-export function detachVocabItemMedia(
+export function demeupVocabItemMedia(
   items: VocabItemDraft[],
   itemId: string,
   attrKey: string,

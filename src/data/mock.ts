@@ -18,7 +18,7 @@ export const LANGUAGES: Language[] = [
 
 /** Mock device session — replace with API later. */
 export const MOCK_DEVICE = {
-  name: 'Tach CapyGo #A1B2',
+  name: 'MeUp #A1B2',
   creditsRemaining: 128,
 }
 

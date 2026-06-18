@@ -154,7 +154,7 @@ export function CreateProgramWizard() {
       }
       return
     }
-    console.info('[tach-web mock] create program', { langPair, ...exportPayload })
+    console.info('[meup-web mock] create program', { langPair, ...exportPayload })
     setStep('done')
   }
 

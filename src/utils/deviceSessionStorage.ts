@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'tach.deviceSession'
+const STORAGE_KEY = 'meup.deviceSession'
 
 export type DeviceSession = {
   authCode: string

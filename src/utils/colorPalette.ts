@@ -1,4 +1,4 @@
-/** Ported from tach `ColorPalette.h`. */
+/** Ported from meup `ColorPalette.h`. */
 export const COLOR_PALETTE = [
   '#1a1a2e',
   '#16213e',

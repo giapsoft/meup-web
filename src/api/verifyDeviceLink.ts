@@ -12,14 +12,14 @@ const MOCK_LATENCY_MS = 400
 
 /**
  * Mock POST /api/device/verify-link — replace with real fetch when capygo-api is ready.
- * Valid authCode for mock: {@link MOCK_VALID_AUTH_CODE} (`tach`).
+ * Valid authCode for mock: {@link MOCK_VALID_AUTH_CODE} (`meup`).
  */
 export async function verifyDeviceLink(
   authCode: string,
 ): Promise<VerifyLinkResponse> {
   const request: VerifyLinkRequest = { authCode }
 
-  console.info('[tach-web mock API]', {
+  console.info('[meup-web mock API]', {
     method: 'POST',
     url: API_DEVICE_VERIFY_LINK,
     body: request,

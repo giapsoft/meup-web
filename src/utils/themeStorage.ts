@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'tach.darkMode'
+const STORAGE_KEY = 'meup.darkMode'
 
 export function loadDarkMode(): boolean {
   try {

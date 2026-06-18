@@ -3,8 +3,8 @@ import type { MessageParams, TranslationKey } from '../../i18n/types'
 import type { ItemSchemaAttribute, VocabItemDraft } from '../../types/program'
 import {
   acceptMimeForAttribute,
-  attachVocabItemMedia,
-  detachVocabItemMedia,
+  atmeupVocabItemMedia,
+  demeupVocabItemMedia,
   mediaAttributeLabel,
   schemaMediaAttributes,
 } from '../../utils/vocabMedia'
@@ -42,11 +42,11 @@ export function VocabMediaPanel({
     if (!file) {
       return
     }
-    onItemsChange(attachVocabItemMedia(items, item.id, attr.key, file))
+    onItemsChange(atmeupVocabItemMedia(items, item.id, attr.key, file))
   }
 
   function handleClear(attrKey: string) {
-    onItemsChange(detachVocabItemMedia(items, item.id, attrKey))
+    onItemsChange(demeupVocabItemMedia(items, item.id, attrKey))
     const input = fileInputRefs.current[attrKey]
     if (input) {
       input.value = ''

@@ -1,4 +1,4 @@
-/** Matches tach `LabelView::tryParseBracketHighlights_`. */
+/** Matches meup `LabelView::tryParseBracketHighlights_`. */
 export type TextHighlightSegment = {
   text: string
   highlighted: boolean

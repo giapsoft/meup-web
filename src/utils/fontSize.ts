@@ -1,4 +1,4 @@
-/** Matches tach `FontSize.h` / capygo-api dense CFNT sizes (px). */
+/** Matches meup `FontSize.h` / capygo-api dense CFNT sizes (px). */
 export const FONT_SIZES_PX = [12, 14, 18, 24, 32, 48] as const
 
 /** Largest first — same order as `FontSize::allDecrease`. */
@@ -79,7 +79,7 @@ function measureWrappedText(
 }
 
 /**
- * Pick the largest dense font size that fits the box — mirrors tach
+ * Pick the largest dense font size that fits the box — mirrors meup
  * `LabelView::resolveFontSizePx_`.
  */
 export function resolvePreviewFontSizePx(

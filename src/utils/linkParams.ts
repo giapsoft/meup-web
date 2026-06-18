@@ -65,6 +65,6 @@ export function buildDevLinkUrl(base = 'http://localhost:5173/'): string {
   const url = new URL(base)
   url.searchParams.set('nativeLangCode', DEFAULT_NATIVE_LANG)
   url.searchParams.set('studyLangCode', DEFAULT_STUDY_LANG)
-  url.searchParams.set('authCode', 'tach')
+  url.searchParams.set('authCode', 'meup')
   return url.toString()
 }

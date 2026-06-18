@@ -52,7 +52,7 @@ export type SideDraft = {
 
 export type LevelRangeDraft = {
   id: string
-  /** SRS breakpoint — same semantics as tach `LevelRange.maxLvl`. */
+  /** SRS breakpoint — same semantics as meup `LevelRange.maxLvl`. */
   maxLvl: number
   sides: SideDraft[]
 }

@@ -74,7 +74,7 @@ export function Header({ onLogout }: HeaderProps) {
             T
           </span>
           <div className="min-w-0 text-left">
-            <p className="truncate text-sm font-semibold text-text sm:text-base">Tach</p>
+            <p className="truncate text-sm font-semibold text-text sm:text-base">MeUp</p>
             <p className="hidden truncate text-xs text-text-muted sm:block">{MOCK_DEVICE.name}</p>
           </div>
         </Link>

@@ -1,6 +1,6 @@
 /**
- * Level band logic ported from tach `ConfigLevelItem.h`.
- * Storage uses breakpoint `maxLvl` only (same as tach JSON / ProgramConfig.h).
+ * Level band logic ported from meup `ConfigLevelItem.h`.
+ * Storage uses breakpoint `maxLvl` only (same as meup JSON / ProgramConfig.h).
  */
 import type { LevelRangeDraft, SideDraft } from '../types/program'
 import type { MessageParams, TranslationKey } from '../i18n/types'
@@ -25,7 +25,7 @@ export function cloneLevels(levels: LevelRangeDraft[]): LevelRangeDraft[] {
   }))
 }
 
-/** Mirrors tach `buildConfigLevelItems`. */
+/** Mirrors meup `buildConfigLevelItems`. */
 export function buildConfigLevelItems(levels: LevelRangeDraft[]): ConfigLevelItem[] {
   if (levels.length === 0) {
     return []
@@ -64,7 +64,7 @@ export function configLevelItemLabel(
   return ''
 }
 
-/** Mirrors tach `insertNewLevelRange`. Returns a new levels array. */
+/** Mirrors meup `insertNewLevelRange`. Returns a new levels array. */
 export function insertNewLevelRange(levels: LevelRangeDraft[]): LevelRangeDraft[] {
   if (levels.length === 0) {
     return [{ id: crypto.randomUUID(), maxLvl: 0, sides: [] }]
@@ -124,7 +124,7 @@ export function allProgramPreviewSides(levels: LevelRangeDraft[]): ProgramPrevie
 }
 
 /**
- * Mirrors tach `adjustLevelRangeMaxLvl`.
+ * Mirrors meup `adjustLevelRangeMaxLvl`.
  * Returns a new array on success, or null if the adjustment is rejected.
  */
 export function adjustLevelRangeMaxLvl(

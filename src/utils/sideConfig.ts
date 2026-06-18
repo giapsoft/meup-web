@@ -1,5 +1,5 @@
 /**
- * Side / display / playback config — ported from tach
+ * Side / display / playback config — ported from meup
  * `ConfigSideSchema.h`, `ConfigDisplayElement*.h`, `ConfigSideController.h`.
  */
 import type { DisplayElement, ItemSchemaAttribute, PlayStepDraft, SideDraft } from '../types/program'
@@ -409,7 +409,7 @@ export function opacityToPercent(backgroundOpacity: number | undefined): number 
   return Math.floor((backgroundOpacity * 100 + 127) / 255)
 }
 
-/** Background layer only — opacity must not be applied to text (matches tach DisplayElementView). */
+/** Background layer only — opacity must not be applied to text (matches meup DisplayElementView). */
 export function previewTextBackgroundStyle(el: DisplayElement): {
   backgroundColor: string
   opacity?: number
@@ -569,7 +569,7 @@ export function removeDisplayElement(side: SideDraft, displayIndex: number): Sid
   return { ...side, display }
 }
 
-/** Stack position 0 = back, n-1 = front — matches tach `ItemPlayer` sort by `order`. */
+/** Stack position 0 = back, n-1 = front — matches meup `ItemPlayer` sort by `order`. */
 export function displayStackPosition(side: SideDraft, displayIndex: number): {
   position: number
   count: number
