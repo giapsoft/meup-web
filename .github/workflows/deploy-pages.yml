@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm install
       - run: npm run build
       # GitHub Pages SPA fallback for client-side routes (e.g. /programs)
       - run: cp dist/index.html dist/404.html
