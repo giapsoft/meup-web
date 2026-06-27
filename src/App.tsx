@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { Header } from './components/Header'
-import { clearDeviceSession } from './utils/deviceSessionStorage'
+import { useClearDeviceSession } from './context/DeviceSessionProvider'
 import { useLanguagePair } from './context/LanguagePairProvider'
 import { HomePage } from './pages/HomePage'
 import { CreateProgramWizard } from './pages/create-program/CreateProgramWizard'
@@ -10,13 +10,14 @@ import { PlaceholderPage, type PlaceholderPageKey } from './pages/PlaceholderPag
 function AppShell() {
   const [loggedIn, setLoggedIn] = useState(true)
   const { t, uiLocale } = useLanguagePair()
+  const clearSession = useClearDeviceSession()
 
   const handleLogout = useCallback(() => {
     setLoggedIn(false)
-    clearDeviceSession()
+    clearSession()
     window.alert(t('auth.logoutMock'))
     setLoggedIn(true)
-  }, [t])
+  }, [t, clearSession])
 
   if (!loggedIn) {
     return (

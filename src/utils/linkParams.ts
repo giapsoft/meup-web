@@ -1,9 +1,5 @@
 import { LANGUAGES } from '../data/mock'
-import {
-  DEFAULT_NATIVE_LANG,
-  DEFAULT_STUDY_LANG,
-  normalizeLangCode,
-} from './langCode'
+import { DEFAULT_NATIVE_LANG, DEFAULT_STUDY_LANG, normalizeLangCode } from './langCode'
 
 export { DEFAULT_NATIVE_LANG, DEFAULT_STUDY_LANG, normalizeLangCode } from './langCode'
 
@@ -19,38 +15,19 @@ export function resolveLangCode(code: string | null | undefined, fallback: strin
   return fallback
 }
 
-export type LinkParams = {
+export type LangPair = {
   nativeLangCode: string
   studyLangCode: string
-  authCode: string | null
 }
 
-export function parseLinkParams(searchParams: URLSearchParams): LinkParams {
-  return {
-    nativeLangCode: resolveLangCode(
-      searchParams.get('nativeLangCode'),
-      DEFAULT_NATIVE_LANG,
-    ),
-    studyLangCode: resolveLangCode(searchParams.get('studyLangCode'), DEFAULT_STUDY_LANG),
-    authCode: searchParams.get('authCode'),
-  }
-}
-
-/** Merge QR URL params with a saved session (URL wins when present). */
-export function mergeEntrySession(
+/** Lấy cặp ngôn ngữ từ QR URL (ưu tiên), ngược lại dùng phiên đã lưu, cuối cùng là mặc định. */
+export function resolveLangPair(
   searchParams: URLSearchParams,
-  stored: { authCode: string; nativeLangCode: string; studyLangCode: string } | null,
-): { authCode: string; nativeLangCode: string; studyLangCode: string } | null {
-  const authCode = searchParams.get('authCode') ?? stored?.authCode ?? null
-  if (!authCode) {
-    return null
-  }
-
+  stored: LangPair | null,
+): LangPair {
   const nativeRaw = searchParams.get('nativeLangCode')
   const studyRaw = searchParams.get('studyLangCode')
-
   return {
-    authCode,
     nativeLangCode: nativeRaw
       ? resolveLangCode(nativeRaw, DEFAULT_NATIVE_LANG)
       : (stored?.nativeLangCode ?? DEFAULT_NATIVE_LANG),
@@ -60,11 +37,8 @@ export function mergeEntrySession(
   }
 }
 
-/** Example QR URL for local dev. */
-export function buildDevLinkUrl(base = 'http://localhost:5173/'): string {
-  const url = new URL(base)
-  url.searchParams.set('nativeLangCode', DEFAULT_NATIVE_LANG)
-  url.searchParams.set('studyLangCode', DEFAULT_STUDY_LANG)
-  url.searchParams.set('authCode', 'meup')
-  return url.toString()
+/** Mã link dùng-một-lần từ QR URL (`?authCode=...`), hoặc null nếu không có. */
+export function getAuthCode(searchParams: URLSearchParams): string | null {
+  const code = searchParams.get('authCode')?.trim()
+  return code ? code : null
 }

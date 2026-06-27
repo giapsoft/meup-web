@@ -1,7 +1,7 @@
 const STORAGE_KEY = 'meup.deviceSession'
 
+/** Lựa chọn ngôn ngữ của phiên (suy ra từ QR URL), tách khỏi token xác thực. */
 export type DeviceSession = {
-  authCode: string
   nativeLangCode: string
   studyLangCode: string
 }
@@ -14,14 +14,13 @@ export function loadDeviceSession(): DeviceSession | null {
     }
     const parsed = JSON.parse(raw) as Partial<DeviceSession>
     if (
-      typeof parsed.authCode === 'string' &&
       typeof parsed.nativeLangCode === 'string' &&
       typeof parsed.studyLangCode === 'string'
     ) {
       return parsed as DeviceSession
     }
   } catch {
-    // ignore
+    // ignore corrupt storage
   }
   return null
 }
