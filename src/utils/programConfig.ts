@@ -12,7 +12,7 @@ import { toExportItems } from './vocabItems'
 import type { MessageParams, TranslationKey } from '../i18n/types'
 
 /** Matches capygo-api `DefaultLevelRangeMax` / meup `kDefaultLevelRangeMax`. */
-export const DEFAULT_LEVEL_MAX = 2147483647
+export const DEFAULT_LEVEL_MAX = 10
 
 export function indexForKey(attributes: ItemSchemaAttribute[], key: string): number {
   return attributes.findIndex((a) => a.key === key)
