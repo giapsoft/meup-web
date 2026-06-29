@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { clearAuthTokens } from '../api/authTokens'
 import { ensureAccessToken } from '../api/client'
 import { redeemLink } from '../api/deviceLink'
@@ -11,7 +11,7 @@ import {
   saveDeviceSession,
   type DeviceSession,
 } from '../utils/deviceSessionStorage'
-import { getAuthCode, resolveLangPair } from '../utils/linkParams'
+import { getAuthCode, getPathAuthCode, resolveLangPair } from '../utils/linkParams'
 
 type SessionStatus = 'loading' | 'authorized' | 'unauthorized'
 
@@ -22,11 +22,13 @@ const DeviceSessionContext = createContext<DeviceSessionContextValue | null>(nul
 /**
  * Cổng xác thực phiên web. Thứ tự ưu tiên (tránh tạo nhiều request):
  *  1. Đã có access token còn hạn (hoặc refresh được) → authorized, không gọi mạng thừa.
- *  2. Có `authCode` từ QR URL → redeem 1 lần lấy token.
+ *  2. Có mã link từ QR URL (path `/<order>-<mac>` hoặc `?authCode=`) → redeem 1 lần lấy token.
  *  3. Không có gì → unauthorized.
  */
 export function DeviceSessionProvider({ children }: { children: ReactNode }) {
   const [searchParams] = useSearchParams()
+  const location = useLocation()
+  const navigate = useNavigate()
   const [status, setStatus] = useState<SessionStatus>('loading')
   const [langs, setLangs] = useState<DeviceSession | null>(null)
 
@@ -41,12 +43,17 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
     async function run() {
       setStatus('loading')
       const langPair = resolveLangPair(searchParams, loadDeviceSession())
-      const authorized = await authorizeSession(getAuthCode(searchParams))
+      const pathCode = getPathAuthCode(location.pathname)
+      const authorized = await authorizeSession(pathCode ?? getAuthCode(searchParams))
       if (cancelled) {
         return
       }
       if (authorized) {
         saveDeviceSession(langPair)
+        // Dọn mã khỏi URL (dùng-một-lần) và đưa về trang chủ.
+        if (pathCode) {
+          navigate('/', { replace: true })
+        }
         setLangs(langPair)
         setStatus('authorized')
       } else {
@@ -61,7 +68,7 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [searchParams])
+  }, [searchParams, location.pathname, navigate])
 
   if (status === 'loading') {
     return <AuthLoadingPage locale={langPreview.nativeLangCode} />

@@ -42,3 +42,12 @@ export function getAuthCode(searchParams: URLSearchParams): string | null {
   const code = searchParams.get('authCode')?.trim()
   return code ? code : null
 }
+
+/**
+ * Mã link dùng-một-lần dạng path `/<deviceOrder>-<mac>` (vd. `/3-Az64j`), hoặc null.
+ * Phân biệt với các route app (đều bắt đầu bằng chữ cái) nhờ pattern `số-...`.
+ */
+export function getPathAuthCode(pathname: string): string | null {
+  const seg = pathname.replace(/^\/+/, '').split('/')[0]
+  return /^\d+-[A-Za-z0-9_-]+$/.test(seg) ? seg : null
+}
