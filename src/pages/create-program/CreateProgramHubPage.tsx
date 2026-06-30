@@ -25,7 +25,6 @@ const CREATE_MODES: CreateMode[] = [
     icon: '💡',
     titleKey: 'createHub.aiTitle.title',
     descriptionKey: 'createHub.aiTitle.description',
-    soon: true,
   },
   {
     to: '/programs/new/ai/paragraph',

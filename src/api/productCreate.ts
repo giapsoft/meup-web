@@ -1,6 +1,12 @@
 import { API_PRODUCT_CREATE, API_PRODUCT_CREATE_PROGRESS } from '../config'
 import { apiRequest } from './client'
 
+export type CreateProductJob = {
+  type: 'vocab'
+  content: string
+  limitCount: number
+}
+
 export type CreateProductRequestBody = {
   ownerId: string
   productName: string
@@ -8,7 +14,7 @@ export type CreateProductRequestBody = {
   nativeLangId: string
   studyLangId: string
   payload: string
-  jobs: []
+  jobs: CreateProductJob[]
 }
 
 export type CreateProductRequestDto = {
