@@ -10,5 +10,20 @@ export const API_DEVICE_LINK_REDEEM = '/api/device/link/redeem'
 /** Web gia hạn access token bằng refresh token. */
 export const API_AUTH_REFRESH = '/api/auth/refresh'
 
+/** Đăng ký tài khoản web bằng email + mật khẩu. */
+export const API_AUTH_REGISTER = '/api/auth/register'
+
+/** Đăng nhập bằng email + mật khẩu. */
+export const API_AUTH_LOGIN = '/api/auth/login'
+
+/** Xác thực email bằng token (từ link trong mail). */
+export const API_AUTH_VERIFY_EMAIL = '/api/auth/verify-email'
+
+/** Gửi lại mail xác thực (cần đăng nhập). */
+export const API_AUTH_VERIFY_RESEND = '/api/auth/verify-email/resend'
+
+/** Thông tin tài khoản phiên hiện tại (cần đăng nhập). */
+export const API_AUTH_ME = '/api/auth/me'
+
 /** Khoảng đệm (ms) coi access token là "sắp hết hạn" để refresh trước, tránh lỗi 401. */
 export const ACCESS_TOKEN_SKEW_MS = 30_000

@@ -1,10 +1,20 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { clearAuthTokens } from '../api/authTokens'
 import { ensureAccessToken } from '../api/client'
 import { redeemLink } from '../api/deviceLink'
 import { LanguagePairProvider } from './LanguagePairProvider'
-import { AuthLoadingPage, NotFoundPage } from '../pages/AuthGatePages'
+import { AuthLoadingPage } from '../pages/AuthGatePages'
+import { AuthPages } from '../pages/auth/AuthPages'
+import { VerifyEmailPage } from '../pages/auth/VerifyEmailPage'
 import {
   clearDeviceSession,
   loadDeviceSession,
@@ -19,6 +29,9 @@ type DeviceSessionContextValue = DeviceSession
 
 const DeviceSessionContext = createContext<DeviceSessionContextValue | null>(null)
 
+/** Hành động xác thực dùng được ở mọi trạng thái (trang login/register lẫn app). */
+const AuthActionsContext = createContext<{ reauthorize: () => void } | null>(null)
+
 /**
  * Cổng xác thực phiên web. Thứ tự ưu tiên (tránh tạo nhiều request):
  *  1. Đã có access token còn hạn (hoặc refresh được) → authorized, không gọi mạng thừa.
@@ -31,6 +44,9 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
   const [status, setStatus] = useState<SessionStatus>('loading')
   const [langs, setLangs] = useState<DeviceSession | null>(null)
+  const [reloadToken, setReloadToken] = useState(0)
+
+  const reauthorize = useCallback(() => setReloadToken((n) => n + 1), [])
 
   const langPreview = useMemo(
     () => resolveLangPair(searchParams, loadDeviceSession()),
@@ -68,26 +84,48 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [searchParams, location.pathname, navigate])
+  }, [searchParams, location.pathname, navigate, reloadToken])
 
-  if (status === 'loading') {
-    return <AuthLoadingPage locale={langPreview.nativeLangCode} />
-  }
+  const actions = useMemo(() => ({ reauthorize }), [reauthorize])
 
-  if (status === 'unauthorized' || !langs) {
-    return <NotFoundPage locale={langPreview.nativeLangCode} />
-  }
-
-  return (
-    <DeviceSessionContext.Provider value={langs}>
+  let content: ReactNode
+  if (location.pathname === '/verify-email') {
+    // Trang xác thực email chỉ cần token trong URL (không phụ thuộc phiên) → bỏ qua cổng auth.
+    content = (
       <LanguagePairProvider
-        initialNativeLang={langs.nativeLangCode}
-        initialStudyLang={langs.studyLangCode}
+        initialNativeLang={langPreview.nativeLangCode}
+        initialStudyLang={langPreview.studyLangCode}
       >
-        {children}
+        <VerifyEmailPage />
       </LanguagePairProvider>
-    </DeviceSessionContext.Provider>
-  )
+    )
+  } else if (status === 'loading') {
+    content = <AuthLoadingPage locale={langPreview.nativeLangCode} />
+  } else if (status === 'unauthorized' || !langs) {
+    // Chưa có phiên → cho đăng nhập/đăng ký bằng email (vẫn bọc LanguagePairProvider để dịch
+    // UI theo ngôn ngữ suy ra từ URL/lưu trữ).
+    content = (
+      <LanguagePairProvider
+        initialNativeLang={langPreview.nativeLangCode}
+        initialStudyLang={langPreview.studyLangCode}
+      >
+        <AuthPages />
+      </LanguagePairProvider>
+    )
+  } else {
+    content = (
+      <DeviceSessionContext.Provider value={langs}>
+        <LanguagePairProvider
+          initialNativeLang={langs.nativeLangCode}
+          initialStudyLang={langs.studyLangCode}
+        >
+          {children}
+        </LanguagePairProvider>
+      </DeviceSessionContext.Provider>
+    )
+  }
+
+  return <AuthActionsContext.Provider value={actions}>{content}</AuthActionsContext.Provider>
 }
 
 async function authorizeSession(authCode: string | null): Promise<boolean> {
@@ -122,4 +160,13 @@ export function useDeviceSession(): DeviceSessionContextValue {
 /** Call on logout — clears persisted tokens + device session. */
 export function useClearDeviceSession(): () => void {
   return clearSession
+}
+
+/** Buộc cổng xác thực chạy lại (sau khi đăng nhập/đăng ký/đăng xuất). */
+export function useReauthorize(): () => void {
+  const ctx = useContext(AuthActionsContext)
+  if (!ctx) {
+    throw new Error('useReauthorize must be used within DeviceSessionProvider')
+  }
+  return ctx.reauthorize
 }
