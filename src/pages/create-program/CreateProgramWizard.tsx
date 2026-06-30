@@ -4,6 +4,7 @@ import { ApiError } from '../../api/client'
 import { getAccount } from '../../api/emailAuth'
 import { createProductRequest, pollProductCreateProgress } from '../../api/productCreate'
 import { useLanguagePair } from '../../context/LanguagePairProvider'
+import { useAccount } from '../../context/AccountProvider'
 import { useWizardWideLayout } from '../../hooks/useMediaQuery'
 import type { TranslationKey } from '../../i18n/types'
 import type { ItemSchemaEditorState, LevelRangeDraft, SchemaFieldUiType, SideDraft, VocabItemDraft } from '../../types/program'
@@ -59,6 +60,7 @@ function findSide(levels: LevelRangeDraft[], sideId: string): SideDraft | undefi
 
 export function CreateProgramWizard() {
   const { t, langPair, nativeLang, studyLang } = useLanguagePair()
+  const { refreshAccount } = useAccount()
   const isWideLayout = useWizardWideLayout()
   const [step, setStep] = useState<WizardStep>('name')
   const [name, setName] = useState('')
@@ -169,7 +171,9 @@ export function CreateProgramWizard() {
         payload: exportPayload,
         jobs: [],
       })
+      await refreshAccount()
       const progress = await pollProductCreateProgress(created.id)
+      await refreshAccount()
       if (progress.status === 'success') {
         setSubmitState({ phase: 'success', requestId: created.id })
       } else {

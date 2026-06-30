@@ -8,6 +8,7 @@ import {
   type ProductCreateProgressDto,
 } from '../../api/productCreate'
 import { useLanguagePair } from '../../context/LanguagePairProvider'
+import { useAccount } from '../../context/AccountProvider'
 import type { TranslationKey } from '../../i18n/types'
 import type { ItemSchemaEditorState, LevelRangeDraft, SchemaFieldUiType } from '../../types/program'
 import {
@@ -61,6 +62,7 @@ function paragraphPreview(text: string): string {
 
 export function CreateProgramFromParagraphPage() {
   const { nativeLang, studyLang, langPair, t } = useLanguagePair()
+  const { refreshAccount } = useAccount()
 
   const [step, setStep] = useState<Step>('setup')
   const [name, setName] = useState('')
@@ -151,6 +153,8 @@ export function CreateProgramFromParagraphPage() {
         jobs: [job],
       })
 
+      await refreshAccount()
+
       setSubmitState({
         phase: 'processing',
         requestId: created.id,
@@ -162,6 +166,7 @@ export function CreateProgramFromParagraphPage() {
         setLiveProgress,
         { maxAttempts: 180 },
       )
+      await refreshAccount()
       if (finalProgress.status === 'success') {
         setSubmitState({
           phase: 'success',

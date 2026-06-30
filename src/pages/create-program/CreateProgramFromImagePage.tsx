@@ -8,6 +8,7 @@ import {
   type ProductCreateProgressDto,
 } from '../../api/productCreate'
 import { useLanguagePair } from '../../context/LanguagePairProvider'
+import { useAccount } from '../../context/AccountProvider'
 import type { TranslationKey } from '../../i18n/types'
 import type { ItemSchemaEditorState, LevelRangeDraft, SchemaFieldUiType } from '../../types/program'
 import {
@@ -60,6 +61,7 @@ const MAX_UPLOAD_BYTES = 20 * 1024 * 1024
 
 export function CreateProgramFromImagePage() {
   const { nativeLang, studyLang, langPair, t } = useLanguagePair()
+  const { refreshAccount } = useAccount()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [step, setStep] = useState<Step>('setup')
@@ -190,6 +192,8 @@ export function CreateProgramFromImagePage() {
         jobs: [job],
       })
 
+      await refreshAccount()
+
       setSubmitState({
         phase: 'processing',
         requestId: created.id,
@@ -201,6 +205,7 @@ export function CreateProgramFromImagePage() {
         setLiveProgress,
         { maxAttempts: 180 },
       )
+      await refreshAccount()
       if (finalProgress.status === 'success') {
         setSubmitState({
           phase: 'success',

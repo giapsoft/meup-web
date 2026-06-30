@@ -8,6 +8,7 @@ import {
   type ProductCreateProgressDto,
 } from '../../api/productCreate'
 import { useLanguagePair } from '../../context/LanguagePairProvider'
+import { useAccount } from '../../context/AccountProvider'
 import type { TranslationKey } from '../../i18n/types'
 import type { ItemSchemaEditorState, LevelRangeDraft, SchemaFieldUiType } from '../../types/program'
 import {
@@ -51,6 +52,7 @@ const FIELD_TYPE_KEYS: Record<SchemaFieldUiType, TranslationKey> = {
 
 export function CreateProgramFromTitlePage() {
   const { nativeLang, studyLang, langPair, t } = useLanguagePair()
+  const { refreshAccount } = useAccount()
 
   const [step, setStep] = useState<Step>('setup')
   const [name, setName] = useState('')
@@ -141,6 +143,8 @@ export function CreateProgramFromTitlePage() {
         jobs: [job],
       })
 
+      await refreshAccount()
+
       setSubmitState({
         phase: 'processing',
         requestId: created.id,
@@ -152,6 +156,7 @@ export function CreateProgramFromTitlePage() {
         setLiveProgress,
         { maxAttempts: 180 },
       )
+      await refreshAccount()
       if (finalProgress.status === 'success') {
         setSubmitState({
           phase: 'success',
