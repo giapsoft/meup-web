@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -47,6 +48,12 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<SessionStatus>('loading')
   const [langs, setLangs] = useState<DeviceSession | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
+  const statusRef = useRef(status)
+  statusRef.current = status
+
+  const pathAuthCode = getPathAuthCode(location.pathname)
+  const queryAuthCode = getAuthCode(searchParams)
+  const pendingAuthCode = pathAuthCode ?? queryAuthCode
 
   const reauthorize = useCallback(() => setReloadToken((n) => n + 1), [])
 
@@ -59,10 +66,14 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
     let cancelled = false
 
     async function run() {
+      // Đã đăng nhập và không có mã QR/link mới → không chặn UI khi đổi tab/route.
+      if (statusRef.current === 'authorized' && !pendingAuthCode) {
+        return
+      }
+
       setStatus('loading')
       const langPair = resolveLangPair(searchParams, loadDeviceSession())
-      const pathCode = getPathAuthCode(location.pathname)
-      const authorized = await authorizeSession(pathCode ?? getAuthCode(searchParams))
+      const authorized = await authorizeSession(pendingAuthCode)
       if (cancelled) {
         return
       }
@@ -70,7 +81,9 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
         let finalPair = langPair
         const hasUrlNative = searchParams.has('nativeLangCode')
         const hasUrlStudy = searchParams.has('studyLangCode')
-        if (!hasUrlNative || !hasUrlStudy) {
+        const stored = loadDeviceSession()
+        const hasStoredLangs = Boolean(stored?.nativeLangCode && stored?.studyLangCode)
+        if ((!hasUrlNative || !hasUrlStudy) && !hasStoredLangs) {
           try {
             const account = await getAccount()
             const fromAccount = langPairFromAccount(account)
@@ -86,7 +99,7 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
         }
         saveDeviceSession(finalPair)
         // Dọn mã khỏi URL (dùng-một-lần) và đưa về trang chủ.
-        if (pathCode) {
+        if (pathAuthCode) {
           navigate('/', { replace: true })
         }
         setLangs(finalPair)
@@ -103,7 +116,7 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [searchParams, location.pathname, navigate, reloadToken])
+  }, [reloadToken, pendingAuthCode, pathAuthCode, navigate, searchParams])
 
   const actions = useMemo(() => ({ reauthorize }), [reauthorize])
 
