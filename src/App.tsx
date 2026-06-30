@@ -11,6 +11,7 @@ import { CreateProgramFromParagraphPage } from './pages/create-program/CreatePro
 import { CreateProgramFromTitlePage } from './pages/create-program/CreateProgramFromTitlePage'
 import { CreateProgramHubPage } from './pages/create-program/CreateProgramHubPage'
 import { CreateProgramWizard } from './pages/create-program/CreateProgramWizard'
+import { ProductsPage } from './pages/ProductsPage'
 import { PlaceholderPage, type PlaceholderPageKey } from './pages/PlaceholderPage'
 import { LegacyProgramsRedirect } from './pages/LegacyProgramsRedirect'
 
@@ -27,7 +28,6 @@ function AppShell() {
   }, [clearSession, navigate, reauthorize])
 
   const placeholders: { path: string; page: PlaceholderPageKey }[] = [
-    { path: '/products', page: 'products' },
     { path: '/explore', page: 'explore' },
   ]
 
@@ -37,6 +37,7 @@ function AppShell() {
       <VerifyEmailBanner />
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/new" element={<CreateProgramHubPage />} />
         <Route path="/products/new/manual" element={<CreateProgramWizard key={uiLocale} />} />
         <Route path="/products/new/ai/title" element={<CreateProgramFromTitlePage key={uiLocale} />} />
