@@ -37,7 +37,6 @@ const CREATE_MODES: CreateMode[] = [
     icon: '🖼️',
     titleKey: 'createHub.aiImage.title',
     descriptionKey: 'createHub.aiImage.description',
-    soon: true,
   },
 ]
 

@@ -6,6 +6,7 @@ import { useClearDeviceSession, useReauthorize } from './context/DeviceSessionPr
 import { useLanguagePair } from './context/LanguagePairProvider'
 import { HomePage } from './pages/HomePage'
 import { CreateProgramAiSoonPage } from './pages/create-program/CreateProgramAiSoonPage'
+import { CreateProgramFromImagePage } from './pages/create-program/CreateProgramFromImagePage'
 import { CreateProgramFromParagraphPage } from './pages/create-program/CreateProgramFromParagraphPage'
 import { CreateProgramFromTitlePage } from './pages/create-program/CreateProgramFromTitlePage'
 import { CreateProgramHubPage } from './pages/create-program/CreateProgramHubPage'
@@ -39,6 +40,7 @@ function AppShell() {
         <Route path="/programs/new/manual" element={<CreateProgramWizard key={uiLocale} />} />
         <Route path="/programs/new/ai/title" element={<CreateProgramFromTitlePage key={uiLocale} />} />
         <Route path="/programs/new/ai/paragraph" element={<CreateProgramFromParagraphPage key={uiLocale} />} />
+        <Route path="/programs/new/ai/image" element={<CreateProgramFromImagePage key={uiLocale} />} />
         <Route path="/programs/new/ai/:mode" element={<CreateProgramAiSoonPage />} />
         {placeholders.map(({ path, page }) => (
           <Route key={path} path={path} element={<PlaceholderPage page={page} />} />

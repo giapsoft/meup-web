@@ -6,9 +6,11 @@ export type VocabJobSource = 'fromTitle' | 'fromParagraph' | 'fromImage'
 export const VOCAB_JOB_CREDITS_PER_UNIT = 500
 
 export function buildVocabJob(source: VocabJobSource, content: string, limitCount: number): CreateProductJob {
+  const payload =
+    source === 'fromImage' ? content : content.trim()
   return {
     type: 'vocab',
-    content: JSON.stringify({ source, content: content.trim() }),
+    content: JSON.stringify({ source, content: payload }),
     limitCount,
   }
 }
