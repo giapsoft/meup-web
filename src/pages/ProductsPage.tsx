@@ -146,6 +146,14 @@ function OwnedProductCard({
           <dd className="inline">{formatWhen(product.updatedAt, locale)}</dd>
         </div>
       </dl>
+      {product.shareMode === 'public' && (
+        <Link
+          to="/explore"
+          className="mt-3 inline-flex text-sm font-medium text-accent no-underline transition hover:underline"
+        >
+          {t('products.viewOnExplore')}
+        </Link>
+      )}
     </article>
   )
 }

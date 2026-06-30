@@ -91,6 +91,7 @@ export type TranslationKey =
   | 'products.status.failed'
   | 'products.shareMode.public'
   | 'products.shareMode.private'
+  | 'products.viewOnExplore'
   | 'products.creditPrice'
   | 'products.totalCredits'
   | 'products.langPair'

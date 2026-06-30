@@ -89,6 +89,7 @@
   "products.status.failed": "Failed",
   "products.shareMode.public": "Public",
   "products.shareMode.private": "Private",
+  "products.viewOnExplore": "View on Explore",
   "products.creditPrice": "Price (credits)",
   "products.totalCredits": "Credits charged",
   "products.langPair": "Language pair",
