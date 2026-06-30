@@ -6,6 +6,8 @@ import {
   API_AUTH_VERIFY_RESEND,
 } from '../config'
 import { apiRequest, storeTokenPair, type TokenPairDto } from './client'
+import { langPairFromAccount } from '../utils/accountLangPrefs'
+import { saveDeviceSession } from '../utils/deviceSessionStorage'
 
 /** Thông tin tài khoản trả về từ `/api/auth/me`, `/resend`, và PATCH `/me`. */
 export type AccountDto = {
@@ -16,38 +18,53 @@ export type AccountDto = {
   studyLangCode: string
 }
 
-/** Cặp token + userId trả về từ `/api/auth/login` và `/api/auth/register`. */
-type EmailSessionDto = TokenPairDto & {
+/** Token + userId + lang prefs từ `/api/auth/login` và `/api/auth/register`. */
+export type EmailSessionDto = TokenPairDto & {
   userId: string
+  nativeLangCode: string
+  studyLangCode: string
+}
+
+function applySessionLangPrefs(session: EmailSessionDto): void {
+  const pair = langPairFromAccount({
+    userId: session.userId,
+    email: '',
+    emailVerified: false,
+    nativeLangCode: session.nativeLangCode,
+    studyLangCode: session.studyLangCode,
+  })
+  if (pair) {
+    saveDeviceSession(pair)
+  }
 }
 
 /**
- * Đăng ký tài khoản web bằng email + mật khẩu. Thành công → server trả cặp token + userId và
- * phiên được lưu ngay (auto đăng nhập). Ném ApiError với `code` (vd. email_taken, weak_password).
- * Trả về userId để caller lưu vào context/state.
+ * Đăng ký tài khoản web bằng email + mật khẩu. Thành công → server trả cặp token + userId +
+ * nativeLangCode/studyLangCode (có thể rỗng nếu chưa set) và phiên được lưu ngay.
  */
-export async function registerEmail(email: string, password: string): Promise<string> {
+export async function registerEmail(email: string, password: string): Promise<EmailSessionDto> {
   const res = await apiRequest<EmailSessionDto>(API_AUTH_REGISTER, {
     method: 'POST',
     body: { email, password },
     auth: false,
   })
   storeTokenPair(res)
-  return res.userId
+  applySessionLangPrefs(res)
+  return res
 }
 
 /**
- * Đăng nhập bằng email + mật khẩu. Thành công → lưu phiên. Sai thông tin → ApiError với
- * `code` = invalid_credentials. Trả về userId để caller lưu vào context/state.
+ * Đăng nhập bằng email + mật khẩu. Thành công → lưu phiên + áp lang prefs nếu hợp lệ.
  */
-export async function loginEmail(email: string, password: string): Promise<string> {
+export async function loginEmail(email: string, password: string): Promise<EmailSessionDto> {
   const res = await apiRequest<EmailSessionDto>(API_AUTH_LOGIN, {
     method: 'POST',
     body: { email, password },
     auth: false,
   })
   storeTokenPair(res)
-  return res.userId
+  applySessionLangPrefs(res)
+  return res
 }
 
 /** Xác thực email bằng token từ link. Public (không cần đăng nhập). */

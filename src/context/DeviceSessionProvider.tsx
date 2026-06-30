@@ -10,6 +10,7 @@ import {
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { clearAuthTokens } from '../api/authTokens'
 import { ensureAccessToken } from '../api/client'
+import { getAccount } from '../api/emailAuth'
 import { redeemLink } from '../api/deviceLink'
 import { LanguagePairProvider } from './LanguagePairProvider'
 import { AuthLoadingPage } from '../pages/AuthGatePages'
@@ -22,6 +23,7 @@ import {
   type DeviceSession,
 } from '../utils/deviceSessionStorage'
 import { getAuthCode, getPathAuthCode, resolveLangPair } from '../utils/linkParams'
+import { langPairFromAccount } from '../utils/accountLangPrefs'
 
 type SessionStatus = 'loading' | 'authorized' | 'unauthorized'
 
@@ -65,12 +67,29 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
         return
       }
       if (authorized) {
-        saveDeviceSession(langPair)
+        let finalPair = langPair
+        const hasUrlNative = searchParams.has('nativeLangCode')
+        const hasUrlStudy = searchParams.has('studyLangCode')
+        if (!hasUrlNative || !hasUrlStudy) {
+          try {
+            const account = await getAccount()
+            const fromAccount = langPairFromAccount(account)
+            if (fromAccount) {
+              finalPair = {
+                nativeLangCode: hasUrlNative ? finalPair.nativeLangCode : fromAccount.nativeLangCode,
+                studyLangCode: hasUrlStudy ? finalPair.studyLangCode : fromAccount.studyLangCode,
+              }
+            }
+          } catch {
+            // Giữ cặp ngôn ngữ từ URL / sessionStorage nếu không đọc được tài khoản.
+          }
+        }
+        saveDeviceSession(finalPair)
         // Dọn mã khỏi URL (dùng-một-lần) và đưa về trang chủ.
         if (pathCode) {
           navigate('/', { replace: true })
         }
-        setLangs(langPair)
+        setLangs(finalPair)
         setStatus('authorized')
       } else {
         clearAuthTokens()
