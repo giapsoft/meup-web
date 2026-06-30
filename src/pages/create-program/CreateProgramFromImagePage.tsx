@@ -222,7 +222,7 @@ export function CreateProgramFromImagePage() {
   return (
     <main className={WIZARD_MAIN}>
       <Link
-        to="/programs/new"
+        to="/products/new"
         className="inline-flex text-sm text-text-muted no-underline transition hover:text-accent"
       >
         {t('createProgram.hubBack')}
@@ -503,7 +503,7 @@ export function CreateProgramFromImagePage() {
           )}
 
           <Link
-            to="/programs/new"
+            to="/products/new"
             className={`mt-6 lg:max-w-xs ${WIZARD_ACTION_SECONDARY} inline-flex items-center justify-center no-underline`}
           >
             {t('createHub.backHub')}

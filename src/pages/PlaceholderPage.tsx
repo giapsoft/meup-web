@@ -2,17 +2,15 @@ import { Link } from 'react-router-dom'
 import { useLanguagePair } from '../context/LanguagePairProvider'
 import type { TranslationKey } from '../i18n/types'
 
-export type PlaceholderPageKey = 'programs' | 'programsNew' | 'explore'
+export type PlaceholderPageKey = 'products' | 'explore'
 
 const TITLE_KEYS: Record<PlaceholderPageKey, TranslationKey> = {
-  programs: 'placeholder.programs.title',
-  programsNew: 'placeholder.programsNew.title',
+  products: 'placeholder.products.title',
   explore: 'placeholder.explore.title',
 }
 
 const DESCRIPTION_KEYS: Record<PlaceholderPageKey, TranslationKey> = {
-  programs: 'placeholder.programs.description',
-  programsNew: 'placeholder.programsNew.description',
+  products: 'placeholder.products.description',
   explore: 'placeholder.explore.description',
 }
 

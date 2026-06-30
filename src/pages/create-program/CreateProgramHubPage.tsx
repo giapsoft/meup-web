@@ -14,26 +14,26 @@ type CreateMode = {
 
 const CREATE_MODES: CreateMode[] = [
   {
-    to: '/programs/new/manual',
+    to: '/products/new/manual',
     icon: '✏️',
     titleKey: 'createHub.manual.title',
     descriptionKey: 'createHub.manual.description',
     variant: 'primary',
   },
   {
-    to: '/programs/new/ai/title',
+    to: '/products/new/ai/title',
     icon: '💡',
     titleKey: 'createHub.aiTitle.title',
     descriptionKey: 'createHub.aiTitle.description',
   },
   {
-    to: '/programs/new/ai/paragraph',
+    to: '/products/new/ai/paragraph',
     icon: '📄',
     titleKey: 'createHub.aiParagraph.title',
     descriptionKey: 'createHub.aiParagraph.description',
   },
   {
-    to: '/programs/new/ai/image',
+    to: '/products/new/ai/image',
     icon: '🖼️',
     titleKey: 'createHub.aiImage.title',
     descriptionKey: 'createHub.aiImage.description',
@@ -72,10 +72,10 @@ export function CreateProgramHubPage() {
       </div>
 
       <Link
-        to="/programs"
+        to="/products"
         className="mt-8 inline-flex text-sm text-text-muted no-underline transition hover:text-accent"
       >
-        {t('createHub.backPrograms')}
+        {t('createHub.backProducts')}
       </Link>
     </main>
   )

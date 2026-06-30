@@ -74,27 +74,27 @@ export function HomePage() {
 
       <section>
         <h2 className="mb-4 text-base font-semibold text-text sm:text-lg">
-          {t('programs.sectionTitle')}
+          {t('products.sectionTitle')}
         </h2>
         <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           <ActionCard
-            to="/programs"
+            to="/products"
             icon="📚"
-            title={t('programs.my.title')}
-            description={t('programs.my.description')}
+            title={t('products.my.title')}
+            description={t('products.my.description')}
           />
           <ActionCard
-            to="/programs/new"
+            to="/products/new"
             icon="✨"
-            title={t('programs.new.title')}
-            description={t('programs.new.description')}
+            title={t('products.new.title')}
+            description={t('products.new.description')}
             variant="primary"
           />
           <ActionCard
             to="/explore"
             icon="🧭"
-            title={t('programs.explore.title')}
-            description={t('programs.explore.description')}
+            title={t('products.explore.title')}
+            description={t('products.explore.description')}
             className="sm:col-span-2 lg:col-span-1"
           />
         </div>

@@ -23,7 +23,7 @@ export function CreateProgramAiSoonPage() {
 
   const keys = mode ? AI_MODE_KEYS[mode] : undefined
   if (!keys) {
-    return <Navigate to="/programs/new" replace />
+    return <Navigate to="/products/new" replace />
   }
 
   return (
@@ -36,13 +36,13 @@ export function CreateProgramAiSoonPage() {
       </p>
       <div className="mt-8 flex flex-wrap gap-3">
         <Link
-          to="/programs/new/manual"
+          to="/products/new/manual"
           className="inline-flex rounded-xl border border-accent/40 bg-accent-soft px-4 py-2.5 text-sm font-medium text-accent no-underline transition hover:bg-accent/20"
         >
           {t('createHub.manualCta')}
         </Link>
         <Link
-          to="/programs/new"
+          to="/products/new"
           className="inline-flex rounded-xl border border-border bg-surface-card px-4 py-2.5 text-sm font-medium text-text no-underline transition hover:border-accent/40"
         >
           {t('createHub.backHub')}

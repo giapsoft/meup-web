@@ -196,7 +196,7 @@ export function CreateProgramWizard() {
   return (
     <main className={WIZARD_MAIN}>
       <Link
-        to="/programs/new"
+        to="/products/new"
         className="inline-flex text-sm text-text-muted no-underline transition hover:text-accent"
       >
         {t('createProgram.hubBack')}

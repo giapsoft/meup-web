@@ -5,22 +5,22 @@ export type MainNavItem = {
   labelKey: TranslationKey
   /** When set, pathname.startsWith this marks the item active (except `excludePrefix`). */
   activePrefix?: string
-  /** Skip active match when pathname starts with this (e.g. /programs vs /programs/new). */
+  /** Skip active match when pathname starts with this (e.g. /products vs /products/new). */
   excludePrefix?: string
 }
 
 export const MAIN_NAV_ITEMS: MainNavItem[] = [
   { path: '/', labelKey: 'nav.home' },
   {
-    path: '/programs',
-    labelKey: 'nav.programs',
-    activePrefix: '/programs',
-    excludePrefix: '/programs/new',
+    path: '/products',
+    labelKey: 'nav.products',
+    activePrefix: '/products',
+    excludePrefix: '/products/new',
   },
   {
-    path: '/programs/new',
+    path: '/products/new',
     labelKey: 'nav.create',
-    activePrefix: '/programs/new',
+    activePrefix: '/products/new',
   },
   { path: '/explore', labelKey: 'nav.explore', activePrefix: '/explore' },
 ]
@@ -36,4 +36,12 @@ export function isNavItemActive(pathname: string, item: MainNavItem): boolean {
     return true
   }
   return pathname === item.path
+}
+
+/** Legacy `/programs/*` paths from early web mockups. */
+export function legacyProgramsRedirectPath(pathname: string): string | null {
+  if (!pathname.startsWith('/programs')) {
+    return null
+  }
+  return pathname.replace(/^\/programs/, '/products')
 }

@@ -12,6 +12,7 @@ import { CreateProgramFromTitlePage } from './pages/create-program/CreateProgram
 import { CreateProgramHubPage } from './pages/create-program/CreateProgramHubPage'
 import { CreateProgramWizard } from './pages/create-program/CreateProgramWizard'
 import { PlaceholderPage, type PlaceholderPageKey } from './pages/PlaceholderPage'
+import { LegacyProgramsRedirect } from './pages/LegacyProgramsRedirect'
 
 function AppShell() {
   const { uiLocale } = useLanguagePair()
@@ -26,7 +27,7 @@ function AppShell() {
   }, [clearSession, navigate, reauthorize])
 
   const placeholders: { path: string; page: PlaceholderPageKey }[] = [
-    { path: '/programs', page: 'programs' },
+    { path: '/products', page: 'products' },
     { path: '/explore', page: 'explore' },
   ]
 
@@ -36,15 +37,16 @@ function AppShell() {
       <VerifyEmailBanner />
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/programs/new" element={<CreateProgramHubPage />} />
-        <Route path="/programs/new/manual" element={<CreateProgramWizard key={uiLocale} />} />
-        <Route path="/programs/new/ai/title" element={<CreateProgramFromTitlePage key={uiLocale} />} />
-        <Route path="/programs/new/ai/paragraph" element={<CreateProgramFromParagraphPage key={uiLocale} />} />
-        <Route path="/programs/new/ai/image" element={<CreateProgramFromImagePage key={uiLocale} />} />
-        <Route path="/programs/new/ai/:mode" element={<CreateProgramAiSoonPage />} />
+        <Route path="/products/new" element={<CreateProgramHubPage />} />
+        <Route path="/products/new/manual" element={<CreateProgramWizard key={uiLocale} />} />
+        <Route path="/products/new/ai/title" element={<CreateProgramFromTitlePage key={uiLocale} />} />
+        <Route path="/products/new/ai/paragraph" element={<CreateProgramFromParagraphPage key={uiLocale} />} />
+        <Route path="/products/new/ai/image" element={<CreateProgramFromImagePage key={uiLocale} />} />
+        <Route path="/products/new/ai/:mode" element={<CreateProgramAiSoonPage />} />
         {placeholders.map(({ path, page }) => (
           <Route key={path} path={path} element={<PlaceholderPage page={page} />} />
         ))}
+        <Route path="/programs/*" element={<LegacyProgramsRedirect />} />
       </Routes>
     </div>
   )
