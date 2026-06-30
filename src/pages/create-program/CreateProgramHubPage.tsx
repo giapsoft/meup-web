@@ -31,7 +31,6 @@ const CREATE_MODES: CreateMode[] = [
     icon: '📄',
     titleKey: 'createHub.aiParagraph.title',
     descriptionKey: 'createHub.aiParagraph.description',
-    soon: true,
   },
   {
     to: '/programs/new/ai/image',

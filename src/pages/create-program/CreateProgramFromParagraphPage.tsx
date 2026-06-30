@@ -49,16 +49,26 @@ const FIELD_TYPE_KEYS: Record<SchemaFieldUiType, TranslationKey> = {
   'text+audio': 'createProgram.fieldType.textAudio',
 }
 
-export function CreateProgramFromTitlePage() {
+const PARAGRAPH_PREVIEW_MAX = 280
+
+function paragraphPreview(text: string): string {
+  const trimmed = text.trim()
+  if (trimmed.length <= PARAGRAPH_PREVIEW_MAX) {
+    return trimmed
+  }
+  return `${trimmed.slice(0, PARAGRAPH_PREVIEW_MAX)}…`
+}
+
+export function CreateProgramFromParagraphPage() {
   const { nativeLang, studyLang, langPair, t } = useLanguagePair()
 
   const [step, setStep] = useState<Step>('setup')
   const [name, setName] = useState('')
-  const [topic, setTopic] = useState('')
+  const [paragraph, setParagraph] = useState('')
   const [wordCountText, setWordCountText] = useState('')
   const [wordCount, setWordCount] = useState<number | null>(null)
   const [nameError, setNameError] = useState('')
-  const [topicError, setTopicError] = useState('')
+  const [paragraphError, setParagraphError] = useState('')
   const [wordCountError, setWordCountError] = useState('')
   const [itemSchemaEditor, setItemSchemaEditor] = useState<ItemSchemaEditorState>(() =>
     createPresetItemSchemaEditor(t),
@@ -79,7 +89,7 @@ export function CreateProgramFromTitlePage() {
 
   function handleContinueSetup() {
     const trimmedName = name.trim()
-    const trimmedTopic = topic.trim()
+    const trimmedParagraph = paragraph.trim()
     let valid = true
     if (!trimmedName) {
       setNameError(t('createProgram.validation.nameRequired'))
@@ -87,11 +97,11 @@ export function CreateProgramFromTitlePage() {
     } else {
       setNameError('')
     }
-    if (!trimmedTopic) {
-      setTopicError(t('createAiTitle.validation.topicRequired'))
+    if (!trimmedParagraph) {
+      setParagraphError(t('createAiParagraph.validation.paragraphRequired'))
       valid = false
     } else {
-      setTopicError('')
+      setParagraphError('')
     }
     const wordCountResult = validateWordCountInput(wordCountText, t)
     if (!wordCountResult.ok) {
@@ -127,7 +137,7 @@ export function CreateProgramFromTitlePage() {
     setLiveProgress(null)
 
     const payload = toProductCreatePayloadString(itemSchema, levels, [])
-    const job = buildVocabJob('fromTitle', topic, wordCount ?? AI_VOCAB_MIN_WORD_COUNT)
+    const job = buildVocabJob('fromParagraph', paragraph, wordCount ?? AI_VOCAB_MIN_WORD_COUNT)
 
     try {
       const account = await getAccount()
@@ -199,7 +209,7 @@ export function CreateProgramFromTitlePage() {
                       : 'bg-surface-raised text-text-muted/60',
                 ].join(' ')}
               >
-                {index + 1}. {t(`createAiTitle.step.${s}` as TranslationKey)}
+                {index + 1}. {t(`createAiParagraph.step.${s}` as TranslationKey)}
               </li>
             )
           })}
@@ -208,14 +218,14 @@ export function CreateProgramFromTitlePage() {
 
       {step === 'setup' && (
         <section className={`${WIZARD_NARROW_SECTION} mt-4`}>
-          <h1 className="text-xl font-semibold text-text sm:text-2xl">{t('createAiTitle.setup.title')}</h1>
-          <p className="mt-2 text-sm text-text-muted">{t('createAiTitle.setup.hint')}</p>
+          <h1 className="text-xl font-semibold text-text sm:text-2xl">{t('createAiParagraph.setup.title')}</h1>
+          <p className="mt-2 text-sm text-text-muted">{t('createAiParagraph.setup.hint')}</p>
 
-          <label className="mt-6 block text-sm font-medium text-text" htmlFor="ai-title-program-name">
+          <label className="mt-6 block text-sm font-medium text-text" htmlFor="ai-paragraph-program-name">
             {t('createProgram.stepName.label')}
           </label>
           <input
-            id="ai-title-program-name"
+            id="ai-paragraph-program-name"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -224,24 +234,29 @@ export function CreateProgramFromTitlePage() {
           />
           {nameError && <p className="mt-2 text-sm text-warning">{nameError}</p>}
 
-          <label className="mt-5 block text-sm font-medium text-text" htmlFor="ai-title-topic">
-            {t('createAiTitle.setup.topicLabel')}
+          <label className="mt-5 block text-sm font-medium text-text" htmlFor="ai-paragraph-text">
+            {t('createAiParagraph.setup.paragraphLabel')}
           </label>
-          <input
-            id="ai-title-topic"
-            type="text"
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-            placeholder={t('createAiTitle.setup.topicPlaceholder')}
-            className="mt-2 w-full rounded-xl border border-border bg-surface-card px-4 py-3 text-sm text-text focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25 sm:text-base"
+          <textarea
+            id="ai-paragraph-text"
+            value={paragraph}
+            onChange={(e) => {
+              setParagraph(e.target.value)
+              if (paragraphError) {
+                setParagraphError('')
+              }
+            }}
+            placeholder={t('createAiParagraph.setup.paragraphPlaceholder')}
+            rows={8}
+            className="mt-2 w-full resize-y rounded-xl border border-border bg-surface-card px-4 py-3 text-sm leading-relaxed text-text focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25 sm:text-base"
           />
-          {topicError && <p className="mt-2 text-sm text-warning">{topicError}</p>}
+          {paragraphError && <p className="mt-2 text-sm text-warning">{paragraphError}</p>}
 
-          <label className="mt-5 block text-sm font-medium text-text" htmlFor="ai-title-word-count">
+          <label className="mt-5 block text-sm font-medium text-text" htmlFor="ai-paragraph-word-count">
             {t('createAiTitle.setup.wordCountLabel')}
           </label>
           <input
-            id="ai-title-word-count"
+            id="ai-paragraph-word-count"
             type="number"
             min={AI_VOCAB_MIN_WORD_COUNT}
             max={AI_VOCAB_MAX_WORD_COUNT}
@@ -281,7 +296,7 @@ export function CreateProgramFromTitlePage() {
       {step === 'schema' && (
         <section className={`${WIZARD_NARROW_SECTION} mt-4`}>
           <h1 className="text-xl font-semibold text-text sm:text-2xl">{t('createProgram.stepSchema.title')}</h1>
-          <p className="mt-2 text-sm text-text-muted">{t('createAiTitle.schema.hint')}</p>
+          <p className="mt-2 text-sm text-text-muted">{t('createAiParagraph.schema.hint')}</p>
           <p className="mt-1 text-xs text-text-muted">{name}</p>
 
           <ItemSchemaEditor
@@ -304,8 +319,8 @@ export function CreateProgramFromTitlePage() {
 
       {step === 'review' && (
         <section className={`${WIZARD_NARROW_SECTION} mt-4`}>
-          <h1 className="text-xl font-semibold text-text sm:text-2xl">{t('createAiTitle.review.title')}</h1>
-          <p className="mt-2 text-sm text-text-muted">{t('createAiTitle.review.hint')}</p>
+          <h1 className="text-xl font-semibold text-text sm:text-2xl">{t('createAiParagraph.review.title')}</h1>
+          <p className="mt-2 text-sm text-text-muted">{t('createAiParagraph.review.hint')}</p>
 
           <dl className="mt-5 space-y-3 text-sm">
             <div>
@@ -313,16 +328,16 @@ export function CreateProgramFromTitlePage() {
               <dd className="font-medium text-text">{name.trim()}</dd>
             </div>
             <div>
-              <dt className="text-text-muted">{t('createAiTitle.setup.topicLabel')}</dt>
-              <dd className="font-medium text-text">{topic.trim()}</dd>
+              <dt className="text-text-muted">{t('createAiParagraph.setup.paragraphLabel')}</dt>
+              <dd className="whitespace-pre-wrap text-text">{paragraphPreview(paragraph)}</dd>
             </div>
             <div>
               <dt className="text-text-muted">{t('createAiTitle.setup.wordCountLabel')}</dt>
               <dd className="font-medium text-text">{wordCount ?? '—'}</dd>
             </div>
             <div>
-              <dt className="text-text-muted">{t('createAiTitle.review.jobType')}</dt>
-              <dd className="font-mono text-xs text-text">vocab · fromTitle</dd>
+              <dt className="text-text-muted">{t('createAiParagraph.review.jobType')}</dt>
+              <dd className="font-mono text-xs text-text">vocab · fromParagraph</dd>
             </div>
             <div>
               <dt className="text-text-muted">{t('createAiTitle.review.credits')}</dt>
@@ -347,7 +362,7 @@ export function CreateProgramFromTitlePage() {
               {t('createProgram.stepSchema.back')}
             </button>
             <button type="button" onClick={handleSubmit} className={WIZARD_ACTION_PRIMARY}>
-              {t('createAiTitle.review.submit')}
+              {t('createAiParagraph.review.submit')}
             </button>
           </div>
         </section>
@@ -357,7 +372,7 @@ export function CreateProgramFromTitlePage() {
         <section className={`${WIZARD_NARROW_SECTION} mt-4`}>
           <h1 className="text-xl font-semibold text-text sm:text-2xl">
             {submitState.phase === 'submitting' || submitState.phase === 'processing'
-              ? t('createAiTitle.done.processingTitle')
+              ? t('createAiParagraph.done.processingTitle')
               : submitState.phase === 'success'
                 ? t('createProgram.stepDone.title')
                 : submitState.phase === 'failed'
@@ -368,9 +383,9 @@ export function CreateProgramFromTitlePage() {
             {submitState.phase === 'submitting'
               ? t('createProgram.stepDone.submittingHint')
               : submitState.phase === 'processing'
-                ? t('createAiTitle.done.processingHint')
+                ? t('createAiParagraph.done.processingHint')
                 : submitState.phase === 'success'
-                  ? t('createAiTitle.done.successHint')
+                  ? t('createAiParagraph.done.successHint')
                   : submitState.phase === 'failed'
                     ? submitState.message
                     : t('createProgram.stepDone.subtitle')}
