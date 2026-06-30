@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { MainNav } from './MainNav'
+import { useAccount } from '../context/AccountProvider'
 import { useLanguagePair } from '../context/LanguagePairProvider'
 import { useTheme } from '../context/ThemeProvider'
-import { MOCK_DEVICE } from '../data/mock'
 
 type HeaderProps = {
   onLogout: () => void
@@ -33,6 +33,7 @@ function ThemeToggle({ checked, onChange, label }: { checked: boolean; onChange:
 
 export function Header({ onLogout }: HeaderProps) {
   const { t } = useLanguagePair()
+  const { creditBalance } = useAccount()
   const { darkMode, setDarkMode } = useTheme()
   const [menuOpen, setMenuOpen] = useState(false)
   const [navOpen, setNavOpen] = useState(false)
@@ -87,7 +88,7 @@ export function Header({ onLogout }: HeaderProps) {
           </span>
           <div className="min-w-0 text-left">
             <p className="truncate text-sm font-semibold text-text sm:text-base">MeUp</p>
-            <p className="hidden truncate text-xs text-text-muted sm:block">{MOCK_DEVICE.name}</p>
+            <p className="hidden truncate text-xs text-text-muted sm:block">MeUp Web</p>
           </div>
         </Link>
 
@@ -132,8 +133,8 @@ export function Header({ onLogout }: HeaderProps) {
               title={t('nav.creditsTitle')}
             >
               <span className="text-xs text-text-muted sm:text-sm">{t('nav.credits')}</span>
-              <span className="text-sm font-semibold tabular-nums text-credit sm:text-base">
-                {MOCK_DEVICE.creditsRemaining}
+              <span className="min-w-[1ch] text-sm font-semibold tabular-nums text-credit sm:text-base">
+                {creditBalance}
               </span>
             </button>
 

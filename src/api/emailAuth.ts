@@ -9,27 +9,26 @@ import { apiRequest, storeTokenPair, type TokenPairDto } from './client'
 import { langPairFromAccount } from '../utils/accountLangPrefs'
 import { saveDeviceSession } from '../utils/deviceSessionStorage'
 
-/** Thông tin tài khoản trả về từ `/api/auth/me`, `/resend`, và PATCH `/me`. */
+/** Thông tin tài khoản trả về từ `/api/auth/me`, `/resend`, PATCH `/me`, login và register. */
 export type AccountDto = {
   userId: string
   email: string
   emailVerified: boolean
   nativeLangCode: string
   studyLangCode: string
+  creditBalance: number
 }
 
-/** Token + userId + lang prefs từ `/api/auth/login` và `/api/auth/register`. */
+/** Token + userId + lang prefs + credits từ `/api/auth/login` và `/api/auth/register`. */
 export type EmailSessionDto = TokenPairDto & {
   userId: string
   nativeLangCode: string
   studyLangCode: string
+  creditBalance: number
 }
 
 function applySessionLangPrefs(session: EmailSessionDto): void {
   const pair = langPairFromAccount({
-    userId: session.userId,
-    email: '',
-    emailVerified: false,
     nativeLangCode: session.nativeLangCode,
     studyLangCode: session.studyLangCode,
   })

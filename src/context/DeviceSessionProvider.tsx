@@ -14,6 +14,7 @@ import { ensureAccessToken } from '../api/client'
 import { getAccount } from '../api/emailAuth'
 import { redeemLink } from '../api/deviceLink'
 import { LanguagePairProvider } from './LanguagePairProvider'
+import { AccountProvider } from './AccountProvider'
 import { AuthLoadingPage } from '../pages/AuthGatePages'
 import { AuthPages } from '../pages/auth/AuthPages'
 import { VerifyEmailPage } from '../pages/auth/VerifyEmailPage'
@@ -151,7 +152,7 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
           initialNativeLang={langs.nativeLangCode}
           initialStudyLang={langs.studyLangCode}
         >
-          {children}
+          <AccountProvider>{children}</AccountProvider>
         </LanguagePairProvider>
       </DeviceSessionContext.Provider>
     )

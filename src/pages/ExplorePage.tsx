@@ -6,6 +6,7 @@ import {
   type CatalogProductDto,
 } from '../api/product'
 import { useLanguagePair } from '../context/LanguagePairProvider'
+import { useAccount } from '../context/AccountProvider'
 import type { TranslationKey } from '../i18n/types'
 import { userCanUseCatalogProduct } from '../utils/catalogProductAccess'
 
@@ -86,6 +87,7 @@ function CatalogCard({ product, purchasing, purchaseError, onPurchase }: Catalog
 
 export function ExplorePage() {
   const { t, nativeLang, studyLang, langPair } = useLanguagePair()
+  const { refreshAccount } = useAccount()
   const [loadState, setLoadState] = useState<LoadState>({ phase: 'loading' })
   const [products, setProducts] = useState<CatalogProductDto[]>([])
   const [page, setPage] = useState(1)
@@ -130,6 +132,7 @@ export function ExplorePage() {
         setProducts((prev) =>
           prev.map((p) => (p.productId === productId ? { ...p, isPurchased: true } : p)),
         )
+        await refreshAccount()
       } catch (err) {
         setPurchaseErrors((prev) => ({
           ...prev,
@@ -139,7 +142,7 @@ export function ExplorePage() {
         setPurchasingId(null)
       }
     },
-    [purchasingId, t],
+    [purchasingId, t, refreshAccount],
   )
 
   useEffect(() => {
