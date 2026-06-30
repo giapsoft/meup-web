@@ -1,3 +1,4 @@
+import { API_PRODUCT_SETTINGS } from '../config'
 import { apiRequest } from './client'
 
 /** Matches `GET /api/product/owned` → `ownedProductData`. */
@@ -79,6 +80,25 @@ export type PurchaseProductResponse = {
   creditAmount: number
 }
 
+/** Matches `PATCH /api/product/settings` response `data` (`ProductSettings` in Go). */
+export type ProductSettingsDto = {
+  productId: string
+  name: string
+  description: string
+  creditPrice: number
+  shareMode: string
+  updatedAt: string
+}
+
+/** Body for `PATCH /api/product/settings` — send only fields to update (plus productId). */
+export type PatchProductSettingsBody = {
+  productId: string
+  name?: string
+  description?: string
+  creditPrice?: number
+  shareMode?: 'public' | 'private'
+}
+
 export type ListProductCatalogParams = {
   nativeLang?: string
   studyLang?: string
@@ -136,5 +156,15 @@ export async function purchaseProduct(productId: string): Promise<PurchaseProduc
   return apiRequest<PurchaseProductResponse>('/api/product/purchase', {
     method: 'POST',
     body: { productId },
+  })
+}
+
+/** Owner updates marketplace metadata. JWT required; owner from `sub`. */
+export async function patchProductSettings(
+  body: PatchProductSettingsBody,
+): Promise<ProductSettingsDto> {
+  return apiRequest<ProductSettingsDto>(API_PRODUCT_SETTINGS, {
+    method: 'PATCH',
+    body,
   })
 }

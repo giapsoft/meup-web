@@ -31,5 +31,8 @@ export const API_PRODUCT_CREATE = '/api/product-create'
 /** Poll tiến độ tạo bộ từ — path prefix, thêm `/{requestId}/progress`. */
 export const API_PRODUCT_CREATE_PROGRESS = '/api/product-create'
 
+/** Owner cập nhật metadata marketplace (shareMode, creditPrice, …). */
+export const API_PRODUCT_SETTINGS = '/api/product/settings'
+
 /** Khoảng đệm (ms) coi access token là "sắp hết hạn" để refresh trước, tránh lỗi 401. */
 export const ACCESS_TOKEN_SKEW_MS = 30_000

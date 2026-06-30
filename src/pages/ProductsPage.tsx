@@ -7,8 +7,10 @@ import {
   listProductCreateRequests,
   type OwnedProductDto,
   type ProductCreateRequestSummaryDto,
+  type ProductSettingsDto,
 } from '../api/product'
 import { getProductCreateProgress, type ProductCreateProgressDto } from '../api/productCreate'
+import { ProductSettingsModal } from '../components/ProductSettingsModal'
 import { useLanguagePair } from '../context/LanguagePairProvider'
 import type { TranslationKey } from '../i18n/types'
 
@@ -96,7 +98,15 @@ function ProgressPanel({
   )
 }
 
-function OwnedProductCard({ product, locale }: { product: OwnedProductDto; locale: string }) {
+function OwnedProductCard({
+  product,
+  locale,
+  onOpenSettings,
+}: {
+  product: OwnedProductDto
+  locale: string
+  onOpenSettings: () => void
+}) {
   const { t } = useLanguagePair()
   const shareKey = SHARE_MODE_KEYS[product.shareMode]
 
@@ -104,15 +114,24 @@ function OwnedProductCard({ product, locale }: { product: OwnedProductDto; local
     <article className="rounded-2xl border border-border bg-surface-card p-4 sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <h3 className="text-base font-semibold text-text">{product.name}</h3>
-        {shareKey ? (
-          <span className="rounded-md border border-border bg-surface-raised px-2 py-0.5 text-xs font-medium text-text-muted">
-            {t(shareKey)}
-          </span>
-        ) : (
-          <span className="rounded-md border border-border bg-surface-raised px-2 py-0.5 text-xs text-text-muted">
-            {product.shareMode}
-          </span>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {shareKey ? (
+            <span className="rounded-md border border-border bg-surface-raised px-2 py-0.5 text-xs font-medium text-text-muted">
+              {t(shareKey)}
+            </span>
+          ) : (
+            <span className="rounded-md border border-border bg-surface-raised px-2 py-0.5 text-xs text-text-muted">
+              {product.shareMode}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={onOpenSettings}
+            className="rounded-lg border border-border bg-surface-raised px-3 py-1 text-xs font-medium text-text transition hover:border-accent/40 hover:bg-surface-hover"
+          >
+            {t('products.settings.open')}
+          </button>
+        </div>
       </div>
       {product.description ? (
         <p className="mt-2 text-sm leading-relaxed text-text-muted">{product.description}</p>
@@ -214,6 +233,24 @@ export function ProductsPage() {
   const [requests, setRequests] = useState<ProductCreateRequestSummaryDto[]>([])
   const [requestPage, setRequestPage] = useState(1)
   const [requestTotalPages, setRequestTotalPages] = useState(1)
+  const [settingsProduct, setSettingsProduct] = useState<OwnedProductDto | null>(null)
+
+  const handleSettingsSaved = useCallback((updated: ProductSettingsDto) => {
+    setOwned((prev) =>
+      prev.map((p) =>
+        p.productId === updated.productId
+          ? {
+              ...p,
+              name: updated.name,
+              description: updated.description,
+              creditPrice: updated.creditPrice,
+              shareMode: updated.shareMode,
+              updatedAt: updated.updatedAt,
+            }
+          : p,
+      ),
+    )
+  }, [])
 
   const load = useCallback(async () => {
     setLoadState({ phase: 'loading' })
@@ -312,7 +349,11 @@ export function ProductsPage() {
             <ul className="grid gap-3 sm:gap-4">
               {owned.map((product) => (
                 <li key={product.productId}>
-                  <OwnedProductCard product={product} locale={locale} />
+                  <OwnedProductCard
+                    product={product}
+                    locale={locale}
+                    onOpenSettings={() => setSettingsProduct(product)}
+                  />
                 </li>
               ))}
             </ul>
@@ -357,6 +398,14 @@ export function ProductsPage() {
           </>
         )}
       </section>
+
+      {settingsProduct && (
+        <ProductSettingsModal
+          product={settingsProduct}
+          onClose={() => setSettingsProduct(null)}
+          onSaved={handleSettingsSaved}
+        />
+      )}
     </main>
   )
 }
