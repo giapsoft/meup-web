@@ -37,7 +37,7 @@ type Envelope<T> = {
 }
 
 type RequestOptions = {
-  method?: 'GET' | 'POST'
+  method?: 'GET' | 'POST' | 'PATCH'
   body?: unknown
   /** Đính `Authorization: Bearer` (mặc định true). Đặt false cho redeem/refresh. */
   auth?: boolean

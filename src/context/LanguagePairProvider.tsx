@@ -4,9 +4,11 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
+import { updateLangPrefs } from '../api/emailAuth'
 import { langPairId, resolveUiLocale, translate } from '../i18n/messages'
 import type { MessageParams, TranslationKey, UiLocale } from '../i18n/types'
 import { patchDeviceSession } from '../utils/deviceSessionStorage'
@@ -37,6 +39,12 @@ export function LanguagePairProvider({
   const [nativeLang, setNativeLangState] = useState(initialNativeLang)
   const [studyLang, setStudyLangState] = useState(initialStudyLang)
 
+  // Dùng ref để luôn đọc giá trị mới nhất trong callback mà không tạo closure stale.
+  const nativeLangRef = useRef(nativeLang)
+  const studyLangRef = useRef(studyLang)
+  nativeLangRef.current = nativeLang
+  studyLangRef.current = studyLang
+
   useEffect(() => {
     setNativeLangState(initialNativeLang)
     setStudyLangState(initialStudyLang)
@@ -51,11 +59,17 @@ export function LanguagePairProvider({
   const setNativeLang = useCallback((code: string) => {
     setNativeLangState(code)
     patchDeviceSession({ nativeLangCode: code })
+    void updateLangPrefs(code, studyLangRef.current).catch(() => {
+      // best-effort: lỗi mạng không chặn UI
+    })
   }, [])
 
   const setStudyLang = useCallback((code: string) => {
     setStudyLangState(code)
     patchDeviceSession({ studyLangCode: code })
+    void updateLangPrefs(nativeLangRef.current, code).catch(() => {
+      // best-effort: lỗi mạng không chặn UI
+    })
   }, [])
 
   const t = useCallback(
