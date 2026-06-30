@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { MessageParams, TranslationKey } from '../../i18n/types'
-import type { ItemSchemaAttribute, LevelRangeDraft, VocabItemDraft } from '../../types/program'
+import type { ItemSchema, LevelRangeDraft, VocabItemDraft } from '../../types/program'
 import { sideNumberLabel } from '../../utils/programConfig'
 import {
   allProgramPreviewSides,
@@ -28,7 +28,7 @@ import {
 
 type VocabEntryStepProps = {
   programName: string
-  attributes: ItemSchemaAttribute[]
+  schema: ItemSchema
   levels: LevelRangeDraft[]
   items: VocabItemDraft[]
   onItemsChange: (items: VocabItemDraft[]) => void
@@ -39,7 +39,7 @@ type VocabEntryStepProps = {
 
 export function VocabEntryStep({
   programName,
-  attributes,
+  schema,
   levels,
   items,
   onItemsChange,
@@ -47,7 +47,7 @@ export function VocabEntryStep({
   onContinue,
   t,
 }: VocabEntryStepProps) {
-  const textAttrs = useMemo(() => textAttributes(attributes), [attributes])
+  const textAttrs = useMemo(() => textAttributes(schema), [schema])
   const previewEntries = useMemo(() => allProgramPreviewSides(levels), [levels])
   const levelItems = useMemo(() => buildConfigLevelItems(levels), [levels])
   const [selectedItemId, setSelectedItemId] = useState<string | null>(items[0]?.id ?? null)
@@ -91,7 +91,7 @@ export function VocabEntryStep({
   }
 
   function handleAddRow() {
-    const next = addVocabItem(items, attributes)
+    const next = addVocabItem(items, schema)
     onItemsChange(next)
     setSelectedItemId(next[next.length - 1]?.id ?? null)
   }
@@ -147,7 +147,7 @@ export function VocabEntryStep({
                 <div className="min-w-0 flex-1">
                   <SidePreview
                     side={previewSide}
-                    attributes={attributes}
+                    schema={schema}
                     itemValues={selectedItem.values}
                     itemMediaUrls={itemMediaObjectUrls(selectedItem)}
                     readOnly
@@ -178,7 +178,7 @@ export function VocabEntryStep({
         <div className="space-y-3 lg:mt-0">
           <VocabCsvImportBar
             programName={programName}
-            attributes={attributes}
+            schema={schema}
             items={items}
             onItemsChange={onItemsChange}
             onImported={setSelectedItemId}
@@ -252,7 +252,7 @@ export function VocabEntryStep({
 
           {selectedItem && (
             <VocabMediaPanel
-              attributes={attributes}
+              schema={schema}
               item={selectedItem}
               items={items}
               onItemsChange={onItemsChange}

@@ -1,11 +1,12 @@
 import type { MessageParams, TranslationKey } from '../../i18n/types'
-import type { DisplayElement, ItemSchemaAttribute, SideDraft } from '../../types/program'
+import type { DisplayElement, ItemSchema, SideDraft } from '../../types/program'
 import {
   attributeLabel,
   bringDisplayElementToFront,
   displayLayoutBounds,
   displayStackPosition,
   displayableAttributeIndexes,
+  isImageAttribute,
   isTextAttribute,
   opacityToPercent,
   percentToOpacity,
@@ -28,7 +29,7 @@ import {
 type DisplayElementEditorPanelProps = {
   side: SideDraft
   displayIndex: number
-  attributes: ItemSchemaAttribute[]
+  schema: ItemSchema
   onChange: (side: SideDraft) => void
   onBack: () => void
   t: (key: TranslationKey, params?: MessageParams) => string
@@ -54,7 +55,7 @@ function alignLabel(
 export function DisplayElementEditorPanel({
   side,
   displayIndex,
-  attributes,
+  schema,
   onChange,
   onBack,
   t,
@@ -66,10 +67,10 @@ export function DisplayElementEditorPanel({
     return null
   }
 
-  const isText = isTextAttribute(attributes, el.attributeIndex)
-  const displayIndexes = displayableAttributeIndexes(attributes)
+  const isText = isTextAttribute(schema, el.attributeIndex)
+  const displayIndexes = displayableAttributeIndexes(schema)
   const bounds = displayLayoutBounds(el)
-  const title = attributeLabel(attributes, el.attributeIndex)
+  const title = attributeLabel(schema, el.attributeIndex)
   const stack = displayStackPosition(side, displayIndex)
   const canSendBack = stack.count > 1 && stack.position > 0
   const canBringFront = stack.count > 1 && stack.position < stack.count - 1
@@ -103,8 +104,8 @@ export function DisplayElementEditorPanel({
         >
           {displayIndexes.map((idx) => (
             <option key={idx} value={idx}>
-              {attributeLabel(attributes, idx)} (
-              {attributes[idx].type === 'image'
+              {attributeLabel(schema, idx)} (
+              {isImageAttribute(schema, idx)
                 ? t('createProgram.stepDisplay.typeImage')
                 : t('createProgram.stepDisplay.typeText')}
               )
@@ -203,7 +204,7 @@ export function DisplayElementEditorPanel({
               onChange={(e) =>
                 patch({ ...el, label: e.target.value.trim() ? e.target.value : undefined })
               }
-              placeholder={attributeLabel(attributes, el.attributeIndex)}
+              placeholder={attributeLabel(schema, el.attributeIndex)}
               className="mt-2 w-full min-h-11 rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-text"
             />
             <p className="mt-1 text-xs text-text-muted">

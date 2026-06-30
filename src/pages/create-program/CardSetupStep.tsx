@@ -18,7 +18,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { useEffect, useMemo, useState } from 'react'
 import type { MessageParams, TranslationKey } from '../../i18n/types'
 import { useWizardWideLayout } from '../../hooks/useMediaQuery'
-import type { ItemSchemaAttribute, LevelRangeDraft, SideDraft } from '../../types/program'
+import type { ItemSchema, LevelRangeDraft, SideDraft } from '../../types/program'
 import {
   adjustLevelRangeMaxLvl,
   buildConfigLevelItems,
@@ -38,7 +38,7 @@ import {
 
 type CardSetupStepProps = {
   programName: string
-  attributes: ItemSchemaAttribute[]
+  schema: ItemSchema
   levels: LevelRangeDraft[]
   activeLevelId: string
   onLevelsChange: (levels: LevelRangeDraft[]) => void
@@ -139,7 +139,7 @@ function SortableSideRow({
 
 export function CardSetupStep({
   programName,
-  attributes,
+  schema,
   levels,
   activeLevelId,
   onLevelsChange,
@@ -217,7 +217,7 @@ export function CardSetupStep({
       return
     }
     const nextOrder = activeLevel.sides.length + 1
-    const side = createEmptySide(attributes, nextOrder)
+    const side = createEmptySide(schema, nextOrder)
     updateActiveLevel({ sides: [...activeLevel.sides, side] })
   }
 
@@ -323,7 +323,7 @@ export function CardSetupStep({
             <div className="hidden lg:block">
               <SidePreview
                 side={previewSide}
-                attributes={attributes}
+                schema={schema}
                 hint={t(previewTapHintKey(isWideLayout))}
               />
               <p className="mt-2 text-xs text-text-muted">

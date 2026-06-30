@@ -2,7 +2,14 @@
  * Side / display / playback config — ported from meup
  * `ConfigSideSchema.h`, `ConfigDisplayElement*.h`, `ConfigSideController.h`.
  */
-import type { DisplayElement, ItemSchemaAttribute, PlayStepDraft, SideDraft } from '../types/program'
+import type { DisplayElement, ItemSchema, PlayStepDraft, SideDraft } from '../types/program'
+import {
+  audioLayoutIndexes,
+  displayableLayoutIndexes,
+  layoutSlotLabel,
+  propTypeAt,
+  valueAtLayoutIndex,
+} from './itemSchemaLayout'
 import { cyclePaletteColor, defaultPaletteColor } from './colorPalette'
 import { createPlayStep } from './programConfig'
 
@@ -19,25 +26,12 @@ function positiveMod(n: number, m: number): number {
   return ((n % m) + m) % m
 }
 
-export function displayableAttributeIndexes(attributes: ItemSchemaAttribute[]): number[] {
-  const out: number[] = []
-  for (let i = 0; i < attributes.length; i++) {
-    const type = attributes[i].type
-    if (type === 'text' || type === 'image') {
-      out.push(i)
-    }
-  }
-  return out
+export function displayableAttributeIndexes(schema: ItemSchema): number[] {
+  return displayableLayoutIndexes(schema)
 }
 
-export function audioAttributeIndexes(attributes: ItemSchemaAttribute[]): number[] {
-  const out: number[] = []
-  for (let i = 0; i < attributes.length; i++) {
-    if (attributes[i].type === 'audio') {
-      out.push(i)
-    }
-  }
-  return out
+export function audioAttributeIndexes(schema: ItemSchema): number[] {
+  return audioLayoutIndexes(schema)
 }
 
 export type AttributeLabelOptions = {
@@ -48,66 +42,39 @@ export type AttributeLabelOptions = {
 }
 
 export function attributeLabel(
-  attributes: ItemSchemaAttribute[],
+  schema: ItemSchema,
   attributeIndex: number,
   options?: AttributeLabelOptions,
 ): string {
-  const attr = attributes[attributeIndex]
-  if (!attr) {
-    return options?.fallback ?? '?'
-  }
-  const name = attr.name.trim()
-  if (name) {
-    return name
-  }
-  if (attr.type === 'audio' && attr.key.endsWith('Audio')) {
-    const baseKey = attr.key.slice(0, -'Audio'.length)
-    const textAttr = attributes.find((a) => a.key === baseKey && a.type === 'text')
-    if (textAttr?.name.trim()) {
-      const suffix = options?.audioSuffix?.trim()
-      return suffix ? `${textAttr.name.trim()} ${suffix}` : textAttr.name.trim()
-    }
+  const label = layoutSlotLabel(schema, attributeIndex, options?.audioSuffix?.trim() ?? '')
+  if (label !== '?' && label !== 'Text' && label !== 'Audio' && label !== 'Image') {
+    return label
   }
   if (options?.fallback) {
     return options.fallback
   }
-  if (attr.type === 'image') {
-    return 'Image'
-  }
-  if (attr.type === 'audio') {
-    return 'Audio'
-  }
-  if (attr.type === 'text') {
-    return 'Text'
-  }
-  return '?'
+  return label
 }
 
-export function displayElementPreviewText(
-  el: DisplayElement,
-  attributes: ItemSchemaAttribute[],
-): string {
+export function displayElementPreviewText(el: DisplayElement, schema: ItemSchema): string {
   const custom = el.label?.trim()
   if (custom) {
     return custom
   }
-  return attributeLabel(attributes, el.attributeIndex)
+  return attributeLabel(schema, el.attributeIndex)
 }
 
 /** Preview label from item row when editing vocabulary; falls back to wizard placeholder. */
 export function displayElementContentText(
   el: DisplayElement,
-  attributes: ItemSchemaAttribute[],
+  schema: ItemSchema,
   itemValues?: Record<string, string>,
 ): string {
-  const attr = attributes[el.attributeIndex]
-  if (attr && itemValues) {
-    const value = itemValues[attr.key]?.trim()
-    if (value) {
-      return value
-    }
+  const value = valueAtLayoutIndex(schema, el.attributeIndex, itemValues)
+  if (value) {
+    return value
   }
-  return displayElementPreviewText(el, attributes)
+  return displayElementPreviewText(el, schema)
 }
 
 export function cycleInIndexList(indexes: number[], currentIndex: number, delta: number): number {
@@ -121,17 +88,8 @@ export function cycleInIndexList(indexes: number[], currentIndex: number, delta:
   return indexes[positiveMod(pos + delta, indexes.length)]
 }
 
-export function resolvePlayStepAttributeIndex(
-  step: PlayStepDraft,
-  attributes: ItemSchemaAttribute[],
-): number {
-  if (step.attributeKey) {
-    const idx = attributes.findIndex((a) => a.key === step.attributeKey)
-    if (idx >= 0) {
-      return idx
-    }
-  }
-  return -1
+export function resolvePlayStepAttributeIndex(step: PlayStepDraft): number {
+  return step.attributeIndex ?? -1
 }
 
 export function cyclePauseSeconds(currentSeconds: number, delta: number): number {
@@ -490,28 +448,27 @@ export function adjustBorderRadius(current: number | undefined, delta: number): 
   return Math.max(0, Math.min(32, (current ?? 0) + delta))
 }
 
-export function isTextAttribute(attributes: ItemSchemaAttribute[], attributeIndex: number): boolean {
-  return attributes[attributeIndex]?.type === 'text'
+export function isTextAttribute(schema: ItemSchema, attributeIndex: number): boolean {
+  return propTypeAt(schema, attributeIndex) === 'text'
 }
 
-export function isImageAttribute(attributes: ItemSchemaAttribute[], attributeIndex: number): boolean {
-  return attributes[attributeIndex]?.type === 'image'
+export function isImageAttribute(schema: ItemSchema, attributeIndex: number): boolean {
+  return propTypeAt(schema, attributeIndex) === 'image'
 }
 
 export function createDefaultDisplayElement(
-  attributes: ItemSchemaAttribute[],
+  schema: ItemSchema,
   existingDisplay: DisplayElement[],
 ): DisplayElement | null {
-  const indexes = displayableAttributeIndexes(attributes)
+  const indexes = displayableAttributeIndexes(schema)
   if (indexes.length === 0) {
     return null
   }
   const used = new Set(existingDisplay.map((d) => d.attributeIndex))
   const attributeIndex = indexes.find((i) => !used.has(i)) ?? indexes[0]
-  const attr = attributes[attributeIndex]
   const order = existingDisplay.length
 
-  if (attr.type === 'image') {
+  if (propTypeAt(schema, attributeIndex) === 'image') {
     return { attributeIndex, x: 0, y: 0, w: 1, h: 1, order }
   }
 
@@ -535,10 +492,10 @@ export function cycleSideBackground(side: SideDraft, delta: number): SideDraft {
 export function cycleDisplayAttribute(
   side: SideDraft,
   displayIndex: number,
-  attributes: ItemSchemaAttribute[],
+  schema: ItemSchema,
   delta: number,
 ): SideDraft {
-  const indexes = displayableAttributeIndexes(attributes)
+  const indexes = displayableAttributeIndexes(schema)
   if (indexes.length === 0 || displayIndex < 0 || displayIndex >= side.display.length) {
     return side
   }
@@ -551,8 +508,8 @@ export function cycleDisplayAttribute(
   return { ...side, display }
 }
 
-export function addDisplayElement(side: SideDraft, attributes: ItemSchemaAttribute[]): SideDraft {
-  const el = createDefaultDisplayElement(attributes, side.display)
+export function addDisplayElement(side: SideDraft, schema: ItemSchema): SideDraft {
+  const el = createDefaultDisplayElement(schema, side.display)
   if (!el) {
     return side
   }
@@ -645,7 +602,7 @@ export function updateDisplayElement(
 export function cyclePlayStep(
   side: SideDraft,
   stepIndex: number,
-  attributes: ItemSchemaAttribute[],
+  schema: ItemSchema,
   delta: number,
 ): SideDraft {
   if (stepIndex < 0 || stepIndex >= side.playSteps.length) {
@@ -660,28 +617,27 @@ export function cyclePlayStep(
     }
     return { ...side, playSteps }
   }
-  const audioIndexes = audioAttributeIndexes(attributes)
+  const audioIndexes = audioAttributeIndexes(schema)
   if (audioIndexes.length === 0) {
     return side
   }
-  const current = resolvePlayStepAttributeIndex(step, attributes)
+  const current = resolvePlayStepAttributeIndex(step)
   const nextIndex = cycleInIndexList(audioIndexes, current, delta)
   playSteps[stepIndex] = {
     ...step,
-    attributeKey: attributes[nextIndex]?.key ?? step.attributeKey,
+    attributeIndex: nextIndex,
   }
   return { ...side, playSteps }
 }
 
-export function addPlayStep(side: SideDraft, attributes: ItemSchemaAttribute[]): SideDraft {
-  const audioIndexes = audioAttributeIndexes(attributes)
+export function addPlayStep(side: SideDraft, schema: ItemSchema): SideDraft {
+  const audioIndexes = audioAttributeIndexes(schema)
   if (audioIndexes.length === 0) {
     return side
   }
-  const key = attributes[audioIndexes[0]].key
   return {
     ...side,
-    playSteps: [...side.playSteps, createPlayStep({ kind: 'play', attributeKey: key })],
+    playSteps: [...side.playSteps, createPlayStep({ kind: 'play', attributeIndex: audioIndexes[0] })],
   }
 }
 
@@ -704,14 +660,14 @@ export function removePlayStep(side: SideDraft, stepIndex: number): SideDraft {
 
 export function playStepLabel(
   step: PlayStepDraft,
-  attributes: ItemSchemaAttribute[],
+  schema: ItemSchema,
   tPlay: (name: string) => string,
   tPause: (seconds: number) => string,
 ): string {
   if (step.kind === 'pause') {
     return tPause(step.durationSeconds ?? DEFAULT_PAUSE_SECONDS)
   }
-  const idx = resolvePlayStepAttributeIndex(step, attributes)
-  const name = attributeLabel(attributes, idx)
+  const idx = resolvePlayStepAttributeIndex(step)
+  const name = attributeLabel(schema, idx)
   return tPlay(name)
 }

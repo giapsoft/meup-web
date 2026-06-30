@@ -1,19 +1,24 @@
-import type { DisplayElement, ItemSchemaAttribute, LevelRangeDraft, SideDraft } from '../types/program'
+import type { DisplayElement, ItemSchema, LevelRangeDraft, SideDraft } from '../types/program'
+import {
+  imageLayoutIndex,
+  layoutIndexForAttrKey,
+} from './itemSchemaLayout'
 import {
   createDefaultLevel,
   createEmptySide,
   createPlayStep,
-  indexForKey,
+  firstTextAudioPlayIndex,
 } from './programConfig'
 
-type DisplayTemplate = Omit<DisplayElement, 'attributeIndex'> & { key: string }
+type DisplayTemplate = Omit<DisplayElement, 'attributeIndex'> & { layoutKey: string; slot?: 'text' | 'audio' | 'image' }
 
 type SideTemplateSpec = {
   backgroundColor: string
   display: DisplayTemplate[]
   playSteps: Array<{
     kind: 'play' | 'pause'
-    attributeKey?: string
+    layoutKey?: string
+    slot?: 'text' | 'audio' | 'image'
     durationSeconds?: number
   }>
 }
@@ -22,9 +27,10 @@ const PRESET_SIDE_TEMPLATES: SideTemplateSpec[] = [
   {
     backgroundColor: '#1a1a2e',
     display: [
-      { key: 'image', x: 0, y: 0, w: 1, h: 1, order: 0 },
+      { layoutKey: 'image', slot: 'image', x: 0, y: 0, w: 1, h: 1, order: 0 },
       {
-        key: 'studyText',
+        layoutKey: 'studyText',
+        slot: 'text',
         x: 0.05,
         y: 0.05,
         w: 0.6,
@@ -34,7 +40,8 @@ const PRESET_SIDE_TEMPLATES: SideTemplateSpec[] = [
         order: 1,
       },
       {
-        key: 'ipa',
+        layoutKey: 'ipa',
+        slot: 'text',
         x: 0.05,
         y: 0.6,
         w: 0.9,
@@ -45,16 +52,16 @@ const PRESET_SIDE_TEMPLATES: SideTemplateSpec[] = [
       },
     ],
     playSteps: [
-      { kind: 'play', attributeKey: 'studyTextAudio' },
+      { kind: 'play', layoutKey: 'studyText', slot: 'audio' },
       { kind: 'pause', durationSeconds: 1 },
-      { kind: 'play', attributeKey: 'studyExampleAudio' },
     ],
   },
   {
     backgroundColor: '#16213e',
     display: [
       {
-        key: 'studyExample',
+        layoutKey: 'nativeText',
+        slot: 'text',
         x: 0.05,
         y: 0.1,
         w: 0.9,
@@ -64,21 +71,29 @@ const PRESET_SIDE_TEMPLATES: SideTemplateSpec[] = [
         order: 0,
       },
     ],
-    playSteps: [{ kind: 'play', attributeKey: 'studyExampleAudio' }],
+    playSteps: [{ kind: 'play', layoutKey: 'nativeText', slot: 'audio' }],
   },
 ]
 
-function mapDisplayTemplate(
-  templates: DisplayTemplate[],
-  attributes: ItemSchemaAttribute[],
-): DisplayElement[] {
+function resolveLayoutIndex(
+  schema: ItemSchema,
+  layoutKey: string,
+  slot: 'text' | 'audio' | 'image' = 'text',
+): number {
+  if (slot === 'image' || layoutKey === 'image') {
+    return imageLayoutIndex(schema)
+  }
+  return layoutIndexForAttrKey(schema, layoutKey, slot)
+}
+
+function mapDisplayTemplate(templates: DisplayTemplate[], schema: ItemSchema): DisplayElement[] {
   const out: DisplayElement[] = []
   for (const tpl of templates) {
-    const attributeIndex = indexForKey(attributes, tpl.key)
+    const attributeIndex = resolveLayoutIndex(schema, tpl.layoutKey, tpl.slot ?? 'text')
     if (attributeIndex < 0) {
       continue
     }
-    const { key: _key, ...rest } = tpl
+    const { layoutKey: _layoutKey, slot: _slot, ...rest } = tpl
     out.push({ ...rest, attributeIndex })
   }
   return out.sort((a, b) => a.order - b.order)
@@ -86,24 +101,30 @@ function mapDisplayTemplate(
 
 function mapSideTemplate(
   spec: SideTemplateSpec,
-  attributes: ItemSchemaAttribute[],
+  schema: ItemSchema,
   playOrder: number,
 ): SideDraft | null {
-  const display = mapDisplayTemplate(spec.display, attributes)
+  const display = mapDisplayTemplate(spec.display, schema)
   const playSteps = spec.playSteps
     .filter((step) => {
       if (step.kind === 'pause') {
         return true
       }
-      return step.attributeKey !== undefined && indexForKey(attributes, step.attributeKey) >= 0
+      if (!step.layoutKey) {
+        return false
+      }
+      return resolveLayoutIndex(schema, step.layoutKey, step.slot ?? 'audio') >= 0
     })
-    .map((step) =>
-      createPlayStep({
-        kind: step.kind,
-        attributeKey: step.attributeKey,
-        durationSeconds: step.durationSeconds,
-      }),
-    )
+    .map((step) => {
+      if (step.kind === 'pause') {
+        return createPlayStep({
+          kind: 'pause',
+          durationSeconds: step.durationSeconds,
+        })
+      }
+      const attributeIndex = resolveLayoutIndex(schema, step.layoutKey!, step.slot ?? 'audio')
+      return createPlayStep({ kind: 'play', attributeIndex })
+    })
 
   if (display.length === 0 && playSteps.length === 0) {
     return null
@@ -118,10 +139,10 @@ function mapSideTemplate(
   }
 }
 
-export function buildDefaultSides(attributes: ItemSchemaAttribute[]): SideDraft[] {
+export function buildDefaultSides(schema: ItemSchema): SideDraft[] {
   const fromPresets: SideDraft[] = []
   for (const spec of PRESET_SIDE_TEMPLATES) {
-    const side = mapSideTemplate(spec, attributes, fromPresets.length + 1)
+    const side = mapSideTemplate(spec, schema, fromPresets.length + 1)
     if (side) {
       fromPresets.push(side)
     }
@@ -129,9 +150,14 @@ export function buildDefaultSides(attributes: ItemSchemaAttribute[]): SideDraft[
   if (fromPresets.length > 0) {
     return fromPresets
   }
-  return [createEmptySide(attributes, 1)]
+  const fallback = createEmptySide(schema, 1)
+  const audioIdx = firstTextAudioPlayIndex(schema)
+  if (audioIdx !== undefined && fallback.playSteps.length === 0) {
+    fallback.playSteps = [createPlayStep({ kind: 'play', attributeIndex: audioIdx })]
+  }
+  return [fallback]
 }
 
-export function buildDefaultLevels(attributes: ItemSchemaAttribute[]): LevelRangeDraft[] {
-  return [createDefaultLevel(buildDefaultSides(attributes))]
+export function buildDefaultLevels(schema: ItemSchema): LevelRangeDraft[] {
+  return [createDefaultLevel(buildDefaultSides(schema))]
 }

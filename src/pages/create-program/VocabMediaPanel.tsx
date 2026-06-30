@@ -1,16 +1,16 @@
 import { useId, useRef, useState } from 'react'
 import type { MessageParams, TranslationKey } from '../../i18n/types'
-import type { ItemSchemaAttribute, VocabItemDraft } from '../../types/program'
+import type { ItemSchema, VocabItemDraft } from '../../types/program'
 import {
-  acceptMimeForAttribute,
-  atmeupVocabItemMedia,
-  demeupVocabItemMedia,
-  mediaAttributeLabel,
-  schemaMediaAttributes,
+  acceptMimeForMediaSlot,
+  attachVocabItemMedia,
+  detachVocabItemMedia,
+  mediaSlotLabel,
+  schemaMediaSlots,
 } from '../../utils/vocabMedia'
 
 type VocabMediaPanelProps = {
-  attributes: ItemSchemaAttribute[]
+  schema: ItemSchema
   item: VocabItemDraft
   onItemsChange: (items: VocabItemDraft[]) => void
   items: VocabItemDraft[]
@@ -18,7 +18,7 @@ type VocabMediaPanelProps = {
 }
 
 export function VocabMediaPanel({
-  attributes,
+  schema,
   item,
   items,
   onItemsChange,
@@ -27,34 +27,34 @@ export function VocabMediaPanel({
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
   const previewDialogTitleId = useId()
   const [imagePreview, setImagePreview] = useState<{ url: string; label: string } | null>(null)
-  const mediaAttrs = schemaMediaAttributes(attributes)
+  const slots = schemaMediaSlots(schema)
 
-  if (mediaAttrs.length === 0) {
+  if (slots.length === 0) {
     return null
   }
 
-  function pickFile(attrKey: string) {
-    fileInputRefs.current[attrKey]?.click()
+  function pickFile(mediaKey: string) {
+    fileInputRefs.current[mediaKey]?.click()
   }
 
-  function handleFileChange(attr: ItemSchemaAttribute, fileList: FileList | null) {
+  function handleFileChange(mediaKey: string, fileList: FileList | null) {
     const file = fileList?.[0]
     if (!file) {
       return
     }
-    onItemsChange(atmeupVocabItemMedia(items, item.id, attr.key, file))
+    onItemsChange(attachVocabItemMedia(items, item.id, mediaKey, file))
   }
 
-  function handleClear(attrKey: string) {
-    onItemsChange(demeupVocabItemMedia(items, item.id, attrKey))
-    const input = fileInputRefs.current[attrKey]
+  function handleClear(mediaKey: string) {
+    onItemsChange(detachVocabItemMedia(items, item.id, mediaKey))
+    const input = fileInputRefs.current[mediaKey]
     if (input) {
       input.value = ''
     }
   }
 
-  function handlePlay(attrKey: string) {
-    const url = item.media?.[attrKey]?.objectUrl
+  function handlePlay(mediaKey: string) {
+    const url = item.media?.[mediaKey]?.objectUrl
     if (!url) {
       return
     }
@@ -68,12 +68,12 @@ export function VocabMediaPanel({
         <p className="text-sm font-medium text-text">{t('createProgram.stepVocab.mediaTitle')}</p>
         <p className="mt-1 text-xs text-text-muted">{t('createProgram.stepVocab.mediaHint')}</p>
         <ul className="mt-3 space-y-3">
-          {mediaAttrs.map((attr) => {
-            const media = item.media?.[attr.key]
-            const label = mediaAttributeLabel(attr, attributes, t('createProgram.fieldType.audio'))
+          {slots.map((slot) => {
+            const media = item.media?.[slot.key]
+            const label = mediaSlotLabel(slot, schema)
             return (
               <li
-                key={attr.key}
+                key={slot.key}
                 className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-3 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="min-w-0 flex-1">
@@ -89,24 +89,24 @@ export function VocabMediaPanel({
                 <div className="flex shrink-0 flex-wrap items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => pickFile(attr.key)}
+                    onClick={() => pickFile(slot.key)}
                     className="min-h-9 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-accent hover:border-accent"
                   >
                     {media
                       ? t('createProgram.stepVocab.mediaReplace')
                       : t('createProgram.stepVocab.mediaChoose')}
                   </button>
-                  {attr.type === 'audio' && media && (
+                  {slot.kind === 'audio' && media && (
                     <button
                       type="button"
-                      onClick={() => handlePlay(attr.key)}
+                      onClick={() => handlePlay(slot.key)}
                       className="min-h-9 rounded-lg border border-border px-3 py-1.5 text-sm text-text hover:bg-surface-hover"
                       aria-label={t('createProgram.stepVocab.mediaPlay')}
                     >
                       ▶ {t('createProgram.stepVocab.mediaPlay')}
                     </button>
                   )}
-                  {attr.type === 'image' && media && (
+                  {slot.kind === 'image' && media && (
                     <button
                       type="button"
                       onClick={() => setImagePreview({ url: media.objectUrl, label })}
@@ -118,7 +118,7 @@ export function VocabMediaPanel({
                   {media && (
                     <button
                       type="button"
-                      onClick={() => handleClear(attr.key)}
+                      onClick={() => handleClear(slot.key)}
                       className="min-h-9 rounded-lg px-3 py-1.5 text-sm text-red-400 hover:bg-red-500/10"
                     >
                       {t('createProgram.stepVocab.mediaClear')}
@@ -126,12 +126,12 @@ export function VocabMediaPanel({
                   )}
                   <input
                     ref={(node) => {
-                      fileInputRefs.current[attr.key] = node
+                      fileInputRefs.current[slot.key] = node
                     }}
                     type="file"
-                    accept={acceptMimeForAttribute(attr)}
+                    accept={acceptMimeForMediaSlot(slot)}
                     className="hidden"
-                    onChange={(e) => handleFileChange(attr, e.target.files)}
+                    onChange={(e) => handleFileChange(slot.key, e.target.files)}
                   />
                 </div>
               </li>

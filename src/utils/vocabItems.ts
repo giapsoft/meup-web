@@ -1,25 +1,21 @@
-import type {
-  ItemSchemaAttribute,
-  LevelRangeDraft,
-  VocabItemDraft,
-  VocabMediaExportMeta,
-} from '../types/program'
+import type { ItemSchema, LevelRangeDraft, VocabItemDraft } from '../types/program'
 import { revokeVocabItemMedia } from './vocabMedia'
+import { rowLength } from './itemSchemaLayout'
 
-export function textAttributes(attributes: ItemSchemaAttribute[]): ItemSchemaAttribute[] {
-  return attributes.filter((a) => a.type === 'text')
+export function textAttrs(schema: ItemSchema) {
+  return schema.attrs
 }
 
-export function createEmptyVocabItem(attributes: ItemSchemaAttribute[]): VocabItemDraft {
+export function createEmptyVocabItem(schema: ItemSchema): VocabItemDraft {
   const values: Record<string, string> = {}
-  for (const attr of attributes) {
+  for (const attr of schema.attrs) {
     values[attr.key] = ''
   }
   return { id: crypto.randomUUID(), values }
 }
 
-export function addVocabItem(items: VocabItemDraft[], attributes: ItemSchemaAttribute[]): VocabItemDraft[] {
-  return [...items, createEmptyVocabItem(attributes)]
+export function addVocabItem(items: VocabItemDraft[], schema: ItemSchema): VocabItemDraft[] {
+  return [...items, createEmptyVocabItem(schema)]
 }
 
 export function removeVocabItem(items: VocabItemDraft[], itemId: string): VocabItemDraft[] {
@@ -41,77 +37,36 @@ export function updateVocabItemValue(
   )
 }
 
-/** Attribute keys for text fields referenced on any card face. */
+/** Text attr keys referenced on any card face display. */
 export function requiredTextKeysForDisplay(
   levels: LevelRangeDraft[],
-  attributes: ItemSchemaAttribute[],
+  schema: ItemSchema,
 ): string[] {
   const keys = new Set<string>()
   for (const level of levels) {
     for (const side of level.sides) {
       for (const el of side.display) {
-        const attr = attributes[el.attributeIndex]
-        if (attr?.type === 'text') {
-          keys.add(attr.key)
+        if (el.attributeIndex < schema.attrs.length) {
+          const attr = schema.attrs[el.attributeIndex]
+          if (attr) {
+            keys.add(attr.key)
+          }
         }
       }
     }
   }
   return [...keys]
-}
-
-export function requiredImageKeysForDisplay(
-  levels: LevelRangeDraft[],
-  attributes: ItemSchemaAttribute[],
-): string[] {
-  const keys = new Set<string>()
-  for (const level of levels) {
-    for (const side of level.sides) {
-      for (const el of side.display) {
-        const attr = attributes[el.attributeIndex]
-        if (attr?.type === 'image') {
-          keys.add(attr.key)
-        }
-      }
-    }
-  }
-  return [...keys]
-}
-
-export function requiredAudioKeysForPlaySteps(
-  levels: LevelRangeDraft[],
-  attributes: ItemSchemaAttribute[],
-): string[] {
-  const keys = new Set<string>()
-  for (const level of levels) {
-    for (const side of level.sides) {
-      for (const step of side.playSteps) {
-        if (step.kind !== 'play' || !step.attributeKey) {
-          continue
-        }
-        const attr = attributes.find((a) => a.key === step.attributeKey)
-        if (attr?.type === 'audio') {
-          keys.add(attr.key)
-        }
-      }
-    }
-  }
-  return [...keys]
-}
-
-function hasMediaFile(item: VocabItemDraft, key: string): boolean {
-  return Boolean(item.media?.[key]?.file)
 }
 
 export function validateVocabItems(
   items: VocabItemDraft[],
   levels: LevelRangeDraft[],
-  attributes: ItemSchemaAttribute[],
-): { ok: true } | { ok: false; reason: 'empty' | 'missingRequired' | 'missingMedia'; keys?: string[] } {
+  schema: ItemSchema,
+): { ok: true } | { ok: false; reason: 'empty' | 'missingRequired'; keys?: string[] } {
   if (items.length === 0) {
     return { ok: false, reason: 'empty' }
   }
-  const requiredText = requiredTextKeysForDisplay(levels, attributes)
+  const requiredText = requiredTextKeysForDisplay(levels, schema)
   for (const item of items) {
     for (const key of requiredText) {
       if (!item.values[key]?.trim()) {
@@ -119,22 +74,22 @@ export function validateVocabItems(
       }
     }
   }
-  const requiredImages = requiredImageKeysForDisplay(levels, attributes)
-  const requiredAudio = requiredAudioKeysForPlaySteps(levels, attributes)
-  const requiredMedia = [...requiredImages, ...requiredAudio]
-  for (const item of items) {
-    for (const key of requiredMedia) {
-      if (!hasMediaFile(item, key)) {
-        return { ok: false, reason: 'missingMedia', keys: requiredMedia }
-      }
-    }
-  }
   return { ok: true }
 }
 
+export function toCompactItemRow(schema: ItemSchema, item: VocabItemDraft): string[] {
+  const row = new Array(rowLength(schema)).fill('')
+  for (let i = 0; i < schema.attrs.length; i++) {
+    const attr = schema.attrs[i]
+    row[i] = (item.values[attr.key] ?? '').trim()
+  }
+  return row
+}
+
 export function toExportItems(
+  _schema: ItemSchema,
   items: VocabItemDraft[],
-): Array<{ values: Record<string, string>; mediaFiles?: Record<string, VocabMediaExportMeta> }> {
+): Array<{ values: Record<string, string>; mediaFiles?: Record<string, import('../types/program').VocabMediaExportMeta> }> {
   return items.map((item) => {
     const mediaFiles = item.media
       ? Object.fromEntries(
@@ -156,6 +111,9 @@ export function toExportItems(
   })
 }
 
-export function primaryTextAttributeKey(attributes: ItemSchemaAttribute[]): string | undefined {
-  return textAttributes(attributes)[0]?.key
+export function primaryTextAttributeKey(schema: ItemSchema): string | undefined {
+  return schema.attrs[0]?.key
 }
+
+/** @deprecated alias */
+export const textAttributes = textAttrs

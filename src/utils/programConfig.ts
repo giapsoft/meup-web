@@ -1,6 +1,6 @@
 import type {
   DisplayElement,
-  ItemSchemaAttribute,
+  ItemSchema,
   LevelRangeDraft,
   PlayStepDraft,
   ProgramConfigPayload,
@@ -8,27 +8,18 @@ import type {
   SideDraft,
   VocabItemDraft,
 } from '../types/program'
+import {
+  audioLayoutIndexForKey,
+  audioLayoutIndexes,
+  displayableLayoutIndexes,
+  imageLayoutIndex,
+  textAudioAttrs,
+} from './itemSchemaLayout'
 import { toExportItems } from './vocabItems'
 import type { MessageParams, TranslationKey } from '../i18n/types'
 
 /** Matches capygo-api `DefaultLevelRangeMax` / meup `kDefaultLevelRangeMax`. */
 export const DEFAULT_LEVEL_MAX = 10
-
-export function indexForKey(attributes: ItemSchemaAttribute[], key: string): number {
-  return attributes.findIndex((a) => a.key === key)
-}
-
-export function audioKeys(attributes: ItemSchemaAttribute[]): string[] {
-  return attributes.filter((a) => a.type === 'audio').map((a) => a.key)
-}
-
-export function displayableAttributes(
-  attributes: ItemSchemaAttribute[],
-): Array<{ index: number; attr: ItemSchemaAttribute }> {
-  return attributes
-    .map((attr, index) => ({ index, attr }))
-    .filter(({ attr }) => attr.type === 'text' || attr.type === 'image')
-}
 
 export function cloneSide(side: SideDraft): SideDraft {
   return {
@@ -62,13 +53,11 @@ export function createDefaultLevel(sides: SideDraft[]): LevelRangeDraft {
   }
 }
 
-export function autoLayoutFromIndices(
-  indices: number[],
-  attributes: ItemSchemaAttribute[],
-): DisplayElement[] {
-  const ordered = indices.filter((i) => i >= 0 && i < attributes.length)
-  const imageIndices = ordered.filter((i) => attributes[i].type === 'image')
-  const textIndices = ordered.filter((i) => attributes[i].type === 'text')
+export function autoLayoutFromIndices(schema: ItemSchema, indices: number[]): DisplayElement[] {
+  const ordered = indices.filter((i) => i >= 0)
+  const imageIdx = imageLayoutIndex(schema)
+  const imageIndices = ordered.filter((i) => i === imageIdx)
+  const textIndices = ordered.filter((i) => i !== imageIdx && i < schema.attrs.length)
 
   const out: DisplayElement[] = []
   let order = 0
@@ -115,40 +104,40 @@ export function selectedDisplayIndices(side: SideDraft): number[] {
 export function applyDisplaySelection(
   side: SideDraft,
   indices: number[],
-  attributes: ItemSchemaAttribute[],
+  schema: ItemSchema,
 ): SideDraft {
   return {
     ...side,
-    display: autoLayoutFromIndices(indices, attributes),
+    display: autoLayoutFromIndices(schema, indices),
   }
 }
 
 export function createPlayStep(partial: Partial<PlayStepDraft> & Pick<PlayStepDraft, 'kind'>): PlayStepDraft {
   return {
     id: crypto.randomUUID(),
-    attributeKey: partial.attributeKey,
+    attributeIndex: partial.attributeIndex,
     durationSeconds: partial.durationSeconds,
     kind: partial.kind,
   }
 }
 
-export function suggestPlaySteps(attributes: ItemSchemaAttribute[]): PlayStepDraft[] {
-  const keys = audioKeys(attributes)
-  if (keys.length === 0) {
+export function suggestPlaySteps(schema: ItemSchema): PlayStepDraft[] {
+  const audio = audioLayoutIndexes(schema)
+  if (audio.length === 0) {
     return []
   }
-  return [createPlayStep({ kind: 'play', attributeKey: keys[0] })]
+  return [createPlayStep({ kind: 'play', attributeIndex: audio[0] })]
 }
 
-export function createEmptySide(attributes: ItemSchemaAttribute[], playOrder: number): SideDraft {
-  const displayable = displayableAttributes(attributes)
-  const indices = displayable.slice(0, Math.min(3, displayable.length)).map(({ index }) => index)
+export function createEmptySide(schema: ItemSchema, playOrder: number): SideDraft {
+  const displayable = displayableLayoutIndexes(schema)
+  const indices = displayable.slice(0, Math.min(3, displayable.length))
   return {
     id: crypto.randomUUID(),
     playOrder,
     backgroundColor: '#1a1a2e',
-    display: autoLayoutFromIndices(indices, attributes),
-    playSteps: suggestPlaySteps(attributes),
+    display: autoLayoutFromIndices(schema, indices),
+    playSteps: suggestPlaySteps(schema),
   }
 }
 
@@ -167,7 +156,7 @@ function mapLevelsToPayload(levels: LevelRangeDraft[]) {
         }
         return {
           kind: 'play' as const,
-          attributeKey: step.attributeKey ?? '',
+          attributeIndex: step.attributeIndex ?? -1,
         }
       }),
     })),
@@ -177,13 +166,13 @@ function mapLevelsToPayload(levels: LevelRangeDraft[]) {
 export function toProgramConfigPayload(
   id: string,
   name: string,
-  attributes: ItemSchemaAttribute[],
+  itemSchema: ItemSchema,
   levels: LevelRangeDraft[],
 ): ProgramConfigPayload {
   return {
     id,
     name,
-    itemSchema: { attributes },
+    itemSchema,
     levels: mapLevelsToPayload(levels),
   }
 }
@@ -191,12 +180,22 @@ export function toProgramConfigPayload(
 export function toProgramExportPayload(
   id: string,
   name: string,
-  attributes: ItemSchemaAttribute[],
+  itemSchema: ItemSchema,
   levels: LevelRangeDraft[],
   items: VocabItemDraft[],
 ): ProgramExportPayload {
   return {
-    ...toProgramConfigPayload(id, name, attributes, levels),
-    items: toExportItems(items),
+    ...toProgramConfigPayload(id, name, itemSchema, levels),
+    items: toExportItems(itemSchema, items),
   }
+}
+
+/** First text+audio column audio layout index (for default side templates). */
+export function firstTextAudioPlayIndex(schema: ItemSchema): number | undefined {
+  const first = textAudioAttrs(schema)[0]
+  if (!first) {
+    return undefined
+  }
+  const idx = audioLayoutIndexForKey(schema, first.key)
+  return idx >= 0 ? idx : undefined
 }

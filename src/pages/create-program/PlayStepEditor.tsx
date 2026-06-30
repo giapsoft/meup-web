@@ -16,7 +16,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { MessageParams, TranslationKey } from '../../i18n/types'
-import type { ItemSchemaAttribute, PlayStepDraft, SideDraft } from '../../types/program'
+import type { ItemSchema, PlayStepDraft, SideDraft } from '../../types/program'
 import {
   DEFAULT_PAUSE_SECONDS,
   PLAY_STEP_PAUSE_MAX,
@@ -30,7 +30,7 @@ import {
 
 type PlayStepEditorProps = {
   side: SideDraft
-  attributes: ItemSchemaAttribute[]
+  schema: ItemSchema
   onChange: (side: SideDraft) => void
   t: (key: TranslationKey, params?: MessageParams) => string
 }
@@ -50,9 +50,8 @@ function DragHandleIcon() {
 
 type SortablePlayStepRowProps = {
   step: PlayStepDraft
-  index: number
   audioIndexes: number[]
-  attributes: ItemSchemaAttribute[]
+  schema: ItemSchema
   onUpdate: (patch: Partial<PlayStepDraft>) => void
   onRemove: () => void
   t: (key: TranslationKey, params?: MessageParams) => string
@@ -61,7 +60,7 @@ type SortablePlayStepRowProps = {
 function SortablePlayStepRow({
   step,
   audioIndexes,
-  attributes,
+  schema,
   onUpdate,
   onRemove,
   t,
@@ -93,13 +92,13 @@ function SortablePlayStepRow({
             <label className="block">
               <span className="text-xs text-text-muted">{t('createProgram.stepSide.addPlay')}</span>
               <select
-                value={step.attributeKey ?? ''}
-                onChange={(e) => onUpdate({ attributeKey: e.target.value })}
+                value={step.attributeIndex ?? audioIndexes[0] ?? ''}
+                onChange={(e) => onUpdate({ attributeIndex: Number(e.target.value) })}
                 className="mt-1 w-full min-h-11 rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-text"
               >
                 {audioIndexes.map((idx) => (
-                  <option key={attributes[idx].key} value={attributes[idx].key}>
-                    {attributeLabel(attributes, idx, {
+                  <option key={idx} value={idx}>
+                    {attributeLabel(schema, idx, {
                       fallback: t('createProgram.fieldType.audio'),
                     })}
                   </option>
@@ -142,8 +141,8 @@ function SortablePlayStepRow({
   )
 }
 
-export function PlayStepEditor({ side, attributes, onChange, t }: PlayStepEditorProps) {
-  const audioIndexes = audioAttributeIndexes(attributes)
+export function PlayStepEditor({ side, schema, onChange, t }: PlayStepEditorProps) {
+  const audioIndexes = audioAttributeIndexes(schema)
   const sensors = useSensors(
     useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
     useSensor(PointerSensor),
@@ -185,9 +184,8 @@ export function PlayStepEditor({ side, attributes, onChange, t }: PlayStepEditor
             <SortablePlayStepRow
               key={step.id}
               step={step}
-              index={index}
               audioIndexes={audioIndexes}
-              attributes={attributes}
+              schema={schema}
               onUpdate={(patch) => onChange(updatePlayStep(side, index, patch))}
               onRemove={() => confirmRemove(index)}
               t={t}

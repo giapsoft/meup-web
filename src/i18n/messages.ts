@@ -12,11 +12,11 @@ export const UI_LOCALES: UiLocale[] = ['vi', 'en', 'ja', 'ko', 'zh', 'fr', 'de']
 const LOCALE_MESSAGES: Record<UiLocale, Messages> = {
   vi: vi as Messages,
   en: en as Messages,
-  ja: ja as Messages,
-  ko: ko as Messages,
-  zh: zh as Messages,
-  fr: fr as Messages,
-  de: de as Messages,
+  ja: { ...en, ...ja } as Messages,
+  ko: { ...en, ...ko } as Messages,
+  zh: { ...en, ...zh } as Messages,
+  fr: { ...en, ...fr } as Messages,
+  de: { ...en, ...de } as Messages,
 }
 
 const FALLBACK_LOCALE: UiLocale = 'en'

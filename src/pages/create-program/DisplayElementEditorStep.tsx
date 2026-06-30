@@ -1,5 +1,5 @@
 import type { MessageParams, TranslationKey } from '../../i18n/types'
-import type { ItemSchemaAttribute, SideDraft } from '../../types/program'
+import type { ItemSchema, SideDraft } from '../../types/program'
 import { attributeLabel, updateDisplayElement } from '../../utils/sideConfig'
 import { DisplayElementEditorPanel } from './DisplayElementEditorPanel'
 import { SidePreview } from './SidePreview'
@@ -14,7 +14,7 @@ import { useWizardWideLayout } from '../../hooks/useMediaQuery'
 type DisplayElementEditorStepProps = {
   side: SideDraft
   displayIndex: number
-  attributes: ItemSchemaAttribute[]
+  schema: ItemSchema
   onChange: (side: SideDraft) => void
   onSelectDisplayIndex: (index: number) => void
   onBack: () => void
@@ -24,7 +24,7 @@ type DisplayElementEditorStepProps = {
 export function DisplayElementEditorStep({
   side,
   displayIndex,
-  attributes,
+  schema,
   onChange,
   onSelectDisplayIndex,
   onBack,
@@ -36,7 +36,7 @@ export function DisplayElementEditorStep({
     return null
   }
 
-  const title = attributeLabel(attributes, el.attributeIndex)
+  const title = attributeLabel(schema, el.attributeIndex)
 
   return (
     <section className={WIZARD_STEP_SECTION}>
@@ -46,7 +46,7 @@ export function DisplayElementEditorStep({
         <div className={WIZARD_PREVIEW_COLUMN}>
           <SidePreview
             side={side}
-            attributes={attributes}
+            schema={schema}
             selectedIndex={displayIndex}
             draggableIndex={displayIndex}
             onSelectIndex={onSelectDisplayIndex}
@@ -58,7 +58,7 @@ export function DisplayElementEditorStep({
         <DisplayElementEditorPanel
           side={side}
           displayIndex={displayIndex}
-          attributes={attributes}
+          schema={schema}
           onChange={onChange}
           onBack={onBack}
           t={t}

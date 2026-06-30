@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
-import type { DisplayElement, ItemSchemaAttribute, SideDraft } from '../../types/program'
+import type { DisplayElement, ItemSchema, SideDraft } from '../../types/program'
+import { IMAGE_MEDIA_KEY } from '../../types/program'
 import {
   resolvePreviewFontSizePx,
   scaleFontSizeForPreview,
@@ -21,7 +22,7 @@ import { displayColorOr, defaultPaletteColor } from '../../utils/colorPalette'
 
 type SidePreviewProps = {
   side: SideDraft
-  attributes: ItemSchemaAttribute[]
+  schema: ItemSchema
   selectedIndex?: number | null
   draggableIndex?: number | null
   onSelectIndex?: (index: number) => void
@@ -85,7 +86,7 @@ function ResizeHandle({
 
 export function SidePreview({
   side,
-  attributes,
+  schema,
   selectedIndex = null,
   draggableIndex = null,
   onSelectIndex,
@@ -215,15 +216,14 @@ export function SidePreview({
         }}
       >
         {sorted.map(({ el, index }, stackIndex) => {
-          const attr = attributes[el.attributeIndex]
-          const isText = isTextAttribute(attributes, el.attributeIndex)
-          const isImage = isImageAttribute(attributes, el.attributeIndex)
+          const isText = isTextAttribute(schema, el.attributeIndex)
+          const isImage = isImageAttribute(schema, el.attributeIndex)
           const isSelected = selectedIndex === index
           const isEditable = !readOnly && draggableIndex === index
           const label = isText
-            ? displayElementContentText(el, attributes, itemValues)
-            : attributeLabel(attributes, el.attributeIndex)
-          const imageUrl = isImage && attr ? itemMediaUrls?.[attr.key] : undefined
+            ? displayElementContentText(el, schema, itemValues)
+            : attributeLabel(schema, el.attributeIndex)
+          const imageUrl = isImage ? itemMediaUrls?.[IMAGE_MEDIA_KEY] : undefined
           const bodyHandlers = pointerHandlers(index)
 
           return (

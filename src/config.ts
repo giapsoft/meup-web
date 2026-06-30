@@ -25,5 +25,11 @@ export const API_AUTH_VERIFY_RESEND = '/api/auth/verify-email/resend'
 /** Thông tin tài khoản phiên hiện tại (cần đăng nhập). */
 export const API_AUTH_ME = '/api/auth/me'
 
+/** Tạo bộ từ vựng (create_product_request). */
+export const API_PRODUCT_CREATE = '/api/product-create'
+
+/** Poll tiến độ tạo bộ từ — path prefix, thêm `/{requestId}/progress`. */
+export const API_PRODUCT_CREATE_PROGRESS = '/api/product-create'
+
 /** Khoảng đệm (ms) coi access token là "sắp hết hạn" để refresh trước, tránh lỗi 401. */
 export const ACCESS_TOKEN_SKEW_MS = 30_000

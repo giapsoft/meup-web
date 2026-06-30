@@ -1,5 +1,5 @@
-import type { ItemSchemaAttribute, VocabItemDraft } from '../types/program'
-import { createEmptyVocabItem, textAttributes } from './vocabItems'
+import type { ItemSchema, VocabItemDraft } from '../types/program'
+import { createEmptyVocabItem, textAttrs } from './vocabItems'
 
 const UTF8_BOM = '\uFEFF'
 
@@ -19,19 +19,19 @@ function escapeCsvCell(value: string): string {
   return value
 }
 
-function headerLabel(attr: ItemSchemaAttribute): string {
+function headerLabel(attr: ItemSchema['attrs'][number]): string {
   return attr.name.trim() || attr.key
 }
 
 /** CSV template: header row uses display names; one blank example row. */
-export function buildVocabCsvTemplate(attributes: ItemSchemaAttribute[]): string {
-  const cols = textAttributes(attributes)
+export function buildVocabCsvTemplate(schema: ItemSchema): string {
+  const cols = textAttrs(schema)
   const header = cols.map((attr) => escapeCsvCell(headerLabel(attr))).join(',')
   const blank = cols.map(() => '').join(',')
   return `${UTF8_BOM}${header}\r\n${blank}\r\n`
 }
 
-export function downloadVocabCsvTemplate(programName: string, attributes: ItemSchemaAttribute[]): void {
+export function downloadVocabCsvTemplate(programName: string, schema: ItemSchema): void {
   const slug = programName
     .trim()
     .toLowerCase()
@@ -39,7 +39,7 @@ export function downloadVocabCsvTemplate(programName: string, attributes: ItemSc
     .replace(/^-+|-+$/g, '')
     .slice(0, 40)
   const filename = `${slug || 'program'}-vocab-template.csv`
-  const blob = new Blob([buildVocabCsvTemplate(attributes)], { type: 'text/csv;charset=utf-8' })
+  const blob = new Blob([buildVocabCsvTemplate(schema)], { type: 'text/csv;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
@@ -91,84 +91,72 @@ function parseCsvLine(line: string, delimiter: ',' | '\t'): string[] {
     cell += ch
   }
   out.push(cell)
-  return out.map((value) => value.trim())
-}
-
-export function parseCsvText(raw: string): string[][] {
-  const normalized = stripBom(raw).replace(/\r\n/g, '\n').replace(/\r/g, '\n')
-  const lines = normalized.split('\n').filter((line) => line.length > 0)
-  if (lines.length === 0) {
-    return []
-  }
-  const delimiter = detectDelimiter(lines[0])
-  return lines.map((line) => parseCsvLine(line, delimiter))
+  return out
 }
 
 function normalizeHeader(value: string): string {
   return value.trim().toLowerCase()
 }
 
-/** Map CSV column index → attribute key (match display name, then key). */
-export function mapCsvHeadersToTextKeys(
+function mapHeadersToKeys(
   headers: string[],
-  attributes: ItemSchemaAttribute[],
-): Map<number, string> {
-  const textAttrs = textAttributes(attributes)
+  schema: ItemSchema,
+): Map<number, string> | null {
+  const cols = textAttrs(schema)
   const byName = new Map<string, string>()
   const byKey = new Map<string, string>()
-  for (const attr of textAttrs) {
+  for (const attr of cols) {
     byName.set(normalizeHeader(headerLabel(attr)), attr.key)
     byKey.set(normalizeHeader(attr.key), attr.key)
   }
 
   const mapping = new Map<number, string>()
-  headers.forEach((header, index) => {
-    const norm = normalizeHeader(header)
-    if (!norm) {
-      return
-    }
-    const key = byName.get(norm) ?? byKey.get(norm)
+  for (let i = 0; i < headers.length; i++) {
+    const h = normalizeHeader(headers[i])
+    const key = byName.get(h) ?? byKey.get(h)
     if (key) {
-      mapping.set(index, key)
-    }
-  })
-  return mapping
-}
-
-function rowHasAnyMappedValue(cells: string[], columnToKey: Map<number, string>): boolean {
-  for (const [index] of columnToKey) {
-    if (cells[index]?.trim()) {
-      return true
+      mapping.set(i, key)
     }
   }
-  return false
+  return mapping.size > 0 ? mapping : null
 }
 
-export function importVocabItemsFromCsvText(
-  raw: string,
-  attributes: ItemSchemaAttribute[],
+export function parseVocabCsvText(
+  text: string,
+  schema: ItemSchema,
 ): VocabCsvImportResult {
-  const rows = parseCsvText(raw)
-  if (rows.length === 0) {
+  const trimmed = stripBom(text.trim())
+  if (!trimmed) {
     return { ok: false, error: { reason: 'emptyFile' } }
   }
 
-  const [headerRow, ...dataRows] = rows
-  const columnToKey = mapCsvHeadersToTextKeys(headerRow, attributes)
-  if (columnToKey.size === 0) {
-    return { ok: false, error: { reason: 'noMappedColumns', headers: headerRow } }
+  const lines = trimmed.split(/\r?\n/).filter((line) => line.trim().length > 0)
+  if (lines.length < 2) {
+    return { ok: false, error: { reason: 'noDataRows' } }
+  }
+
+  const delimiter = detectDelimiter(lines[0])
+  const headers = parseCsvLine(lines[0], delimiter)
+  const columnMap = mapHeadersToKeys(headers, schema)
+  if (!columnMap) {
+    return { ok: false, error: { reason: 'noMappedColumns', headers } }
   }
 
   const items: VocabItemDraft[] = []
-  for (const row of dataRows) {
-    if (!rowHasAnyMappedValue(row, columnToKey)) {
-      continue
+  for (let rowIdx = 1; rowIdx < lines.length; rowIdx++) {
+    const cells = parseCsvLine(lines[rowIdx], delimiter)
+    const item = createEmptyVocabItem(schema)
+    let hasData = false
+    for (const [colIdx, key] of columnMap) {
+      const value = (cells[colIdx] ?? '').trim()
+      if (value) {
+        hasData = true
+      }
+      item.values[key] = value
     }
-    const item = createEmptyVocabItem(attributes)
-    for (const [index, key] of columnToKey) {
-      item.values[key] = row[index]?.trim() ?? ''
+    if (hasData) {
+      items.push(item)
     }
-    items.push(item)
   }
 
   if (items.length === 0) {
@@ -177,3 +165,6 @@ export function importVocabItemsFromCsvText(
 
   return { ok: true, items, rowCount: items.length }
 }
+
+/** @deprecated alias */
+export const importVocabItemsFromCsvText = parseVocabCsvText

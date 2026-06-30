@@ -1,7 +1,7 @@
-import type { ItemSchemaAttribute, SchemaFieldRow, SchemaFieldUiType } from '../types/program'
+import type { ItemSchema, ItemSchemaEditorState, LangType, SchemaFieldRow, SchemaFieldUiType } from '../types/program'
 import type { TranslationKey } from '../i18n/types'
 
-export const SCHEMA_UI_TYPES: SchemaFieldUiType[] = ['text', 'text+audio', 'image']
+export const SCHEMA_UI_TYPES: SchemaFieldUiType[] = ['text', 'text+audio']
 
 export function slugProgramId(name: string): string {
   const base = name
@@ -21,33 +21,36 @@ export function generateSchemaKey(): string {
   return `attr_${hex}`
 }
 
-export function audioKeyForBase(key: string): string {
-  if (key.endsWith('Audio')) {
-    return key
-  }
-  return `${key}Audio`
-}
-
-/** Expand one UI row into backend `ItemSchema.attributes` entries. */
-export function expandSchemaField(row: SchemaFieldRow): ItemSchemaAttribute[] {
-  const key = row.key.trim() || generateSchemaKey()
-  const name = row.name.trim()
-
-  switch (row.uiType) {
-    case 'text':
-      return [{ key, name, type: 'text' }]
-    case 'image':
-      return [{ key, name, type: 'image' }]
-    case 'text+audio':
-      return [
-        { key, name, type: 'text' },
-        { key: audioKeyForBase(key), name: '', type: 'audio' },
-      ]
+/** Build API `ItemSchema` from wizard editor state. */
+export function itemSchemaFromEditor(state: ItemSchemaEditorState): ItemSchema {
+  return {
+    hasImage: state.hasImage,
+    attrs: state.fields.map((row) => ({
+      key: row.key.trim() || generateSchemaKey(),
+      name: row.name.trim(),
+      type: row.uiType === 'text+audio' ? 'text+audio' : 'text',
+      langType: row.langType,
+    })),
   }
 }
 
-export function expandSchemaFields(rows: SchemaFieldRow[]): ItemSchemaAttribute[] {
-  return rows.flatMap(expandSchemaField)
+/** @deprecated use itemSchemaFromEditor */
+export function fieldsToItemSchema(fields: SchemaFieldRow[], hasImage: boolean): ItemSchema {
+  return itemSchemaFromEditor({ hasImage, fields })
+}
+
+export function createPresetItemSchemaEditor(t: (key: TranslationKey) => string): ItemSchemaEditorState {
+  return {
+    hasImage: true,
+    fields: PRESET_SCHEMA_ROW_SPECS.map((spec) =>
+      createSchemaRow({
+        name: t(spec.labelKey),
+        uiType: spec.uiType,
+        key: spec.key,
+        langType: spec.langType,
+      }),
+    ),
+  }
 }
 
 export function createSchemaRow(
@@ -60,23 +63,20 @@ export function createSchemaRow(
     name,
     uiType: partial.uiType,
     key,
+    langType: partial.langType,
   }
 }
 
-/** Default row specs — names come from i18n at runtime; keys are stable presets. */
+/** Default row specs — names from i18n; langType fixed for presets. */
 export const PRESET_SCHEMA_ROW_SPECS: Array<{
   labelKey: TranslationKey
   uiType: SchemaFieldUiType
   key: string
+  langType?: LangType
 }> = [
-  { labelKey: 'createProgram.preset.studyText', uiType: 'text+audio', key: 'studyText' },
+  { labelKey: 'createProgram.preset.studyText', uiType: 'text+audio', key: 'studyText', langType: 'study' },
   { labelKey: 'createProgram.preset.ipa', uiType: 'text', key: 'ipa' },
-  {
-    labelKey: 'createProgram.preset.nativeText',
-    uiType: 'text+audio',
-    key: 'nativeText',
-  },
-  { labelKey: 'createProgram.preset.image', uiType: 'image', key: 'image' },
+  { labelKey: 'createProgram.preset.nativeText', uiType: 'text+audio', key: 'nativeText', langType: 'native' },
 ]
 
 export function newEmptySchemaRow(): SchemaFieldRow {

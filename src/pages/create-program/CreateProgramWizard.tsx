@@ -1,27 +1,28 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ApiError } from '../../api/client'
+import { getAccount } from '../../api/emailAuth'
+import { createProductRequest, pollProductCreateProgress } from '../../api/productCreate'
 import { useLanguagePair } from '../../context/LanguagePairProvider'
 import { useWizardWideLayout } from '../../hooks/useMediaQuery'
 import type { TranslationKey } from '../../i18n/types'
-import type { LevelRangeDraft, SchemaFieldRow, SchemaFieldUiType, SideDraft, VocabItemDraft } from '../../types/program'
+import type { ItemSchemaEditorState, LevelRangeDraft, SchemaFieldUiType, SideDraft, VocabItemDraft } from '../../types/program'
+import { toProductCreatePayloadString } from '../../utils/compactProgramConfig'
 import { buildDefaultLevels } from '../../utils/defaultSides'
-import { toProgramExportPayload } from '../../utils/programConfig'
+import { schemaHasLangRole } from '../../utils/itemSchemaLayout'
 import {
   createEmptyVocabItem,
   primaryTextAttributeKey,
   validateVocabItems,
 } from '../../utils/vocabItems'
 import {
-  PRESET_SCHEMA_ROW_SPECS,
-  SCHEMA_UI_TYPES,
-  createSchemaRow,
-  expandSchemaFields,
-  newEmptySchemaRow,
+  createPresetItemSchemaEditor,
+  itemSchemaFromEditor,
   slugProgramId,
 } from '../../utils/schemaField'
 import { CardSetupStep } from './CardSetupStep'
 import { DisplayElementEditorStep } from './DisplayElementEditorStep'
-import { SchemaFieldList } from './SchemaFieldList'
+import { ItemSchemaEditor } from './ItemSchemaEditor'
 import { SideEditorStep } from './SideEditorStep'
 import { VocabEntryStep } from './VocabEntryStep'
 import { WizardProgress, wizardPhaseFromStep } from './WizardProgress'
@@ -35,20 +36,15 @@ import {
 
 type WizardStep = 'name' | 'schema' | 'cardSetup' | 'sideEdit' | 'displayEdit' | 'vocabEntry' | 'done'
 
+type SubmitState =
+  | { phase: 'idle' }
+  | { phase: 'submitting' }
+  | { phase: 'success'; requestId: string }
+  | { phase: 'failed'; message: string }
+
 const FIELD_TYPE_KEYS: Record<SchemaFieldUiType, TranslationKey> = {
   text: 'createProgram.fieldType.text',
-  image: 'createProgram.fieldType.image',
   'text+audio': 'createProgram.fieldType.textAudio',
-}
-
-function buildPresetFields(t: (key: TranslationKey) => string): SchemaFieldRow[] {
-  return PRESET_SCHEMA_ROW_SPECS.map((spec) =>
-    createSchemaRow({
-      name: t(spec.labelKey),
-      uiType: spec.uiType,
-      key: spec.key,
-    }),
-  )
 }
 
 function findSide(levels: LevelRangeDraft[], sideId: string): SideDraft | undefined {
@@ -62,28 +58,31 @@ function findSide(levels: LevelRangeDraft[], sideId: string): SideDraft | undefi
 }
 
 export function CreateProgramWizard() {
-  const { t, langPair } = useLanguagePair()
+  const { t, langPair, nativeLang, studyLang } = useLanguagePair()
   const isWideLayout = useWizardWideLayout()
   const [step, setStep] = useState<WizardStep>('name')
   const [name, setName] = useState('')
   const [nameError, setNameError] = useState('')
-  const [fields, setFields] = useState<SchemaFieldRow[]>(() => buildPresetFields(t))
+  const [itemSchemaEditor, setItemSchemaEditor] = useState<ItemSchemaEditorState>(() =>
+    createPresetItemSchemaEditor(t),
+  )
   const [levels, setLevels] = useState<LevelRangeDraft[]>([])
   const [activeLevelId, setActiveLevelId] = useState('')
   const [editingSideId, setEditingSideId] = useState<string | null>(null)
   const [editingDisplayIndex, setEditingDisplayIndex] = useState<number | null>(null)
   const [vocabItems, setVocabItems] = useState<VocabItemDraft[]>([])
+  const [submitState, setSubmitState] = useState<SubmitState>({ phase: 'idle' })
 
   const programId = useMemo(() => slugProgramId(name), [name])
-  const expandedAttributes = useMemo(() => expandSchemaFields(fields), [fields])
+  const itemSchema = useMemo(() => itemSchemaFromEditor(itemSchemaEditor), [itemSchemaEditor])
   const editingSide = useMemo(
     () => (editingSideId ? findSide(levels, editingSideId) : undefined),
     [levels, editingSideId],
   )
 
   const exportPayload = useMemo(
-    () => toProgramExportPayload(programId, name.trim(), expandedAttributes, levels, vocabItems),
-    [programId, name, expandedAttributes, levels, vocabItems],
+    () => toProductCreatePayloadString(itemSchema, levels, vocabItems),
+    [itemSchema, levels, vocabItems],
   )
 
   const totalSides = levels.reduce((n, l) => n + l.sides.length, 0)
@@ -118,13 +117,16 @@ export function CreateProgramWizard() {
   }
 
   function handleContinueSchema() {
-    const valid = fields.every((f) => f.name.trim())
-    if (!valid || fields.length === 0) {
+    const valid = itemSchemaEditor.fields.every((f) => f.name.trim())
+    if (!valid || itemSchemaEditor.fields.length === 0) {
       window.alert(t('createProgram.validation.fieldsRequired'))
       return
     }
-    const attributes = expandSchemaFields(fields)
-    const defaultLevels = buildDefaultLevels(attributes)
+    if (!schemaHasLangRole(itemSchema)) {
+      window.alert(t('createProgram.validation.schemaLangRequired'))
+      return
+    }
+    const defaultLevels = buildDefaultLevels(itemSchema)
     setLevels(defaultLevels)
     setActiveLevelId(defaultLevels[0].id)
     setStep('cardSetup')
@@ -137,44 +139,49 @@ export function CreateProgramWizard() {
       return
     }
     if (vocabItems.length === 0) {
-      setVocabItems([createEmptyVocabItem(expandedAttributes)])
+      setVocabItems([createEmptyVocabItem(itemSchema)])
     }
     setStep('vocabEntry')
   }
 
-  function handleContinueVocab() {
-    const result = validateVocabItems(vocabItems, levels, expandedAttributes)
+  async function handleContinueVocab() {
+    const result = validateVocabItems(vocabItems, levels, itemSchema)
     if (!result.ok) {
       if (result.reason === 'empty') {
         window.alert(t('createProgram.validation.vocabEmpty'))
-      } else if (result.reason === 'missingMedia') {
-        window.alert(t('createProgram.validation.vocabRequiredMedia'))
       } else {
         window.alert(t('createProgram.validation.vocabRequiredFields'))
       }
       return
     }
-    console.info('[meup-web mock] create program', { langPair, ...exportPayload })
+
+    setSubmitState({ phase: 'submitting' })
     setStep('done')
-  }
 
-  function updateField(id: string, patch: Partial<SchemaFieldRow>) {
-    setFields((prev) =>
-      prev.map((row) => {
-        if (row.id !== id) {
-          return row
-        }
-        return { ...row, ...patch }
-      }),
-    )
-  }
-
-  function removeField(id: string) {
-    setFields((prev) => prev.filter((row) => row.id !== id))
-  }
-
-  function addField(uiType: SchemaFieldUiType) {
-    setFields((prev) => [...prev, { ...newEmptySchemaRow(), uiType }])
+    try {
+      const account = await getAccount()
+      const created = await createProductRequest({
+        ownerId: account.userId,
+        productName: name.trim(),
+        productDescription: '',
+        nativeLangId: nativeLang,
+        studyLangId: studyLang,
+        payload: exportPayload,
+        jobs: [],
+      })
+      const progress = await pollProductCreateProgress(created.id)
+      if (progress.status === 'success') {
+        setSubmitState({ phase: 'success', requestId: created.id })
+      } else {
+        setSubmitState({
+          phase: 'failed',
+          message: progress.status,
+        })
+      }
+    } catch (err) {
+      const message = err instanceof ApiError ? err.code : 'request_failed'
+      setSubmitState({ phase: 'failed', message })
+    }
   }
 
   function updateSide(sideId: string, nextSide: SideDraft) {
@@ -228,31 +235,14 @@ export function CreateProgramWizard() {
           <p className="mt-2 text-sm text-text-muted">{t('createProgram.stepSchema.hint')}</p>
           <p className="mt-1 text-xs text-text-muted">{name}</p>
 
-          <div className="mt-5">
-            <SchemaFieldList
-              fields={fields}
-              fieldTypeKeys={FIELD_TYPE_KEYS}
-              onReorder={setFields}
-              onUpdate={updateField}
-              onRemove={removeField}
-              t={t}
-            />
-          </div>
+          <ItemSchemaEditor
+            value={itemSchemaEditor}
+            onChange={setItemSchemaEditor}
+            fieldTypeKeys={FIELD_TYPE_KEYS}
+            t={t}
+          />
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            {SCHEMA_UI_TYPES.map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => addField(type)}
-                className="rounded-lg border border-dashed border-border px-3 py-2 text-xs text-text-muted hover:border-accent hover:text-accent"
-              >
-                + {t('createProgram.stepSchema.add')} {t(FIELD_TYPE_KEYS[type])}
-              </button>
-            ))}
-          </div>
-
-          <div className={`${WIZARD_ACTIONS} sm:justify-between`}>
+          <div className={`${WIZARD_ACTIONS} mt-6 sm:justify-between`}>
             <button
               type="button"
               onClick={() => setStep('name')}
@@ -274,7 +264,7 @@ export function CreateProgramWizard() {
       {step === 'cardSetup' && (
         <CardSetupStep
           programName={name}
-          attributes={expandedAttributes}
+          schema={itemSchema}
           levels={levels}
           activeLevelId={activeLevelId}
           onLevelsChange={setLevels}
@@ -293,7 +283,7 @@ export function CreateProgramWizard() {
         <SideEditorStep
           programName={name}
           side={editingSide}
-          attributes={expandedAttributes}
+          schema={itemSchema}
           editingDisplayIndex={isWideLayout ? editingDisplayIndex : null}
           onChange={(next) => updateSide(editingSide.id, next)}
           onEditDisplay={openDisplayEditor}
@@ -315,7 +305,7 @@ export function CreateProgramWizard() {
           <DisplayElementEditorStep
             side={editingSide}
             displayIndex={editingDisplayIndex}
-            attributes={expandedAttributes}
+            schema={itemSchema}
             onChange={(next) => updateSide(editingSide.id, next)}
             onSelectDisplayIndex={openDisplayEditor}
             onBack={closeDisplayEditor}
@@ -326,7 +316,7 @@ export function CreateProgramWizard() {
       {step === 'vocabEntry' && (
         <VocabEntryStep
           programName={name}
-          attributes={expandedAttributes}
+          schema={itemSchema}
           levels={levels}
           items={vocabItems}
           onItemsChange={setVocabItems}
@@ -339,9 +329,29 @@ export function CreateProgramWizard() {
       {step === 'done' && (
         <section className={WIZARD_NARROW_SECTION}>
           <h1 className="text-xl font-semibold text-text sm:text-2xl">
-            {t('createProgram.stepDone.title')}
+            {submitState.phase === 'submitting'
+              ? t('createProgram.stepDone.submitting')
+              : submitState.phase === 'success'
+                ? t('createProgram.stepDone.title')
+                : submitState.phase === 'failed'
+                  ? t('createProgram.stepDone.failedTitle')
+                  : t('createProgram.stepDone.title')}
           </h1>
-          <p className="mt-2 text-sm text-text-muted">{t('createProgram.stepDone.subtitle')}</p>
+          <p className="mt-2 text-sm text-text-muted">
+            {submitState.phase === 'submitting'
+              ? t('createProgram.stepDone.submittingHint')
+              : submitState.phase === 'success'
+                ? t('createProgram.stepDone.subtitle')
+                : submitState.phase === 'failed'
+                  ? submitState.message
+                  : t('createProgram.stepDone.subtitle')}
+          </p>
+
+          {submitState.phase === 'success' && (
+            <p className="mt-2 font-mono text-xs text-text-muted">
+              {t('createProgram.stepDone.requestId', { id: submitState.requestId })}
+            </p>
+          )}
 
           <dl className="mt-5 space-y-3 text-sm">
             <div>
@@ -355,13 +365,20 @@ export function CreateProgramWizard() {
             <div>
               <dt className="text-text-muted">{t('createProgram.stepDone.schemaTitle')}</dt>
               <dd className="mt-2 space-y-1">
-                {expandedAttributes.map((attr) => (
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface-card px-3 py-2 text-xs">
+                  <span className="font-mono text-text">hasImage</span>
+                  <span className="shrink-0 text-text-muted">{itemSchema.hasImage ? '1' : '0'}</span>
+                </div>
+                {itemSchema.attrs.map((attr) => (
                   <div
                     key={attr.key}
-                    className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface-card px-3 py-2 text-xs"
+                    className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface-card px-3 py-2 text-xs font-mono"
                   >
-                    <span className="min-w-0 truncate text-text">{attr.name || '—'}</span>
-                    <span className="shrink-0 text-text-muted">{attr.type}</span>
+                    <span className="min-w-0 truncate text-text">{attr.key}</span>
+                    <span className="shrink-0 text-text-muted">
+                      {attr.type === 'text+audio' ? '1' : '0'}
+                      {attr.langType === 'native' ? ',1' : attr.langType === 'study' ? ',2' : ',0'}
+                    </span>
                   </div>
                 ))}
               </dd>
@@ -374,7 +391,7 @@ export function CreateProgramWizard() {
               {vocabItems.length > 0 && (
                 <ul className="mt-2 max-h-40 space-y-1 overflow-y-auto text-xs text-text-muted">
                   {vocabItems.slice(0, 8).map((item, index) => {
-                    const key = primaryTextAttributeKey(expandedAttributes)
+                    const key = primaryTextAttributeKey(itemSchema)
                     const label = key ? item.values[key]?.trim() : ''
                     return (
                       <li key={item.id} className="truncate rounded-lg bg-surface-card px-2 py-1">
@@ -400,8 +417,6 @@ export function CreateProgramWizard() {
               </dd>
             </div>
           </dl>
-
-          <p className="mt-4 text-xs text-text-muted">{t('createProgram.stepDone.mockNote')}</p>
 
           <Link
             to="/"

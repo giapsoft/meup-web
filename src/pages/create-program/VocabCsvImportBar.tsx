@@ -1,12 +1,12 @@
 import { useRef } from 'react'
 import type { MessageParams, TranslationKey } from '../../i18n/types'
-import type { ItemSchemaAttribute, VocabItemDraft } from '../../types/program'
+import type { ItemSchema, VocabItemDraft } from '../../types/program'
 import { downloadVocabCsvTemplate, importVocabItemsFromCsvText } from '../../utils/vocabCsv'
 import { revokeVocabItemMedia } from '../../utils/vocabMedia'
 
 type VocabCsvImportBarProps = {
   programName: string
-  attributes: ItemSchemaAttribute[]
+  schema: ItemSchema
   items: VocabItemDraft[]
   onItemsChange: (items: VocabItemDraft[]) => void
   onImported: (firstItemId: string | null) => void
@@ -15,7 +15,7 @@ type VocabCsvImportBarProps = {
 
 export function VocabCsvImportBar({
   programName,
-  attributes,
+  schema,
   items,
   onItemsChange,
   onImported,
@@ -24,7 +24,7 @@ export function VocabCsvImportBar({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   function handleDownloadTemplate() {
-    downloadVocabCsvTemplate(programName, attributes)
+    downloadVocabCsvTemplate(programName, schema)
   }
 
   function pickCsvFile() {
@@ -72,7 +72,7 @@ export function VocabCsvImportBar({
     }
     try {
       const text = await file.text()
-      const result = importVocabItemsFromCsvText(text, attributes)
+      const result = importVocabItemsFromCsvText(text, schema)
       if (!result.ok) {
         window.alert(csvErrorMessage(result.error))
         return

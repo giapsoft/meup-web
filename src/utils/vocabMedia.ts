@@ -1,21 +1,22 @@
-import type { ItemSchemaAttribute, VocabItemDraft } from '../types/program'
-import { attributeLabel } from './sideConfig'
+import type { ItemSchema, VocabItemDraft } from '../types/program'
+import { IMAGE_MEDIA_KEY } from '../types/program'
+import { layoutSlotLabel, mediaSlots, type MediaSlot } from './itemSchemaLayout'
 
 export function createLocalResourceId(): string {
   return crypto.randomUUID().replace(/-/g, '').slice(0, 32)
 }
 
-export function atmeupVocabItemMedia(
+export function attachVocabItemMedia(
   items: VocabItemDraft[],
   itemId: string,
-  attrKey: string,
+  mediaKey: string,
   file: File,
 ): VocabItemDraft[] {
   return items.map((item) => {
     if (item.id !== itemId) {
       return item
     }
-    const prev = item.media?.[attrKey]
+    const prev = item.media?.[mediaKey]
     if (prev?.objectUrl) {
       URL.revokeObjectURL(prev.objectUrl)
     }
@@ -23,37 +24,47 @@ export function atmeupVocabItemMedia(
     const localResourceId = createLocalResourceId()
     return {
       ...item,
-      values: { ...item.values, [attrKey]: localResourceId },
+      values: { ...item.values, [mediaKey]: localResourceId },
       media: {
         ...item.media,
-        [attrKey]: { file, objectUrl, localResourceId },
+        [mediaKey]: { file, objectUrl, localResourceId },
       },
     }
   })
 }
 
-export function demeupVocabItemMedia(
+export function detachVocabItemMedia(
   items: VocabItemDraft[],
   itemId: string,
-  attrKey: string,
+  mediaKey: string,
 ): VocabItemDraft[] {
   return items.map((item) => {
     if (item.id !== itemId) {
       return item
     }
-    const prev = item.media?.[attrKey]
+    const prev = item.media?.[mediaKey]
     if (prev?.objectUrl) {
       URL.revokeObjectURL(prev.objectUrl)
     }
     const nextMedia = { ...(item.media ?? {}) }
-    delete nextMedia[attrKey]
+    delete nextMedia[mediaKey]
+    const nextValues = { ...item.values }
+    if (mediaKey === IMAGE_MEDIA_KEY) {
+      delete nextValues[IMAGE_MEDIA_KEY]
+    }
     return {
       ...item,
-      values: { ...item.values, [attrKey]: '' },
+      values: nextValues,
       media: Object.keys(nextMedia).length > 0 ? nextMedia : undefined,
     }
   })
 }
+
+/** @deprecated use attachVocabItemMedia */
+export const atmeupVocabItemMedia = attachVocabItemMedia
+
+/** @deprecated use detachVocabItemMedia */
+export const demeupVocabItemMedia = detachVocabItemMedia
 
 export function revokeVocabItemMedia(item: VocabItemDraft): void {
   if (!item.media) {
@@ -75,29 +86,20 @@ export function itemMediaObjectUrls(item: VocabItemDraft | undefined): Record<st
   return out
 }
 
-/** All image/audio attrs from item schema (vocabulary row may have multiple of each). */
-export function schemaMediaAttributes(attributes: ItemSchemaAttribute[]): ItemSchemaAttribute[] {
-  return attributes.filter((attr) => attr.type === 'image' || attr.type === 'audio')
+export function schemaMediaSlots(schema: ItemSchema): MediaSlot[] {
+  return mediaSlots(schema)
 }
 
-export function mediaAttributeLabel(
-  attr: ItemSchemaAttribute,
-  attributes: ItemSchemaAttribute[],
-  fallback?: string,
-): string {
-  const idx = attributes.findIndex((a) => a.key === attr.key)
-  if (idx < 0) {
-    return fallback ?? '?'
+export function mediaSlotLabel(slot: MediaSlot, schema: ItemSchema): string {
+  if (slot.kind === 'image') {
+    return 'Image'
   }
-  return attributeLabel(attributes, idx, { fallback })
+  return layoutSlotLabel(schema, slot.layoutIndex)
 }
 
-export function acceptMimeForAttribute(attr: ItemSchemaAttribute): string {
-  if (attr.type === 'image') {
+export function acceptMimeForMediaSlot(slot: MediaSlot): string {
+  if (slot.kind === 'image') {
     return 'image/*'
   }
-  if (attr.type === 'audio') {
-    return 'audio/*'
-  }
-  return '*/*'
+  return 'audio/*'
 }
