@@ -226,7 +226,7 @@ function CreateRequestCard({
 }
 
 export function ProductsPage() {
-  const { t, uiLocale } = useLanguagePair()
+  const { t, uiLocale, nativeLang, studyLang, langPair } = useLanguagePair()
   const [tab, setTab] = useState<Tab>('owned')
   const [loadState, setLoadState] = useState<LoadState>({ phase: 'loading' })
   const [owned, setOwned] = useState<OwnedProductDto[]>([])
@@ -257,7 +257,7 @@ export function ProductsPage() {
     try {
       const account = await getAccount()
       if (tab === 'owned') {
-        const res = await listOwnedProducts(account.userId)
+        const res = await listOwnedProducts(account.userId, { nativeLang, studyLang })
         setOwned(res.products)
       } else {
         const res = await listProductCreateRequests(account.userId, requestPage, 20)
@@ -272,7 +272,7 @@ export function ProductsPage() {
           : t('products.errorGeneric')
       setLoadState({ phase: 'error', message })
     }
-  }, [tab, requestPage, t])
+  }, [tab, requestPage, nativeLang, studyLang, t])
 
   useEffect(() => {
     void load()
@@ -288,6 +288,9 @@ export function ProductsPage() {
             {t('products.my.title')}
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-text-muted">{t('products.my.description')}</p>
+          {tab === 'owned' && (
+            <p className="mt-1 text-xs text-text-muted">{t('products.filterPair', { pair: langPair })}</p>
+          )}
         </div>
         <Link
           to="/products/new"

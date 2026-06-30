@@ -9,6 +9,9 @@ export type OwnedProductDto = {
   creditPrice: number
   shareMode: string
   creatorId: string
+  nativeLang: string
+  studyLang: string
+  langPair: string
   createdAt: string
   updatedAt: string
 }
@@ -107,8 +110,20 @@ export type ListProductCatalogParams = {
   limit?: number
 }
 
-export async function listOwnedProducts(userId: string): Promise<OwnedProductsResponse> {
-  const q = new URLSearchParams({ userId })
+export type ListOwnedProductsParams = {
+  nativeLang: string
+  studyLang: string
+}
+
+export async function listOwnedProducts(
+  userId: string,
+  params: ListOwnedProductsParams,
+): Promise<OwnedProductsResponse> {
+  const q = new URLSearchParams({
+    userId,
+    nativeLang: params.nativeLang,
+    studyLang: params.studyLang,
+  })
   return apiRequest<OwnedProductsResponse>(`/api/product/owned?${q.toString()}`)
 }
 
