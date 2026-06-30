@@ -45,6 +45,41 @@ export type ProductCreateRequestListResponse = {
   pagination: PaginationDto
 }
 
+/** Matches `GET /api/product/catalog` list item (`CatalogProduct` in Go). */
+export type CatalogProductDto = {
+  productId: string
+  name: string
+  description: string
+  creditPrice: number
+  vocabCount: number
+  childrenCount: number
+  totalSize: number
+  nativeLang: string
+  studyLang: string
+  langPair: string
+  creatorId: string
+  creatorEmail?: string
+  isOwner: boolean
+  isPurchased: boolean
+  isShared: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+/** Matches `GET /api/product/catalog` response `data`. */
+export type ProductCatalogResponse = {
+  products: CatalogProductDto[]
+  pagination: PaginationDto
+}
+
+export type ListProductCatalogParams = {
+  nativeLang?: string
+  studyLang?: string
+  langPair?: string
+  page?: number
+  limit?: number
+}
+
 export async function listOwnedProducts(userId: string): Promise<OwnedProductsResponse> {
   const q = new URLSearchParams({ userId })
   return apiRequest<OwnedProductsResponse>(`/api/product/owned?${q.toString()}`)
@@ -61,4 +96,30 @@ export async function listProductCreateRequests(
     limit: String(limit),
   })
   return apiRequest<ProductCreateRequestListResponse>(`/api/product-create?${q.toString()}`)
+}
+
+/** Public marketplace catalog; viewer flags come from JWT (`isOwner`, `isPurchased`, `isShared`). */
+export async function listProductCatalog(
+  params: ListProductCatalogParams = {},
+): Promise<ProductCatalogResponse> {
+  const q = new URLSearchParams()
+  if (params.nativeLang) {
+    q.set('nativeLang', params.nativeLang)
+  }
+  if (params.studyLang) {
+    q.set('studyLang', params.studyLang)
+  }
+  if (params.langPair) {
+    q.set('langPair', params.langPair)
+  }
+  if (params.page != null) {
+    q.set('page', String(params.page))
+  }
+  if (params.limit != null) {
+    q.set('limit', String(params.limit))
+  }
+  const query = q.toString()
+  return apiRequest<ProductCatalogResponse>(
+    query ? `/api/product/catalog?${query}` : '/api/product/catalog',
+  )
 }

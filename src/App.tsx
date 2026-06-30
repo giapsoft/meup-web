@@ -11,8 +11,8 @@ import { CreateProgramFromParagraphPage } from './pages/create-program/CreatePro
 import { CreateProgramFromTitlePage } from './pages/create-program/CreateProgramFromTitlePage'
 import { CreateProgramHubPage } from './pages/create-program/CreateProgramHubPage'
 import { CreateProgramWizard } from './pages/create-program/CreateProgramWizard'
+import { ExplorePage } from './pages/ExplorePage'
 import { ProductsPage } from './pages/ProductsPage'
-import { PlaceholderPage, type PlaceholderPageKey } from './pages/PlaceholderPage'
 import { LegacyProgramsRedirect } from './pages/LegacyProgramsRedirect'
 
 function AppShell() {
@@ -27,10 +27,6 @@ function AppShell() {
     reauthorize()
   }, [clearSession, navigate, reauthorize])
 
-  const placeholders: { path: string; page: PlaceholderPageKey }[] = [
-    { path: '/explore', page: 'explore' },
-  ]
-
   return (
     <div className="flex min-h-svh flex-col">
       <Header onLogout={handleLogout} />
@@ -38,15 +34,13 @@ function AppShell() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/products" element={<ProductsPage />} />
+        <Route path="/explore" element={<ExplorePage />} />
         <Route path="/products/new" element={<CreateProgramHubPage />} />
         <Route path="/products/new/manual" element={<CreateProgramWizard key={uiLocale} />} />
         <Route path="/products/new/ai/title" element={<CreateProgramFromTitlePage key={uiLocale} />} />
         <Route path="/products/new/ai/paragraph" element={<CreateProgramFromParagraphPage key={uiLocale} />} />
         <Route path="/products/new/ai/image" element={<CreateProgramFromImagePage key={uiLocale} />} />
         <Route path="/products/new/ai/:mode" element={<CreateProgramAiSoonPage />} />
-        {placeholders.map(({ path, page }) => (
-          <Route key={path} path={path} element={<PlaceholderPage page={page} />} />
-        ))}
         <Route path="/programs/*" element={<LegacyProgramsRedirect />} />
       </Routes>
     </div>
