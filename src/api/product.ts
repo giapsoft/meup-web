@@ -21,6 +21,26 @@ export type OwnedProductsResponse = {
   products: OwnedProductDto[]
 }
 
+/** Matches `GET /api/product/purchased` list item. */
+export type PurchasedProductDto = {
+  transactionId: string
+  creditAmount: number
+  purchasedAt: string
+  productId: string
+  name: string
+  description: string
+  creditPrice: number
+  creatorId: string
+  nativeLang: string
+  studyLang: string
+  langPair: string
+}
+
+/** Matches `GET /api/product/purchased` response `data`. */
+export type PurchasedProductsResponse = {
+  products: PurchasedProductDto[]
+}
+
 /** Matches `GET /api/product-create` list item. */
 export type ProductCreateRequestSummaryDto = {
   id: string
@@ -115,6 +135,11 @@ export type ListOwnedProductsParams = {
   studyLang: string
 }
 
+export type ListPurchasedProductsParams = {
+  nativeLang: string
+  studyLang: string
+}
+
 export type ListProductCreateRequestsParams = {
   nativeLang: string
   studyLang: string
@@ -132,6 +157,18 @@ export async function listOwnedProducts(
     studyLang: params.studyLang,
   })
   return apiRequest<OwnedProductsResponse>(`/api/product/owned?${q.toString()}`)
+}
+
+export async function listPurchasedProducts(
+  userId: string,
+  params: ListPurchasedProductsParams,
+): Promise<PurchasedProductsResponse> {
+  const q = new URLSearchParams({
+    userId,
+    nativeLang: params.nativeLang,
+    studyLang: params.studyLang,
+  })
+  return apiRequest<PurchasedProductsResponse>(`/api/product/purchased?${q.toString()}`)
 }
 
 export async function listProductCreateRequests(

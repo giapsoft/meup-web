@@ -5,16 +5,30 @@ import { getAccount } from '../api/emailAuth'
 import {
   listOwnedProducts,
   listProductCreateRequests,
+  listPurchasedProducts,
   type OwnedProductDto,
   type ProductCreateRequestSummaryDto,
   type ProductSettingsDto,
+  type PurchasedProductDto,
 } from '../api/product'
 import { getProductCreateProgress, type ProductCreateProgressDto } from '../api/productCreate'
 import { ProductSettingsModal } from '../components/ProductSettingsModal'
 import { useLanguagePair } from '../context/LanguagePairProvider'
 import type { TranslationKey } from '../i18n/types'
 
-type Tab = 'owned' | 'requests'
+type Tab = 'owned' | 'purchased' | 'requests'
+
+const TAB_LABEL_KEYS: Record<Tab, TranslationKey> = {
+  owned: 'products.tabOwned',
+  purchased: 'products.tabPurchased',
+  requests: 'products.tabRequests',
+}
+
+const FILTER_PAIR_KEYS: Record<Tab, TranslationKey> = {
+  owned: 'products.filterPair',
+  purchased: 'products.filterPairPurchased',
+  requests: 'products.filterPairRequests',
+}
 
 type LoadState =
   | { phase: 'loading' }
@@ -137,11 +151,7 @@ function OwnedProductCard({
         <p className="mt-2 text-sm leading-relaxed text-text-muted">{product.description}</p>
       ) : null}
       <dl className="mt-3 grid gap-1 text-xs text-text-muted sm:grid-cols-2">
-        <div>
-          <dt className="inline">{t('products.creditPrice')}: </dt>
-          <dd className="inline tabular-nums">{product.creditPrice}</dd>
-        </div>
-        <div>
+        <div className="sm:col-span-2">
           <dt className="inline">{t('products.updatedAt')}: </dt>
           <dd className="inline">{formatWhen(product.updatedAt, locale)}</dd>
         </div>
@@ -154,6 +164,35 @@ function OwnedProductCard({
           {t('products.viewOnExplore')}
         </Link>
       )}
+    </article>
+  )
+}
+
+function PurchasedProductCard({ product, locale }: { product: PurchasedProductDto; locale: string }) {
+  const { t } = useLanguagePair()
+
+  return (
+    <article className="rounded-2xl border border-border bg-surface-card p-4 sm:p-5">
+      <h3 className="text-base font-semibold text-text">{product.name}</h3>
+      {product.description ? (
+        <p className="mt-2 text-sm leading-relaxed text-text-muted">{product.description}</p>
+      ) : null}
+      <dl className="mt-3 grid gap-1 text-xs text-text-muted sm:grid-cols-2">
+        <div>
+          <dt className="inline">{t('products.purchasedCredits')}: </dt>
+          <dd className="inline tabular-nums">{product.creditAmount}</dd>
+        </div>
+        <div className="sm:col-span-2">
+          <dt className="inline">{t('products.purchasedAt')}: </dt>
+          <dd className="inline">{formatWhen(product.purchasedAt, locale)}</dd>
+        </div>
+      </dl>
+      <Link
+        to="/explore"
+        className="mt-3 inline-flex text-sm font-medium text-accent no-underline transition hover:underline"
+      >
+        {t('products.viewOnExplore')}
+      </Link>
     </article>
   )
 }
@@ -238,6 +277,7 @@ export function ProductsPage() {
   const [tab, setTab] = useState<Tab>('owned')
   const [loadState, setLoadState] = useState<LoadState>({ phase: 'loading' })
   const [owned, setOwned] = useState<OwnedProductDto[]>([])
+  const [purchased, setPurchased] = useState<PurchasedProductDto[]>([])
   const [requests, setRequests] = useState<ProductCreateRequestSummaryDto[]>([])
   const [requestPage, setRequestPage] = useState(1)
   const [requestTotalPages, setRequestTotalPages] = useState(1)
@@ -269,6 +309,9 @@ export function ProductsPage() {
       if (tab === 'owned') {
         const res = await listOwnedProducts(account.userId, { nativeLang, studyLang })
         setOwned(res.products)
+      } else if (tab === 'purchased') {
+        const res = await listPurchasedProducts(account.userId, { nativeLang, studyLang })
+        setPurchased(res.products)
       } else {
         const res = await listProductCreateRequests(account.userId, {
           nativeLang,
@@ -310,12 +353,7 @@ export function ProductsPage() {
             {t('products.my.title')}
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-text-muted">{t('products.my.description')}</p>
-          {tab === 'owned' && (
-            <p className="mt-1 text-xs text-text-muted">{t('products.filterPair', { pair: langPair })}</p>
-          )}
-          {tab === 'requests' && (
-            <p className="mt-1 text-xs text-text-muted">{t('products.filterPairRequests', { pair: langPair })}</p>
-          )}
+          <p className="mt-1 text-xs text-text-muted">{t(FILTER_PAIR_KEYS[tab], { pair: langPair })}</p>
         </div>
         <Link
           to="/products/new"
@@ -330,7 +368,7 @@ export function ProductsPage() {
         role="tablist"
         aria-label={t('products.tabsLabel')}
       >
-        {(['owned', 'requests'] as const).map((key) => (
+        {(['owned', 'purchased', 'requests'] as const).map((key) => (
           <button
             key={key}
             type="button"
@@ -343,13 +381,13 @@ export function ProductsPage() {
               }
             }}
             className={[
-              'flex-1 rounded-lg px-3 py-2 text-sm font-medium transition',
+              'flex-1 rounded-lg px-2 py-2 text-sm font-medium transition sm:px-3',
               tab === key
                 ? 'bg-surface-card text-text shadow-sm'
                 : 'text-text-muted hover:text-text',
             ].join(' ')}
           >
-            {t(key === 'owned' ? 'products.tabOwned' : 'products.tabRequests')}
+            {t(TAB_LABEL_KEYS[key])}
           </button>
         ))}
       </div>
@@ -382,6 +420,19 @@ export function ProductsPage() {
                     locale={locale}
                     onOpenSettings={() => setSettingsProduct(product)}
                   />
+                </li>
+              ))}
+            </ul>
+          )
+        )}
+        {loadState.phase === 'ready' && tab === 'purchased' && (
+          purchased.length === 0 ? (
+            <p className="text-sm text-text-muted">{t('products.emptyPurchased')}</p>
+          ) : (
+            <ul className="grid gap-3 sm:gap-4">
+              {purchased.map((product) => (
+                <li key={product.transactionId}>
+                  <PurchasedProductCard product={product} locale={locale} />
                 </li>
               ))}
             </ul>

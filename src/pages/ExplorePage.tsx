@@ -55,10 +55,12 @@ function CatalogCard({ product, purchasing, purchaseError, onPurchase }: Catalog
         <p className="mt-2 text-sm leading-relaxed text-text-muted">{product.description}</p>
       ) : null}
       <dl className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-muted">
-        <div>
-          <dt className="inline">{t('products.creditPrice')}: </dt>
-          <dd className="inline tabular-nums">{product.creditPrice}</dd>
-        </div>
+        {!canUse && (
+          <div>
+            <dt className="inline">{t('products.creditPrice')}: </dt>
+            <dd className="inline tabular-nums">{product.creditPrice}</dd>
+          </div>
+        )}
         <div>
           <dt className="inline">{t('explore.vocabCount')}: </dt>
           <dd className="inline tabular-nums">{product.vocabCount}</dd>
