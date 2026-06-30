@@ -195,7 +195,13 @@ export function CreateProgramWizard() {
 
   return (
     <main className={WIZARD_MAIN}>
-      <p className="text-xs text-text-muted lg:text-sm">{t('createProgram.pairHint', { pair: langPair })}</p>
+      <Link
+        to="/programs/new"
+        className="inline-flex text-sm text-text-muted no-underline transition hover:text-accent"
+      >
+        {t('createProgram.hubBack')}
+      </Link>
+      <p className="mt-2 text-xs text-text-muted lg:text-sm">{t('createProgram.pairHint', { pair: langPair })}</p>
       {step !== 'name' && (
         <WizardProgress current={wizardPhaseFromStep(step)} t={t} />
       )}

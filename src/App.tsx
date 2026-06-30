@@ -5,6 +5,8 @@ import { VerifyEmailBanner } from './components/VerifyEmailBanner'
 import { useClearDeviceSession, useReauthorize } from './context/DeviceSessionProvider'
 import { useLanguagePair } from './context/LanguagePairProvider'
 import { HomePage } from './pages/HomePage'
+import { CreateProgramAiSoonPage } from './pages/create-program/CreateProgramAiSoonPage'
+import { CreateProgramHubPage } from './pages/create-program/CreateProgramHubPage'
 import { CreateProgramWizard } from './pages/create-program/CreateProgramWizard'
 import { PlaceholderPage, type PlaceholderPageKey } from './pages/PlaceholderPage'
 
@@ -31,7 +33,9 @@ function AppShell() {
       <VerifyEmailBanner />
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/programs/new" element={<CreateProgramWizard key={uiLocale} />} />
+        <Route path="/programs/new" element={<CreateProgramHubPage />} />
+        <Route path="/programs/new/manual" element={<CreateProgramWizard key={uiLocale} />} />
+        <Route path="/programs/new/ai/:mode" element={<CreateProgramAiSoonPage />} />
         {placeholders.map(({ path, page }) => (
           <Route key={path} path={path} element={<PlaceholderPage page={page} />} />
         ))}
