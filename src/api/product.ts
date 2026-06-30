@@ -72,6 +72,13 @@ export type ProductCatalogResponse = {
   pagination: PaginationDto
 }
 
+/** Matches `POST /api/product/purchase` response `data`. */
+export type PurchaseProductResponse = {
+  transactionId: string
+  productId: string
+  creditAmount: number
+}
+
 export type ListProductCatalogParams = {
   nativeLang?: string
   studyLang?: string
@@ -122,4 +129,12 @@ export async function listProductCatalog(
   return apiRequest<ProductCatalogResponse>(
     query ? `/api/product/catalog?${query}` : '/api/product/catalog',
   )
+}
+
+/** Buy a public product with credits. User id comes from JWT. */
+export async function purchaseProduct(productId: string): Promise<PurchaseProductResponse> {
+  return apiRequest<PurchaseProductResponse>('/api/product/purchase', {
+    method: 'POST',
+    body: { productId },
+  })
 }
