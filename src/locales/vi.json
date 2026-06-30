@@ -96,7 +96,7 @@
   "createAiTitle.setup.topicPlaceholder": "vd. Du lịch, Động vật, Văn phòng",
   "createAiTitle.setup.wordCountLabel": "Số từ",
   "createAiTitle.setup.wordCountPlaceholder": "Nhập số",
-  "createAiTitle.setup.wordCountHint": "Bạn tự chọn số từ cần sinh (tối thiểu 20, tối đa 100). Gửi lên API dưới dạng limitCount.",
+  "createAiTitle.setup.wordCountHint": "Bạn tự chọn số từ cần sinh (tối thiểu {min}, tối đa {max}). Gửi lên API dưới dạng limitCount.",
   "createAiTitle.setup.creditsEstimate": "Ước tính phí job vocab: ~{credits} credits (server tính số cuối).",
   "createAiTitle.schema.hint": "Chọn cột cho các dòng sinh ra. Layout thẻ mặc định được áp dụng tự động.",
   "createAiTitle.review.title": "Xác nhận & sinh từ",

@@ -43,7 +43,7 @@ const FIELD_TYPE_KEYS: Record<SchemaFieldUiType, TranslationKey> = {
 }
 
 const MIN_WORD_COUNT = 20
-const MAX_WORD_COUNT = 100
+const MAX_WORD_COUNT = 1000
 
 const AI_TITLE_ERROR_KEYS: Partial<Record<string, TranslationKey>> = {
   insufficient_credits: 'createAiTitle.error.insufficient_credits',
@@ -292,7 +292,9 @@ export function CreateProgramFromTitlePage() {
             className="mt-2 w-full max-w-[8rem] rounded-xl border border-border bg-surface-card px-4 py-3 text-sm text-text focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25 sm:text-base"
           />
           {wordCountError && <p className="mt-2 text-sm text-warning">{wordCountError}</p>}
-          <p className="mt-1 text-xs text-text-muted">{t('createAiTitle.setup.wordCountHint')}</p>
+          <p className="mt-1 text-xs text-text-muted">
+            {t('createAiTitle.setup.wordCountHint', { min: MIN_WORD_COUNT, max: MAX_WORD_COUNT })}
+          </p>
           {estimatedCredits != null && (
             <p className="mt-2 text-xs text-text-muted">
               {t('createAiTitle.setup.creditsEstimate', { credits: estimatedCredits })}
