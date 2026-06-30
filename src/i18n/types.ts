@@ -78,6 +78,7 @@ export type TranslationKey =
   | 'products.tabsLabel'
   | 'products.emptyOwned'
   | 'products.filterPair'
+  | 'products.filterPairRequests'
   | 'products.emptyRequests'
   | 'products.loading'
   | 'products.errorGeneric'

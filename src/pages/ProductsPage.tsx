@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { getAccount } from '../api/emailAuth'
@@ -234,6 +234,8 @@ export function ProductsPage() {
   const [requestPage, setRequestPage] = useState(1)
   const [requestTotalPages, setRequestTotalPages] = useState(1)
   const [settingsProduct, setSettingsProduct] = useState<OwnedProductDto | null>(null)
+  const langPairKey = `${nativeLang}_${studyLang}`
+  const prevLangPairRef = useRef(langPairKey)
 
   const handleSettingsSaved = useCallback((updated: ProductSettingsDto) => {
     setOwned((prev) =>
@@ -260,7 +262,12 @@ export function ProductsPage() {
         const res = await listOwnedProducts(account.userId, { nativeLang, studyLang })
         setOwned(res.products)
       } else {
-        const res = await listProductCreateRequests(account.userId, requestPage, 20)
+        const res = await listProductCreateRequests(account.userId, {
+          nativeLang,
+          studyLang,
+          page: requestPage,
+          limit: 20,
+        })
         setRequests(res.requests)
         setRequestTotalPages(Math.max(1, res.pagination.totalPages))
       }
@@ -275,8 +282,15 @@ export function ProductsPage() {
   }, [tab, requestPage, nativeLang, studyLang, t])
 
   useEffect(() => {
+    if (prevLangPairRef.current !== langPairKey) {
+      prevLangPairRef.current = langPairKey
+      if (requestPage !== 1) {
+        setRequestPage(1)
+        return
+      }
+    }
     void load()
-  }, [load])
+  }, [load, langPairKey, requestPage])
 
   const locale = uiLocale === 'vi' ? 'vi-VN' : uiLocale === 'ja' ? 'ja-JP' : 'en-US'
 
@@ -290,6 +304,9 @@ export function ProductsPage() {
           <p className="mt-2 max-w-2xl text-sm text-text-muted">{t('products.my.description')}</p>
           {tab === 'owned' && (
             <p className="mt-1 text-xs text-text-muted">{t('products.filterPair', { pair: langPair })}</p>
+          )}
+          {tab === 'requests' && (
+            <p className="mt-1 text-xs text-text-muted">{t('products.filterPairRequests', { pair: langPair })}</p>
           )}
         </div>
         <Link

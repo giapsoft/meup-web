@@ -115,6 +115,13 @@ export type ListOwnedProductsParams = {
   studyLang: string
 }
 
+export type ListProductCreateRequestsParams = {
+  nativeLang: string
+  studyLang: string
+  page?: number
+  limit?: number
+}
+
 export async function listOwnedProducts(
   userId: string,
   params: ListOwnedProductsParams,
@@ -129,13 +136,14 @@ export async function listOwnedProducts(
 
 export async function listProductCreateRequests(
   ownerId: string,
-  page = 1,
-  limit = 20,
+  params: ListProductCreateRequestsParams,
 ): Promise<ProductCreateRequestListResponse> {
   const q = new URLSearchParams({
     ownerId,
-    page: String(page),
-    limit: String(limit),
+    nativeLang: params.nativeLang,
+    studyLang: params.studyLang,
+    page: String(params.page ?? 1),
+    limit: String(params.limit ?? 20),
   })
   return apiRequest<ProductCreateRequestListResponse>(`/api/product-create?${q.toString()}`)
 }
