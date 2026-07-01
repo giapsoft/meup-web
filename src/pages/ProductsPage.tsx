@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { getAccount } from '../api/emailAuth'
 import {
+  getDevicePrograms,
   listOwnedProducts,
   listProductCreateRequests,
   listPurchasedProducts,
@@ -16,18 +17,24 @@ import { ProductSettingsModal } from '../components/ProductSettingsModal'
 import { ProductShareModal } from '../components/ProductShareModal'
 import { useLanguagePair } from '../context/LanguagePairProvider'
 import type { TranslationKey } from '../i18n/types'
+import {
+  sharedProductsForLangPair,
+  type DeviceProgramProductDto,
+} from '../utils/deviceProgramsCompact'
 
-type Tab = 'owned' | 'purchased' | 'requests'
+type Tab = 'owned' | 'purchased' | 'shared' | 'requests'
 
 const TAB_LABEL_KEYS: Record<Tab, TranslationKey> = {
   owned: 'products.tabOwned',
   purchased: 'products.tabPurchased',
+  shared: 'products.tabShared',
   requests: 'products.tabRequests',
 }
 
 const FILTER_PAIR_KEYS: Record<Tab, TranslationKey> = {
   owned: 'products.filterPair',
   purchased: 'products.filterPairPurchased',
+  shared: 'products.filterPairShared',
   requests: 'products.filterPairRequests',
 }
 
@@ -185,6 +192,45 @@ function OwnedProductCard({
   )
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) {
+    return `${bytes} B`
+  }
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`
+  }
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function SharedProductCard({ product }: { product: DeviceProgramProductDto }) {
+  const { t } = useLanguagePair()
+
+  return (
+    <article className="rounded-2xl border border-border bg-surface-card p-4 sm:p-5">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <h3 className="text-base font-semibold text-text">{product.name}</h3>
+        <span className="rounded-md border border-accent/40 bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent">
+          {t('products.shared.badge')}
+        </span>
+      </div>
+      {product.description ? (
+        <p className="mt-2 text-sm leading-relaxed text-text-muted">{product.description}</p>
+      ) : null}
+      <dl className="mt-3 grid gap-1 text-xs text-text-muted sm:grid-cols-2">
+        <div>
+          <dt className="inline">{t('products.shared.packageSize')}: </dt>
+          <dd className="inline tabular-nums">{formatBytes(product.totalSize)}</dd>
+        </div>
+        <div>
+          <dt className="inline">{t('products.shared.fileCount')}: </dt>
+          <dd className="inline tabular-nums">{product.files.length}</dd>
+        </div>
+      </dl>
+      <p className="mt-3 text-xs leading-relaxed text-text-muted">{t('products.shared.hint')}</p>
+    </article>
+  )
+}
+
 function PurchasedProductCard({ product, locale }: { product: PurchasedProductDto; locale: string }) {
   const { t } = useLanguagePair()
 
@@ -295,6 +341,7 @@ export function ProductsPage() {
   const [loadState, setLoadState] = useState<LoadState>({ phase: 'loading' })
   const [owned, setOwned] = useState<OwnedProductDto[]>([])
   const [purchased, setPurchased] = useState<PurchasedProductDto[]>([])
+  const [shared, setShared] = useState<DeviceProgramProductDto[]>([])
   const [requests, setRequests] = useState<ProductCreateRequestSummaryDto[]>([])
   const [requestPage, setRequestPage] = useState(1)
   const [requestTotalPages, setRequestTotalPages] = useState(1)
@@ -330,6 +377,9 @@ export function ProductsPage() {
       } else if (tab === 'purchased') {
         const res = await listPurchasedProducts(account.userId, { nativeLang, studyLang })
         setPurchased(res.products)
+      } else if (tab === 'shared') {
+        const programs = await getDevicePrograms()
+        setShared(sharedProductsForLangPair(programs, langPair))
       } else {
         const res = await listProductCreateRequests(account.userId, {
           nativeLang,
@@ -348,7 +398,7 @@ export function ProductsPage() {
           : t('products.errorGeneric')
       setLoadState({ phase: 'error', message })
     }
-  }, [tab, requestPage, nativeLang, studyLang, t])
+  }, [tab, requestPage, nativeLang, studyLang, langPair, t])
 
   useEffect(() => {
     if (prevLangPairRef.current !== langPairKey) {
@@ -386,7 +436,7 @@ export function ProductsPage() {
         role="tablist"
         aria-label={t('products.tabsLabel')}
       >
-        {(['owned', 'purchased', 'requests'] as const).map((key) => (
+        {(['owned', 'purchased', 'shared', 'requests'] as const).map((key) => (
           <button
             key={key}
             type="button"
@@ -399,7 +449,7 @@ export function ProductsPage() {
               }
             }}
             className={[
-              'flex-1 rounded-lg px-2 py-2 text-sm font-medium transition sm:px-3',
+              'flex-1 rounded-lg px-1.5 py-2 text-xs font-medium transition sm:px-2 sm:text-sm',
               tab === key
                 ? 'bg-surface-card text-text shadow-sm'
                 : 'text-text-muted hover:text-text',
@@ -452,6 +502,19 @@ export function ProductsPage() {
               {purchased.map((product) => (
                 <li key={product.transactionId}>
                   <PurchasedProductCard product={product} locale={locale} />
+                </li>
+              ))}
+            </ul>
+          )
+        )}
+        {loadState.phase === 'ready' && tab === 'shared' && (
+          shared.length === 0 ? (
+            <p className="text-sm text-text-muted">{t('products.emptyShared')}</p>
+          ) : (
+            <ul className="grid gap-3 sm:gap-4">
+              {shared.map((product) => (
+                <li key={product.id}>
+                  <SharedProductCard product={product} />
                 </li>
               ))}
             </ul>

@@ -1,5 +1,9 @@
 import { API_PRODUCT_SETTINGS } from '../config'
 import { apiRequest } from './client'
+import {
+  parseDeviceProgramsCompact,
+  type DeviceProgramsDto,
+} from '../utils/deviceProgramsCompact'
 
 /** Matches `GET /api/product/owned` → `ownedProductData`. */
 export type OwnedProductDto = {
@@ -335,4 +339,10 @@ export async function unshareProduct(body: ProductShareTargetsBody): Promise<Uns
     method: 'POST',
     body,
   })
+}
+
+/** Catalog grouped by lang pair (owned, shared, purchased). Wire format is compact v1. */
+export async function getDevicePrograms(): Promise<DeviceProgramsDto> {
+  const raw = await apiRequest<unknown>('/api/product/device-programs')
+  return parseDeviceProgramsCompact(raw)
 }
