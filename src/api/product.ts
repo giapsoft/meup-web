@@ -270,6 +270,19 @@ export async function getProductDraft(productId: string): Promise<ProductDraftRe
   return apiRequest<ProductDraftResponse>(`/api/product/draft?${q.toString()}`)
 }
 
+/** Matches `GET /api/product/import-package` response `data`. */
+export type ProductImportPackageResponse = {
+  productId: string
+  tree: ExportProductVersionBody['tree']
+}
+
+export async function getProductImportPackage(
+  productId: string,
+): Promise<ProductImportPackageResponse> {
+  const q = new URLSearchParams({ productId })
+  return apiRequest<ProductImportPackageResponse>(`/api/product/import-package?${q.toString()}`)
+}
+
 export async function saveProductDraft(
   productId: string,
   draftData: string,

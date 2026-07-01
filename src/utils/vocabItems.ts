@@ -86,6 +86,16 @@ export function toCompactItemRow(schema: ItemSchema, item: VocabItemDraft): stri
   return row
 }
 
+/** Map one published compact item row into wizard text values (text columns only). */
+export function fromCompactItemRow(schema: ItemSchema, row: string[]): Record<string, string> {
+  const values: Record<string, string> = {}
+  for (let i = 0; i < schema.attrs.length; i++) {
+    const attr = schema.attrs[i]
+    values[attr.key] = (row[i] ?? '').trim()
+  }
+  return values
+}
+
 export function toExportItems(
   _schema: ItemSchema,
   items: VocabItemDraft[],

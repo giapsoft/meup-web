@@ -5,6 +5,7 @@ import { getAccount } from '../../api/emailAuth'
 import {
   exportProductVersion,
   getProductDraft,
+  getProductImportPackage,
   listOwnedProducts,
   saveProductDraft,
   type OwnedProductDto,
@@ -28,6 +29,7 @@ import {
   parseProductEditDraft,
   serializeProductEditDraft,
 } from '../../utils/productEditDraft'
+import { importTreeToEditDraft } from '../../utils/importPackageToEditDraft'
 import {
   createEmptyVocabItem,
   validateVocabItems,
@@ -176,12 +178,31 @@ export function EditProgramPage() {
             setActiveLevelId(parsed.draft.levels[0]?.id ?? '')
             setVocabItems(draftToVocabItems(parsed.draft))
           } else {
-            const defaults = createDefaultEditDraft(meta.name, t)
-            setName(defaults.name)
-            setItemSchemaEditor(defaults.itemSchemaEditor)
-            setLevels(defaults.levels)
-            setActiveLevelId(defaults.levels[0]?.id ?? '')
-            setVocabItems(draftToVocabItems(defaults))
+            let loadedFromPackage = false
+            try {
+              const imported = await getProductImportPackage(productId!)
+              const fromPackage = importTreeToEditDraft(imported.tree, meta.name)
+              setName(fromPackage.name)
+              setItemSchemaEditor(fromPackage.itemSchemaEditor)
+              setLevels(fromPackage.levels)
+              setActiveLevelId(fromPackage.levels[0]?.id ?? '')
+              setVocabItems(draftToVocabItems(fromPackage))
+              loadedFromPackage = true
+            } catch (err) {
+              if (err instanceof ApiError && err.code === 'no_published_package') {
+                // Never exported — fall back to preset wizard state.
+              } else if (!(err instanceof ApiError)) {
+                throw err
+              }
+            }
+            if (!loadedFromPackage) {
+              const defaults = createDefaultEditDraft(meta.name, t)
+              setName(defaults.name)
+              setItemSchemaEditor(defaults.itemSchemaEditor)
+              setLevels(defaults.levels)
+              setActiveLevelId(defaults.levels[0]?.id ?? '')
+              setVocabItems(draftToVocabItems(defaults))
+            }
           }
           setLoadState('ready')
         }
