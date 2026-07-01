@@ -228,3 +228,59 @@ export async function patchProductSettings(
     body,
   })
 }
+
+/** Matches `GET /api/product/draft` response `data`. */
+export type ProductDraftResponse = {
+  productId: string
+  draftData: string
+}
+
+/** Matches `POST /api/product/draft` response `data`. */
+export type SaveProductDraftResponse = {
+  productId: string
+}
+
+/** Matches `POST /api/product/export-version` response `data`. */
+export type ExportProductVersionResponse = {
+  productId: string
+  versionId: number
+}
+
+export type ExportProductVersionBody = {
+  productId: string
+  tree: {
+    pair: { nativeLang: string; studyLang: string }
+    config: unknown[]
+    root: {
+      name: string
+      depth: number
+      itemIndexes: number[]
+      children: []
+    }
+    items: string[][]
+  }
+}
+
+export async function getProductDraft(productId: string): Promise<ProductDraftResponse> {
+  const q = new URLSearchParams({ productId })
+  return apiRequest<ProductDraftResponse>(`/api/product/draft?${q.toString()}`)
+}
+
+export async function saveProductDraft(
+  productId: string,
+  draftData: string,
+): Promise<SaveProductDraftResponse> {
+  return apiRequest<SaveProductDraftResponse>('/api/product/draft', {
+    method: 'POST',
+    body: { productId, draftData },
+  })
+}
+
+export async function exportProductVersion(
+  body: ExportProductVersionBody,
+): Promise<ExportProductVersionResponse> {
+  return apiRequest<ExportProductVersionResponse>('/api/product/export-version', {
+    method: 'POST',
+    body,
+  })
+}

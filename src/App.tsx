@@ -12,6 +12,7 @@ import { CreateProgramFromTitlePage } from './pages/create-program/CreateProgram
 import { CreateProgramHubPage } from './pages/create-program/CreateProgramHubPage'
 import { CreateProgramWizard } from './pages/create-program/CreateProgramWizard'
 import { ExplorePage } from './pages/ExplorePage'
+import { EditProgramPage } from './pages/edit-program/EditProgramPage'
 import { ProductsPage } from './pages/ProductsPage'
 import { LegacyProgramsRedirect } from './pages/LegacyProgramsRedirect'
 
@@ -41,6 +42,7 @@ function AppShell() {
         <Route path="/products/new/ai/paragraph" element={<CreateProgramFromParagraphPage key={uiLocale} />} />
         <Route path="/products/new/ai/image" element={<CreateProgramFromImagePage key={uiLocale} />} />
         <Route path="/products/new/ai/:mode" element={<CreateProgramAiSoonPage />} />
+        <Route path="/products/:productId/edit" element={<EditProgramPage />} />
         <Route path="/programs/*" element={<LegacyProgramsRedirect />} />
       </Routes>
     </div>

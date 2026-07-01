@@ -34,6 +34,8 @@ type VocabEntryStepProps = {
   onItemsChange: (items: VocabItemDraft[]) => void
   onBack: () => void
   onContinue: () => void
+  /** Override primary action label (default: continue). */
+  continueLabelKey?: TranslationKey
   t: (key: TranslationKey, params?: MessageParams) => string
 }
 
@@ -45,6 +47,7 @@ export function VocabEntryStep({
   onItemsChange,
   onBack,
   onContinue,
+  continueLabelKey,
   t,
 }: VocabEntryStepProps) {
   const textAttrs = useMemo(() => textAttributes(schema), [schema])
@@ -265,7 +268,7 @@ export function VocabEntryStep({
               {t('createProgram.stepSchema.back')}
             </button>
             <button type="button" onClick={onContinue} className={WIZARD_ACTION_PRIMARY}>
-              {t('createProgram.stepSchema.continue')}
+              {t(continueLabelKey ?? 'createProgram.stepSchema.continue')}
             </button>
           </div>
         </div>

@@ -138,6 +138,13 @@ function OwnedProductCard({
               {product.shareMode}
             </span>
           )}
+          <Link
+            to={`/products/${product.productId}/edit`}
+            state={{ product }}
+            className="rounded-lg border border-accent/40 bg-accent-soft px-3 py-1 text-xs font-medium text-accent no-underline transition hover:border-accent hover:bg-accent/20"
+          >
+            {t('products.edit.open')}
+          </Link>
           <button
             type="button"
             onClick={onOpenSettings}
