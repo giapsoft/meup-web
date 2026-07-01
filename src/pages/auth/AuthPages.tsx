@@ -1,6 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { ApiError } from '../../api/client'
+import { GoogleSignInButton, GoogleSignInDivider } from '../../components/GoogleSignInButton'
 import { loginEmail, registerEmail } from '../../api/emailAuth'
 import { useReauthorize } from '../../context/DeviceSessionProvider'
 import { useLanguagePair } from '../../context/LanguagePairProvider'
@@ -115,6 +116,11 @@ function LoginPage() {
   const [error, setError] = useState<TranslationKey | null>(null)
   const [busy, setBusy] = useState(false)
 
+  function handleAuthenticated() {
+    navigate('/', { replace: true })
+    reauthorize()
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (busy) {
@@ -124,8 +130,7 @@ function LoginPage() {
     setBusy(true)
     try {
       await loginEmail(email.trim(), password)
-      navigate('/', { replace: true })
-      reauthorize()
+      handleAuthenticated()
     } catch (err) {
       setError(errorKey(err))
       setBusy(false)
@@ -145,8 +150,17 @@ function LoginPage() {
         </>
       }
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         {error && <ErrorBanner message={t(error)} />}
+        <GoogleSignInButton
+          text="signin_with"
+          disabled={busy}
+          onAuthenticated={handleAuthenticated}
+          onError={setError}
+          onBusyChange={setBusy}
+        />
+        <GoogleSignInDivider />
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Field
           id="login-email"
           label={t('auth.field.emailLabel')}
@@ -166,7 +180,8 @@ function LoginPage() {
           onChange={setPassword}
         />
         <SubmitButton label={busy ? t('auth.login.submitting') : t('auth.login.submit')} busy={busy} />
-      </form>
+        </form>
+      </div>
     </AuthShell>
   )
 }
@@ -181,6 +196,11 @@ function RegisterPage() {
   const [error, setError] = useState<TranslationKey | null>(null)
   const [busy, setBusy] = useState(false)
 
+  function handleAuthenticated() {
+    navigate('/', { replace: true })
+    reauthorize()
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (busy) {
@@ -194,8 +214,7 @@ function RegisterPage() {
     setBusy(true)
     try {
       await registerEmail(email.trim(), password)
-      navigate('/', { replace: true })
-      reauthorize()
+      handleAuthenticated()
     } catch (err) {
       setError(errorKey(err))
       setBusy(false)
@@ -215,8 +234,17 @@ function RegisterPage() {
         </>
       }
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         {error && <ErrorBanner message={t(error)} />}
+        <GoogleSignInButton
+          text="signup_with"
+          disabled={busy}
+          onAuthenticated={handleAuthenticated}
+          onError={setError}
+          onBusyChange={setBusy}
+        />
+        <GoogleSignInDivider />
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Field
           id="register-email"
           label={t('auth.field.emailLabel')}
@@ -248,7 +276,8 @@ function RegisterPage() {
           label={busy ? t('auth.register.submitting') : t('auth.register.submit')}
           busy={busy}
         />
-      </form>
+        </form>
+      </div>
     </AuthShell>
   )
 }

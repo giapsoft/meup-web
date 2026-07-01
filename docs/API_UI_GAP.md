@@ -31,6 +31,7 @@ So sánh `meup-api` (`../meup-api`) với `meup-web`. Cập nhật: 2026-07-01.
 | POST | `/api/auth/refresh` | ✅ | `src/api/client.ts`, token rotation |
 | POST | `/api/auth/register` | ✅ | `src/pages/auth/AuthPages.tsx` |
 | POST | `/api/auth/login` | ✅ | `src/pages/auth/AuthPages.tsx` |
+| POST | `/api/auth/google` | ✅ | `GoogleSignInButton` — Sign In With Google |
 | POST | `/api/auth/verify-email` | ✅ | `src/pages/auth/VerifyEmailPage.tsx` |
 | GET | `/api/auth/me` | ✅ | `AccountProvider`, header credits |
 | PATCH | `/api/auth/me` | ✅ | `LanguagePairProvider` — cập nhật lang prefs |

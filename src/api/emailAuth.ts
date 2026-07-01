@@ -1,4 +1,5 @@
 import {
+  API_AUTH_GOOGLE,
   API_AUTH_LOGIN,
   API_AUTH_ME,
   API_AUTH_REGISTER,
@@ -59,6 +60,18 @@ export async function loginEmail(email: string, password: string): Promise<Email
   const res = await apiRequest<EmailSessionDto>(API_AUTH_LOGIN, {
     method: 'POST',
     body: { email, password },
+    auth: false,
+  })
+  storeTokenPair(res)
+  applySessionLangPrefs(res)
+  return res
+}
+
+/** Đăng nhập bằng Google ID token từ Sign In With Google. */
+export async function loginGoogle(idToken: string): Promise<EmailSessionDto> {
+  const res = await apiRequest<EmailSessionDto>(API_AUTH_GOOGLE, {
+    method: 'POST',
+    body: { idToken },
     auth: false,
   })
   storeTokenPair(res)

@@ -16,6 +16,9 @@ export const API_AUTH_REGISTER = '/api/auth/register'
 /** Đăng nhập bằng email + mật khẩu. */
 export const API_AUTH_LOGIN = '/api/auth/login'
 
+/** Đăng nhập bằng Google ID token (Sign In With Google). */
+export const API_AUTH_GOOGLE = '/api/auth/google'
+
 /** Xác thực email bằng token (từ link trong mail). */
 export const API_AUTH_VERIFY_EMAIL = '/api/auth/verify-email'
 
@@ -51,3 +54,7 @@ export const API_ADMIN_CREDIT_PACKAGES = '/api/admin/credit-packages'
 
 /** Khoảng đệm (ms) coi access token là "sắp hết hạn" để refresh trước, tránh lỗi 401. */
 export const ACCESS_TOKEN_SKEW_MS = 30_000
+
+/** Google OAuth 2.0 Client ID (Web) — khớp một giá trị trong GOOGLE_OAUTH_CLIENT_ID của meup-api. */
+export const GOOGLE_OAUTH_CLIENT_ID =
+  (import.meta.env.VITE_GOOGLE_OAUTH_CLIENT_ID as string | undefined)?.trim() ?? ''
