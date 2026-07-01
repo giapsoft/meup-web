@@ -12,6 +12,7 @@ import { CreateProgramFromTitlePage } from './pages/create-program/CreateProgram
 import { CreateProgramHubPage } from './pages/create-program/CreateProgramHubPage'
 import { CreateProgramWizard } from './pages/create-program/CreateProgramWizard'
 import { ExplorePage } from './pages/ExplorePage'
+import { SellerPage } from './pages/SellerPage'
 import { EditProgramPage } from './pages/edit-program/EditProgramPage'
 import { ProductsPage } from './pages/ProductsPage'
 import { LegacyProgramsRedirect } from './pages/LegacyProgramsRedirect'
@@ -36,6 +37,7 @@ function AppShell() {
         <Route path="/" element={<HomePage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/explore" element={<ExplorePage />} />
+        <Route path="/seller" element={<SellerPage />} />
         <Route path="/products/new" element={<CreateProgramHubPage />} />
         <Route path="/products/new/manual" element={<CreateProgramWizard key={uiLocale} />} />
         <Route path="/products/new/ai/title" element={<CreateProgramFromTitlePage key={uiLocale} />} />

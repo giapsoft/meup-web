@@ -23,6 +23,7 @@ export const MAIN_NAV_ITEMS: MainNavItem[] = [
     activePrefix: '/products/new',
   },
   { path: '/explore', labelKey: 'nav.explore', activePrefix: '/explore' },
+  { path: '/seller', labelKey: 'nav.seller', activePrefix: '/seller' },
 ]
 
 export function isNavItemActive(pathname: string, item: MainNavItem): boolean {
