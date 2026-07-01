@@ -16,6 +16,7 @@ import { redeemLink } from '../api/deviceLink'
 import { LanguagePairProvider } from './LanguagePairProvider'
 import { AccountProvider } from './AccountProvider'
 import { AuthLoadingPage } from '../pages/AuthGatePages'
+import { AdminRoutes } from '../pages/admin/AdminRoutes'
 import { AuthPages } from '../pages/auth/AuthPages'
 import { VerifyEmailPage } from '../pages/auth/VerifyEmailPage'
 import {
@@ -122,7 +123,17 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
   const actions = useMemo(() => ({ reauthorize }), [reauthorize])
 
   let content: ReactNode
-  if (location.pathname === '/verify-email') {
+  if (location.pathname.startsWith('/admin')) {
+    // Admin panel dùng X-Admin-Secret riêng — không cần phiên user.
+    content = (
+      <LanguagePairProvider
+        initialNativeLang={langPreview.nativeLangCode}
+        initialStudyLang={langPreview.studyLangCode}
+      >
+        <AdminRoutes />
+      </LanguagePairProvider>
+    )
+  } else if (location.pathname === '/verify-email') {
     // Trang xác thực email chỉ cần token trong URL (không phụ thuộc phiên) → bỏ qua cổng auth.
     content = (
       <LanguagePairProvider

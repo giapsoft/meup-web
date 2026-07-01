@@ -40,5 +40,14 @@ export const API_SELLER_PAYOUT_SALES = '/api/seller-payout/sales'
 /** Seller xem lịch sử thanh toán (JWT). */
 export const API_SELLER_PAYOUT_HISTORY = '/api/seller-payout/history'
 
+/** Admin: danh sách số dư seller (header `X-Admin-Secret`). */
+export const API_ADMIN_SELLER_BALANCES = '/api/admin/seller-payout/balances'
+
+/** Admin: ghi nhận thanh toán seller. */
+export const API_ADMIN_SELLER_RECORD = '/api/admin/seller-payout/record'
+
+/** Admin: đồng bộ catalog gói nạp credits. */
+export const API_ADMIN_CREDIT_PACKAGES = '/api/admin/credit-packages'
+
 /** Khoảng đệm (ms) coi access token là "sắp hết hạn" để refresh trước, tránh lỗi 401. */
 export const ACCESS_TOKEN_SKEW_MS = 30_000

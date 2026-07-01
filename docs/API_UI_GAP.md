@@ -106,9 +106,9 @@ So sánh `meup-api` (`../meup-api`) với `meup-web`. Cập nhật: 2026-07-01.
 
 | Method | Path | Web UI | Ghi chú |
 |--------|------|--------|---------|
-| GET | `/api/admin/seller-payout/balances` | 📋 sau | Admin secret — làm sau seller self-service |
-| POST | `/api/admin/seller-payout/record` | 📋 sau | Admin secret |
-| PUT | `/api/admin/credit-packages` | 📋 sau | Admin secret — sync catalog gói nạp |
+| GET | `/api/admin/seller-payout/balances` | ✅ | `AdminPanelPage` tab Seller balances — `/admin` |
+| POST | `/api/admin/seller-payout/record` | ✅ | `AdminPanelPage` tab Record payout |
+| PUT | `/api/admin/credit-packages` | ✅ | `AdminPanelPage` tab Credit packages |
 
 ---
 
@@ -121,13 +121,14 @@ So sánh `meup-api` (`../meup-api`) với `meup-web`. Cập nhật: 2026-07-01.
 | 3 | `POST /api/product-create/.../retry` | ❌ chưa làm | List/progress không trả `jobId` — cần quyết trước khi làm UI |
 | 4 | `GET /api/seller-payout/sales` | ✅ xong | `src/pages/SellerPage.tsx` — 2026-07-01 |
 | 5 | `GET /api/seller-payout/history` | ✅ xong | Gộp `SellerPage` — 2026-07-01 |
-| 6–8 | `/api/admin/*` (3 endpoint) | 📋 sau | Làm sau #4–#5 |
+| 6–8 | `/api/admin/*` (3 endpoint) | ✅ xong | `/admin` + `X-Admin-Secret` — 2026-07-01 |
 
 ---
 
 ## Tóm tắt
 
 - **Đã có UI:** auth, redeem QR, product marketplace (owned/purchased/shared/catalog/purchase/share/settings/edit/export/draft), product-create (tạo + list + progress).
-- **Thiếu UI (web, còn làm):** retry job (#3), admin (#6–#8 sau).
+- **Thiếu UI (web, còn làm):** retry job (#3).
+- **Admin UI:** `/admin` (gate) → `/admin/panel` (3 tab).
 - **Bỏ qua (web):** restore-version, package-link/download.
 - **Không cần UI web:** device handshake, payment webhook, health.
