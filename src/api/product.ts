@@ -284,3 +284,55 @@ export async function exportProductVersion(
     body,
   })
 }
+
+/** Matches `GET /api/product/shares` list item. */
+export type ProductShareEntryDto = {
+  userId: string
+  email: string
+  sharedAt: string
+}
+
+/** Matches `GET /api/product/shares` response `data`. */
+export type ProductSharesResponse = {
+  productId: string
+  shares: ProductShareEntryDto[]
+}
+
+/** Body for `POST /api/product/share` and `/unshare`. */
+export type ProductShareTargetsBody = {
+  productId: string
+  userIds?: string[]
+  emails?: string[]
+  deviceOrders?: number[]
+}
+
+/** Matches `POST /api/product/share` response `data`. */
+export type ShareProductResponse = {
+  sharedUserIds: string[]
+  added: number
+}
+
+/** Matches `POST /api/product/unshare` response `data`. */
+export type UnshareProductResponse = {
+  revokedUserIds: string[]
+  removed: number
+}
+
+export async function listProductShares(productId: string): Promise<ProductSharesResponse> {
+  const q = new URLSearchParams({ productId })
+  return apiRequest<ProductSharesResponse>(`/api/product/shares?${q.toString()}`)
+}
+
+export async function shareProduct(body: ProductShareTargetsBody): Promise<ShareProductResponse> {
+  return apiRequest<ShareProductResponse>('/api/product/share', {
+    method: 'POST',
+    body,
+  })
+}
+
+export async function unshareProduct(body: ProductShareTargetsBody): Promise<UnshareProductResponse> {
+  return apiRequest<UnshareProductResponse>('/api/product/unshare', {
+    method: 'POST',
+    body,
+  })
+}

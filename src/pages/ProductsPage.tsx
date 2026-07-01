@@ -13,6 +13,7 @@ import {
 } from '../api/product'
 import { getProductCreateProgress, type ProductCreateProgressDto } from '../api/productCreate'
 import { ProductSettingsModal } from '../components/ProductSettingsModal'
+import { ProductShareModal } from '../components/ProductShareModal'
 import { useLanguagePair } from '../context/LanguagePairProvider'
 import type { TranslationKey } from '../i18n/types'
 
@@ -116,10 +117,12 @@ function OwnedProductCard({
   product,
   locale,
   onOpenSettings,
+  onOpenShare,
 }: {
   product: OwnedProductDto
   locale: string
   onOpenSettings: () => void
+  onOpenShare: () => void
 }) {
   const { t } = useLanguagePair()
   const shareKey = SHARE_MODE_KEYS[product.shareMode]
@@ -145,6 +148,13 @@ function OwnedProductCard({
           >
             {t('products.edit.open')}
           </Link>
+          <button
+            type="button"
+            onClick={onOpenShare}
+            className="rounded-lg border border-border bg-surface-raised px-3 py-1 text-xs font-medium text-text transition hover:border-accent/40 hover:bg-surface-hover"
+          >
+            {t('products.share.open')}
+          </button>
           <button
             type="button"
             onClick={onOpenSettings}
@@ -289,6 +299,7 @@ export function ProductsPage() {
   const [requestPage, setRequestPage] = useState(1)
   const [requestTotalPages, setRequestTotalPages] = useState(1)
   const [settingsProduct, setSettingsProduct] = useState<OwnedProductDto | null>(null)
+  const [shareProductState, setShareProductState] = useState<OwnedProductDto | null>(null)
   const langPairKey = `${nativeLang}_${studyLang}`
   const prevLangPairRef = useRef(langPairKey)
 
@@ -426,6 +437,7 @@ export function ProductsPage() {
                     product={product}
                     locale={locale}
                     onOpenSettings={() => setSettingsProduct(product)}
+                    onOpenShare={() => setShareProductState(product)}
                   />
                 </li>
               ))}
@@ -490,6 +502,13 @@ export function ProductsPage() {
           product={settingsProduct}
           onClose={() => setSettingsProduct(null)}
           onSaved={handleSettingsSaved}
+        />
+      )}
+
+      {shareProductState && (
+        <ProductShareModal
+          product={shareProductState}
+          onClose={() => setShareProductState(null)}
         />
       )}
     </main>
