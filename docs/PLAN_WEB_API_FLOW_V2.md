@@ -586,12 +586,12 @@ function onRefreshClick() {
 - [x] Xóa step schema/review; `CustomConfigDialog` qua nút Cấu hình
 - [x] Bỏ auto-poll sau submit; banner + link tab Create requests
 
-### Phase 5 — Manual create
+### Phase 5 — Manual create ✅ (2026-07-05)
 
-- [ ] Trang mới thay `CreateProgramWizard`
-- [ ] `MediaPickerDialog` — preview Hiện tại / Đang thử; upload / clipboard / paste URL / generate; Áp dụng mới commit
-- [ ] `VocabEntryDialog` — icon +image/+sound trên dòng, mở dialog, `tempId` cho upload
-- [ ] Checkbox `generateMediaForMissingItems`
+- [x] Trang mới `CreateProgramManualPage` thay route wizard
+- [x] `MediaPickerDialog` — preview Hiện tại / Đang thử; upload / clipboard / paste URL / generate; Áp dụng mới commit
+- [x] `VocabEntryDialog` — icon media trên dòng, `tempId` cho upload
+- [x] Checkbox `generateMediaForMissingItems`
 
 ### Phase 6 — Dọn legacy web
 

@@ -10,7 +10,7 @@ import { CreateProgramFromImagePage } from './pages/create-program/CreateProgram
 import { CreateProgramFromParagraphPage } from './pages/create-program/CreateProgramFromParagraphPage'
 import { CreateProgramFromTitlePage } from './pages/create-program/CreateProgramFromTitlePage'
 import { CreateProgramHubPage } from './pages/create-program/CreateProgramHubPage'
-import { CreateProgramWizard } from './pages/create-program/CreateProgramWizard'
+import { CreateProgramManualPage } from './pages/create-program/CreateProgramManualPage'
 import { ExplorePage } from './pages/ExplorePage'
 import { SellerPage } from './pages/SellerPage'
 import { EditProgramPage } from './pages/edit-program/EditProgramPage'
@@ -39,7 +39,7 @@ function AppShell() {
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/seller" element={<SellerPage />} />
         <Route path="/products/new" element={<CreateProgramHubPage />} />
-        <Route path="/products/new/manual" element={<CreateProgramWizard key={uiLocale} />} />
+        <Route path="/products/new/manual" element={<CreateProgramManualPage key={uiLocale} />} />
         <Route path="/products/new/ai/title" element={<CreateProgramFromTitlePage key={uiLocale} />} />
         <Route path="/products/new/ai/paragraph" element={<CreateProgramFromParagraphPage key={uiLocale} />} />
         <Route path="/products/new/ai/image" element={<CreateProgramFromImagePage key={uiLocale} />} />

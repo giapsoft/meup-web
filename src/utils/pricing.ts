@@ -1,4 +1,5 @@
 import { App } from '../app/App'
+import { audioMediaValueKey } from './manualMedia'
 
 /** Minimum manual vocab rows — hardcoded, not from WebConfig. */
 export const MANUAL_MIN_VOCAB_ITEMS = 8
@@ -40,7 +41,7 @@ export function calculateManualMediaPrice(
 
   for (const item of items) {
     for (const attr of schema.attrs) {
-      if (attr.type === 'text+audio' && !hasMediaKey(item.values[`${attr.key}:audio`])) {
+      if (attr.type === 'text+audio' && !hasMediaKey(item.values[audioMediaValueKey(attr.key)])) {
         audioSlots++
       }
     }

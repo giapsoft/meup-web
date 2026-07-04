@@ -110,11 +110,19 @@ export type VocabMediaFile = {
   localResourceId: string
 }
 
+/** Server-staged media after upload/generate (manual create v2). */
+export type StagedServerMedia = {
+  objectKey: string
+  previewUrl: string
+}
+
 /** One vocabulary row — text values keyed by `SchemaAttr.key`. */
 export type VocabItemDraft = {
   id: string
   values: Record<string, string>
   media?: Record<string, VocabMediaFile>
+  /** Preview URLs for manual create media slots (keyed by media value key). */
+  serverMedia?: Record<string, StagedServerMedia>
 }
 
 export type VocabMediaExportMeta = {

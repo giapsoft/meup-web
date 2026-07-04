@@ -1,6 +1,21 @@
-import type { ItemSchemaEditorState, LevelRangeDraft } from '../types/program'
+import type { ItemSchema, ItemSchemaEditorState, LangType, LevelRangeDraft } from '../types/program'
 import type { ProgramConfigWeb } from '../types/webConfig'
 import { generateSchemaKey } from './schemaField'
+
+/** Build `ItemSchema` from API `ProgramConfigWeb`. */
+export function itemSchemaFromWebConfig(config: ProgramConfigWeb): ItemSchema {
+  return {
+    hasImage: config.itemSchema.hasImage,
+    attrs: config.itemSchema.attrs.map((attr) => ({
+      key: attr.key,
+      name: attr.label.trim() || attr.key,
+      ...(attr.description?.trim() ? { description: attr.description.trim() } : {}),
+      type: attr.type === 'text+audio' ? 'text+audio' : 'text',
+      langType:
+        attr.langType === 'native' || attr.langType === 'study' ? (attr.langType as LangType) : undefined,
+    })),
+  }
+}
 
 /** Build `ProgramConfigWeb` from wizard editor state (for create request `config`). */
 export function programConfigWebFromEditor(
