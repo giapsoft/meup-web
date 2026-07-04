@@ -600,12 +600,11 @@ function onRefreshClick() {
 - [x] Cập nhật i18n keys (bỏ step/review/done cũ, soon page)
 - [x] Cập nhật `docs/API_UI_GAP.md`
 
-### Phase 7 — Create requests tab
+### Phase 7 — Create requests tab ✅ (2026-07-05)
 
-- [ ] `ProductsPage` tab — tương thích response mới
-- [ ] Nút **Refresh** luôn enabled; rate limit 5s + toast khi ấn quá sớm
-- [ ] Xóa auto-poll (`pollProductCreateProgress*`) khỏi create pages
-- [ ] (Optional) Retry UI nếu giữ endpoint retry
+- [x] `ProductsPage` tab — `title`/`type` v2 + JWT list (không `ownerId` query)
+- [x] Nút **Refresh** luôn enabled; rate limit 5s + toast khi ấn quá sớm
+- [x] Xóa auto-poll (`pollProductCreateProgress*`) — đã xong Phase 6
 
 ### Phase 8 — EditProgramPage đồng bộ
 

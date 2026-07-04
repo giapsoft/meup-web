@@ -49,6 +49,10 @@ export type PurchasedProductsResponse = {
 export type ProductCreateRequestSummaryDto = {
   id: string
   ownerId: string
+  /** v2 primary title; legacy list may still send productName. */
+  title?: string
+  description?: string
+  type?: 'manual' | 'title' | 'image' | 'paragraph'
   productName: string
   productDescription: string
   payload: string
@@ -176,11 +180,9 @@ export async function listPurchasedProducts(
 }
 
 export async function listProductCreateRequests(
-  ownerId: string,
   params: ListProductCreateRequestsParams,
 ): Promise<ProductCreateRequestListResponse> {
   const q = new URLSearchParams({
-    ownerId,
     nativeLang: params.nativeLang,
     studyLang: params.studyLang,
     page: String(params.page ?? 1),

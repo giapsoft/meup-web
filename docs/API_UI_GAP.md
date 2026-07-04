@@ -109,8 +109,8 @@ So sánh `meup-api` (`../meup-api`) với `meup-web`. Cập nhật: 2026-07-05.
 | Method | Path | Web UI | Ghi chú |
 |--------|------|--------|---------|
 | POST | `/api/product-create` | ✅ | Body v2; AI + manual create (Phase 4–5); legacy wizard removed (Phase 6) |
-| GET | `/api/product-create` | ✅ | `ProductsPage` tab Requests |
-| GET | `/api/product-create/{requestId}/progress` | ✅ | `ProductsPage` — refresh progress |
+| GET | `/api/product-create` | ✅ | `ProductsPage` tab — JWT list, Refresh 5s cooldown (Phase 7) |
+| GET | `/api/product-create/{requestId}/progress` | ✅ | Tab Refresh — progress cho request đang chạy (Phase 7) |
 | POST | `/api/product-create/{requestId}/jobs/{jobId}/retry` | ❌ | **#3** — cần `jobId`; list/progress API không trả danh sách job |
 
 ---
@@ -150,7 +150,7 @@ So sánh `meup-api` (`../meup-api`) với `meup-web`. Cập nhật: 2026-07-05.
 ## Tóm tắt
 
 - **Đã có UI:** auth, redeem QR, web-config cache, product marketplace (owned/purchased/shared/catalog/purchase/share/settings/edit/export/draft), product-create v2 client + list/progress.
-- **Thiếu UI (web, còn làm):** Create requests refresh UX (Phase 7), retry job (#3), EditProgramPage sync (Phase 8).
+- **Thiếu UI (web, còn làm):** retry job (#3), EditProgramPage sync (Phase 8).
 - **Admin UI:** `/admin` (gate) → `/admin/panel` (3 tab).
 - **Bỏ qua (web):** restore-version, package-link/download.
 - **Không cần UI web:** device handshake, payment webhook, health.

@@ -24,6 +24,8 @@ import {
 
 type Tab = 'owned' | 'purchased' | 'shared' | 'requests'
 
+const REFRESH_COOLDOWN_MS = 5000
+
 const TAB_LABEL_KEYS: Record<Tab, TranslationKey> = {
   owned: 'products.tabOwned',
   purchased: 'products.tabPurchased',
@@ -38,11 +40,6 @@ const FILTER_PAIR_KEYS: Record<Tab, TranslationKey> = {
   requests: 'products.filterPairRequests',
 }
 
-type LoadState =
-  | { phase: 'loading' }
-  | { phase: 'ready' }
-  | { phase: 'error'; message: string }
-
 const REQUEST_STATUS_KEYS: Record<string, TranslationKey> = {
   pending: 'products.status.pending',
   working: 'products.status.working',
@@ -50,10 +47,22 @@ const REQUEST_STATUS_KEYS: Record<string, TranslationKey> = {
   failed: 'products.status.failed',
 }
 
+const REQUEST_TYPE_KEYS: Record<string, TranslationKey> = {
+  manual: 'createRequests.type.manual',
+  title: 'createRequests.type.title',
+  image: 'createRequests.type.image',
+  paragraph: 'createRequests.type.paragraph',
+}
+
 const SHARE_MODE_KEYS: Record<string, TranslationKey> = {
   public: 'products.shareMode.public',
   private: 'products.shareMode.private',
 }
+
+type LoadState =
+  | { phase: 'loading' }
+  | { phase: 'ready' }
+  | { phase: 'error'; message: string }
 
 function formatWhen(iso: string, locale: string): string {
   try {
@@ -80,36 +89,35 @@ function statusBadgeClass(status: string): string {
   }
 }
 
-function ProgressPanel({
-  progress,
-  loading,
-}: {
-  progress: ProductCreateProgressDto | null
-  loading: boolean
-}) {
-  const { t } = useLanguagePair()
+function isActiveCreateRequest(status: string): boolean {
+  return status === 'pending' || status === 'working'
+}
 
-  if (loading) {
-    return <p className="mt-3 text-xs text-text-muted">{t('products.progressLoading')}</p>
-  }
-  if (!progress) {
-    return null
-  }
+function requestTitle(request: ProductCreateRequestSummaryDto): string {
+  return request.title?.trim() || request.productName?.trim() || request.id
+}
+
+function requestDescription(request: ProductCreateRequestSummaryDto): string {
+  return request.description?.trim() || request.productDescription?.trim() || ''
+}
+
+function ProgressPanel({ progress }: { progress: ProductCreateProgressDto }) {
+  const { t } = useLanguagePair()
 
   return (
     <div className="mt-3 rounded-xl border border-border bg-surface-card px-3 py-2 text-sm">
       {progress.progressPercent != null ? (
         <p className="font-medium text-text">
-          {t('createAiTitle.done.progressPercent', { percent: progress.progressPercent })}
+          {t('createRequests.progressPercent', { percent: progress.progressPercent })}
         </p>
       ) : progress.jobs ? (
         <ul className="space-y-0.5 text-xs text-text-muted">
-          <li>{t('createAiTitle.done.jobsSuccess', { count: progress.jobs.success })}</li>
-          <li>{t('createAiTitle.done.jobsWorking', { count: progress.jobs.working })}</li>
-          <li>{t('createAiTitle.done.jobsPending', { count: progress.jobs.pending })}</li>
+          <li>{t('createRequests.jobsSuccess', { count: progress.jobs.success })}</li>
+          <li>{t('createRequests.jobsWorking', { count: progress.jobs.working })}</li>
+          <li>{t('createRequests.jobsPending', { count: progress.jobs.pending })}</li>
           {progress.jobs.failed > 0 && (
             <li className="text-warning">
-              {t('createAiTitle.done.jobsFailed', { count: progress.jobs.failed })}
+              {t('createRequests.jobsFailed', { count: progress.jobs.failed })}
             </li>
           )}
         </ul>
@@ -263,45 +271,39 @@ function PurchasedProductCard({ product, locale }: { product: PurchasedProductDt
 function CreateRequestCard({
   request,
   locale,
+  progress,
 }: {
   request: ProductCreateRequestSummaryDto
   locale: string
+  progress?: ProductCreateProgressDto
 }) {
   const { t } = useLanguagePair()
-  const [progress, setProgress] = useState<ProductCreateProgressDto | null>(null)
-  const [progressLoading, setProgressLoading] = useState(false)
-  const [expanded, setExpanded] = useState(false)
-
   const statusKey = REQUEST_STATUS_KEYS[request.status]
-
-  const refreshProgress = useCallback(async () => {
-    setProgressLoading(true)
-    try {
-      const next = await getProductCreateProgress(request.id)
-      setProgress(next)
-      setExpanded(true)
-    } catch {
-      setProgress(null)
-    } finally {
-      setProgressLoading(false)
-    }
-  }, [request.id])
+  const typeKey = request.type ? REQUEST_TYPE_KEYS[request.type] : undefined
+  const description = requestDescription(request)
 
   return (
     <article className="rounded-2xl border border-border bg-surface-card p-4 sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <h3 className="text-base font-semibold text-text">{request.productName}</h3>
-        <span
-          className={[
-            'rounded-md border px-2 py-0.5 text-xs font-medium',
-            statusBadgeClass(request.status),
-          ].join(' ')}
-        >
-          {statusKey ? t(statusKey) : request.status}
-        </span>
+        <h3 className="text-base font-semibold text-text">{requestTitle(request)}</h3>
+        <div className="flex flex-wrap items-center gap-2">
+          {typeKey && (
+            <span className="rounded-md border border-border bg-surface-raised px-2 py-0.5 text-xs font-medium text-text-muted">
+              {t(typeKey)}
+            </span>
+          )}
+          <span
+            className={[
+              'rounded-md border px-2 py-0.5 text-xs font-medium',
+              statusBadgeClass(request.status),
+            ].join(' ')}
+          >
+            {statusKey ? t(statusKey) : request.status}
+          </span>
+        </div>
       </div>
-      {request.productDescription ? (
-        <p className="mt-2 text-sm leading-relaxed text-text-muted">{request.productDescription}</p>
+      {description ? (
+        <p className="mt-2 text-sm leading-relaxed text-text-muted">{description}</p>
       ) : null}
       <dl className="mt-3 grid gap-1 text-xs text-text-muted sm:grid-cols-2">
         <div>
@@ -320,18 +322,92 @@ function CreateRequestCard({
         </div>
       </dl>
       <p className="mt-2 font-mono text-[11px] text-text-muted">{request.id}</p>
-      {request.status !== 'success' && (
+      {progress && <ProgressPanel progress={progress} />}
+    </article>
+  )
+}
+
+function CreateRequestsTab({
+  requests,
+  requestPage,
+  requestTotalPages,
+  progressById,
+  refreshing,
+  toastMessage,
+  onRefresh,
+  onPageChange,
+}: {
+  requests: ProductCreateRequestSummaryDto[]
+  requestPage: number
+  requestTotalPages: number
+  progressById: Record<string, ProductCreateProgressDto>
+  refreshing: boolean
+  toastMessage: string | null
+  onRefresh: () => void
+  onPageChange: (page: number) => void
+}) {
+  const { t, uiLocale } = useLanguagePair()
+  const locale = uiLocale === 'vi' ? 'vi-VN' : uiLocale === 'ja' ? 'ja-JP' : 'en-US'
+
+  return (
+    <>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-xs text-text-muted">{t('createRequests.hint')}</p>
         <button
           type="button"
-          onClick={() => void refreshProgress()}
-          disabled={progressLoading}
-          className="mt-3 rounded-lg border border-border bg-surface-raised px-3 py-1.5 text-xs font-medium text-text transition hover:border-accent/40 hover:bg-surface-hover disabled:opacity-60"
+          onClick={onRefresh}
+          className="rounded-lg border border-border bg-surface-card px-3 py-1.5 text-xs font-medium text-text transition hover:border-accent/40 hover:bg-surface-hover"
         >
-          {t('products.refreshProgress')}
+          {refreshing ? t('createRequests.refreshing') : t('createRequests.refresh')}
         </button>
+      </div>
+
+      {toastMessage && (
+        <div className="mb-4 rounded-xl border border-border bg-surface-raised px-3 py-2 text-sm text-text-muted">
+          {toastMessage}
+        </div>
       )}
-      {expanded && <ProgressPanel progress={progress} loading={progressLoading} />}
-    </article>
+
+      {requests.length === 0 ? (
+        <p className="text-sm text-text-muted">{t('products.emptyRequests')}</p>
+      ) : (
+        <ul className="grid gap-3 sm:gap-4">
+          {requests.map((request) => (
+            <li key={request.id}>
+              <CreateRequestCard
+                request={request}
+                locale={locale}
+                progress={progressById[request.id]}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {requestTotalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between gap-3 text-sm">
+          <button
+            type="button"
+            disabled={requestPage <= 1}
+            onClick={() => onPageChange(Math.max(1, requestPage - 1))}
+            className="rounded-lg border border-border bg-surface-card px-3 py-1.5 font-medium text-text disabled:opacity-40"
+          >
+            {t('products.pagePrev')}
+          </button>
+          <span className="text-text-muted">
+            {t('products.pageInfo', { page: requestPage, totalPages: requestTotalPages })}
+          </span>
+          <button
+            type="button"
+            disabled={requestPage >= requestTotalPages}
+            onClick={() => onPageChange(requestPage + 1)}
+            className="rounded-lg border border-border bg-surface-card px-3 py-1.5 font-medium text-text disabled:opacity-40"
+          >
+            {t('products.pageNext')}
+          </button>
+        </div>
+      )}
+    </>
   )
 }
 
@@ -345,10 +421,14 @@ export function ProductsPage() {
   const [requests, setRequests] = useState<ProductCreateRequestSummaryDto[]>([])
   const [requestPage, setRequestPage] = useState(1)
   const [requestTotalPages, setRequestTotalPages] = useState(1)
+  const [progressById, setProgressById] = useState<Record<string, ProductCreateProgressDto>>({})
+  const [requestsRefreshing, setRequestsRefreshing] = useState(false)
+  const [requestsToast, setRequestsToast] = useState<string | null>(null)
   const [settingsProduct, setSettingsProduct] = useState<OwnedProductDto | null>(null)
   const [shareProductState, setShareProductState] = useState<OwnedProductDto | null>(null)
   const langPairKey = `${nativeLang}_${studyLang}`
   const prevLangPairRef = useRef(langPairKey)
+  const lastRequestsRefreshAtRef = useRef(0)
 
   const handleSettingsSaved = useCallback((updated: ProductSettingsDto) => {
     setOwned((prev) =>
@@ -367,6 +447,65 @@ export function ProductsPage() {
     )
   }, [])
 
+  const loadRequestsList = useCallback(async () => {
+    const res = await listProductCreateRequests({
+      nativeLang,
+      studyLang,
+      page: requestPage,
+      limit: 20,
+    })
+    setRequests(res.requests)
+    setRequestTotalPages(Math.max(1, res.pagination.totalPages))
+    return res.requests
+  }, [nativeLang, studyLang, requestPage])
+
+  const fetchProgressForActive = useCallback(async (list: ProductCreateRequestSummaryDto[]) => {
+    const active = list.filter((r) => isActiveCreateRequest(r.status))
+    if (active.length === 0) {
+      return
+    }
+    const results = await Promise.allSettled(
+      active.map((r) => getProductCreateProgress(r.id)),
+    )
+    setProgressById((prev) => {
+      const next = { ...prev }
+      active.forEach((r, index) => {
+        const result = results[index]
+        if (result.status === 'fulfilled') {
+          next[r.id] = result.value
+        }
+      })
+      return next
+    })
+  }, [])
+
+  const refreshCreateRequests = useCallback(async () => {
+    const elapsed = Date.now() - lastRequestsRefreshAtRef.current
+    if (lastRequestsRefreshAtRef.current > 0 && elapsed < REFRESH_COOLDOWN_MS) {
+      setRequestsToast(
+        t('createRequests.refreshTooSoon', {
+          seconds: Math.ceil((REFRESH_COOLDOWN_MS - elapsed) / 1000),
+        }),
+      )
+      return
+    }
+    lastRequestsRefreshAtRef.current = Date.now()
+    setRequestsRefreshing(true)
+    setRequestsToast(null)
+    try {
+      const list = await loadRequestsList()
+      await fetchProgressForActive(list)
+    } catch (err) {
+      const message =
+        err instanceof ApiError
+          ? t('products.errorCode', { code: err.code })
+          : t('products.errorGeneric')
+      setRequestsToast(message)
+    } finally {
+      setRequestsRefreshing(false)
+    }
+  }, [fetchProgressForActive, loadRequestsList, t])
+
   const load = useCallback(async () => {
     setLoadState({ phase: 'loading' })
     try {
@@ -381,14 +520,9 @@ export function ProductsPage() {
         const programs = await getDevicePrograms()
         setShared(sharedProductsForLangPair(programs, langPair))
       } else {
-        const res = await listProductCreateRequests(account.userId, {
-          nativeLang,
-          studyLang,
-          page: requestPage,
-          limit: 20,
-        })
-        setRequests(res.requests)
-        setRequestTotalPages(Math.max(1, res.pagination.totalPages))
+        await loadRequestsList()
+        setProgressById({})
+        lastRequestsRefreshAtRef.current = 0
       }
       setLoadState({ phase: 'ready' })
     } catch (err) {
@@ -398,7 +532,7 @@ export function ProductsPage() {
           : t('products.errorGeneric')
       setLoadState({ phase: 'error', message })
     }
-  }, [tab, requestPage, nativeLang, studyLang, langPair, t])
+  }, [tab, nativeLang, studyLang, langPair, t, loadRequestsList])
 
   useEffect(() => {
     if (prevLangPairRef.current !== langPairKey) {
@@ -410,6 +544,14 @@ export function ProductsPage() {
     }
     void load()
   }, [load, langPairKey, requestPage])
+
+  useEffect(() => {
+    if (!requestsToast) {
+      return
+    }
+    const timer = window.setTimeout(() => setRequestsToast(null), 4000)
+    return () => window.clearTimeout(timer)
+  }, [requestsToast])
 
   const locale = uiLocale === 'vi' ? 'vi-VN' : uiLocale === 'ja' ? 'ja-JP' : 'en-US'
 
@@ -521,42 +663,16 @@ export function ProductsPage() {
           )
         )}
         {loadState.phase === 'ready' && tab === 'requests' && (
-          <>
-            {requests.length === 0 ? (
-              <p className="text-sm text-text-muted">{t('products.emptyRequests')}</p>
-            ) : (
-              <ul className="grid gap-3 sm:gap-4">
-                {requests.map((request) => (
-                  <li key={request.id}>
-                    <CreateRequestCard request={request} locale={locale} />
-                  </li>
-                ))}
-              </ul>
-            )}
-            {requestTotalPages > 1 && (
-              <div className="mt-6 flex items-center justify-between gap-3 text-sm">
-                <button
-                  type="button"
-                  disabled={requestPage <= 1}
-                  onClick={() => setRequestPage((p) => Math.max(1, p - 1))}
-                  className="rounded-lg border border-border bg-surface-card px-3 py-1.5 font-medium text-text disabled:opacity-40"
-                >
-                  {t('products.pagePrev')}
-                </button>
-                <span className="text-text-muted">
-                  {t('products.pageInfo', { page: requestPage, totalPages: requestTotalPages })}
-                </span>
-                <button
-                  type="button"
-                  disabled={requestPage >= requestTotalPages}
-                  onClick={() => setRequestPage((p) => p + 1)}
-                  className="rounded-lg border border-border bg-surface-card px-3 py-1.5 font-medium text-text disabled:opacity-40"
-                >
-                  {t('products.pageNext')}
-                </button>
-              </div>
-            )}
-          </>
+          <CreateRequestsTab
+            requests={requests}
+            requestPage={requestPage}
+            requestTotalPages={requestTotalPages}
+            progressById={progressById}
+            refreshing={requestsRefreshing}
+            toastMessage={requestsToast}
+            onRefresh={() => void refreshCreateRequests()}
+            onPageChange={setRequestPage}
+          />
         )}
       </section>
 
