@@ -579,11 +579,12 @@ function onRefreshClick() {
 - [x] `utils/customConfigState.ts`, `utils/customConfigValidation.ts`
 - [x] Demo wire: `CreateProgramFromTitlePage` — nút "Cấu hình nâng cao"
 
-### Phase 4 — AI create pages
+### Phase 4 — AI create pages ✅ (2026-07-05)
 
-- [ ] Refactor `CreateProgramFromTitlePage` (mẫu) → áp dụng paragraph, image
-- [ ] Layout bottom actions thống nhất
-- [ ] Xóa step schema/review cũ
+- [x] Refactor `CreateProgramFromTitlePage` → áp dụng paragraph, image
+- [x] Layout bottom actions thống nhất (`AiCreateFooter`)
+- [x] Xóa step schema/review; `CustomConfigDialog` qua nút Cấu hình
+- [x] Bỏ auto-poll sau submit; banner + link tab Create requests
 
 ### Phase 5 — Manual create
 

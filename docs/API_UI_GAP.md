@@ -97,7 +97,7 @@ So sánh `meup-api` (`../meup-api`) với `meup-web`. Cập nhật: 2026-07-05.
 |--------|------|--------|---------|
 | POST | `/api/product-create/generate-audio` | ❌ | Phase 5 — `MediaPickerDialog` |
 | POST | `/api/product-create/generate-image` | ❌ | Phase 5 |
-| POST | `/api/product-create/generate-description` | ⚠️ | `ItemSchemaEditor` — Phase 3; full dialog Phase 4 |
+| POST | `/api/product-create/generate-description` | ⚠️ | `CustomConfigDialog` ✅; AI create dùng dialog (Phase 4) |
 | POST | `/api/product-create/upload-audio` | ❌ | Phase 5 |
 | POST | `/api/product-create/upload-image` | ❌ | Phase 5 |
 | POST | `/api/product-create/cancel-manual` | ❌ | Phase 5 — cleanup staging |
@@ -108,7 +108,7 @@ So sánh `meup-api` (`../meup-api`) với `meup-web`. Cập nhật: 2026-07-05.
 
 | Method | Path | Web UI | Ghi chú |
 |--------|------|--------|---------|
-| POST | `/api/product-create` | ⚠️ | Body v2 ✅; UI create vẫn wizard cũ (Phase 4–5 refactor) |
+| POST | `/api/product-create` | ⚠️ | Body v2 ✅; AI create single-screen ✅ (Phase 4); manual wizard còn Phase 5 |
 | GET | `/api/product-create` | ✅ | `ProductsPage` tab Requests |
 | GET | `/api/product-create/{requestId}/progress` | ✅ | `ProductsPage` — refresh progress |
 | POST | `/api/product-create/{requestId}/jobs/{jobId}/retry` | ❌ | **#3** — cần `jobId`; list/progress API không trả danh sách job |
@@ -150,7 +150,7 @@ So sánh `meup-api` (`../meup-api`) với `meup-web`. Cập nhật: 2026-07-05.
 ## Tóm tắt
 
 - **Đã có UI:** auth, redeem QR, web-config cache, product marketplace (owned/purchased/shared/catalog/purchase/share/settings/edit/export/draft), product-create v2 client + list/progress.
-- **Thiếu UI (web, còn làm):** instant media endpoints UI, create UI refactor (Phase 4–5), retry job (#3).
+- **Thiếu UI (web, còn làm):** instant media endpoints UI, manual create wizard (Phase 5), retry job (#3).
 - **Admin UI:** `/admin` (gate) → `/admin/panel` (3 tab).
 - **Bỏ qua (web):** restore-version, package-link/download.
 - **Không cần UI web:** device handshake, payment webhook, health.
