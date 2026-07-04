@@ -439,27 +439,73 @@ function onRefreshClick() {
 
 ## 6. Kế hoạch triển khai meup-api
 
-### Phase A — WebConfig & system_config
+### Tiến độ triển khai
 
-- [ ] Thêm keys: `WEB_DEFAULT_PROGRAM_CONFIG`, `JOB_PRICE_DESCRIPTION`, `ITEM_MIN_COUNT`, `ITEM_MAX_COUNT`
-- [ ] Migration seed giá trị default
-- [ ] `GET /api/web-config` + unit test decode `defaultConfig`
-- [ ] Document trong `docs/API.md`
+| Phase | Trạng thái | Ghi chú |
+|-------|------------|---------|
+| **A** WebConfig | ✅ Xong | `GET /api/web-config` |
+| **B** Schema web metadata | ✅ Xong — chờ nghiệm thu | `jobcontent/web_schema.go` |
+| **C** Media instant | ✅ Xong — chờ nghiệm thu | `instantmedia/`, `routes/product_create_media.go` |
+| D CreateProduct v2 | ⏳ Chưa làm | |
+| E Packaging + refund | ⏳ Chưa làm | |
+| F Dọn legacy API | ⏳ Chưa làm | |
 
-### Phase B — Schema web metadata
+### Phase A — WebConfig & system_config ✅ (2026-07-05)
 
-- [ ] DTO `SchemaAttrWeb` cho HTTP layer
-- [ ] `StripWebOnlyFields()` trước compact marshal
-- [ ] Cập nhật `GetEnDescription` ưu tiên `description` web field khi có
+- [x] Thêm keys: `WEB_DEFAULT_PROGRAM_CONFIG`, `JOB_PRICE_DESCRIPTION`, `ITEM_MIN_COUNT`, `ITEM_MAX_COUNT`
+- [x] Migration seed `000028_web_config_keys` (description, min, max)
+- [x] `GET /api/web-config` — `internal/webconfig`, `routes/web_config.go`
+- [x] Unit test: `internal/webconfig/*_test.go`
+- [x] Document `docs/API.md`
 
-### Phase C — Endpoints media tức thì
+**Files meup-api:**
 
-- [ ] `generate-audio`, `generate-image` — tái sử dụng `tts` / `img` + `cache_storage`; response `{ objectKey, previewUrl }`
-- [ ] Mỗi request generate = trừ credit (`audioPrice` / `imagePrice`); **recreate cũng trừ lại**
-- [ ] `upload-image`, `upload-audio` — multipart, prefix `{userId}/{tempId}/`
-- [ ] `generate-description` — prompt LLM batch/per-attr
-- [ ] `cancel-manual` — delete R2 prefix
-- [ ] Credit deduct per call (`credit.ModifyCreditsTx` với reason mới, ví dụ `CPR_MEDIA_INSTANT`)
+| File | Thay đổi |
+|------|----------|
+| `internal/systemconfig/keys.go` | +4 keys |
+| `internal/systemconfig/jobprice.go` | +Description, ItemMin/Max getters |
+| `internal/webconfig/*` | Config loader + hardcoded default |
+| `internal/httpapi/routes/web_config.go` | Handler |
+| `internal/httpapi/router.go` | Mount `/web-config` |
+| `internal/database/migrations/000028_*` | Seed keys |
+
+### Phase B — Schema web metadata ✅ (2026-07-05)
+
+- [x] DTO `SchemaAttrWeb` / `ProgramConfigWeb` — `internal/jobcontent/web_schema.go`
+- [x] `StripWebOnlyFields()`, `MarshalProductPayloadConfig()` — compact không chứa label/description
+- [x] `SchemaAttr.Label`, `SchemaAttr.Description` — in-memory web metadata
+- [x] `GetEnDescription` ưu tiên attrs có `Description` metadata
+- [x] `vocab_prompt` dùng `DisplayLabel()` thay `Key`
+- [x] `webconfig` dùng chung `jobcontent.ProgramConfigWeb`
+- [x] Tests: `web_schema_test.go`
+
+**Files meup-api:**
+
+| File | Thay đổi |
+|------|----------|
+| `internal/jobcontent/item_schema.go` | +Label/Description; GetEnDescription priority |
+| `internal/jobcontent/web_schema.go` | DTO + parse/strip/marshal |
+| `internal/jobcontent/web_schema_test.go` | Unit tests |
+| `internal/jobhandler/vocab_prompt.go` | DisplayLabel |
+| `internal/webconfig/types.go` | Alias `jobcontent.ProgramConfigWeb` |
+| `internal/webconfig/default_config.go` | Dùng shared types |
+
+### Phase C — Endpoints media tức thì ✅ (2026-07-05)
+
+- [x] `generate-audio`, `generate-image` — `tts` / `img` + `cache_storage`; response `{ objectKey, previewUrl }`
+- [x] Mỗi request generate = trừ credit (`audioPrice` / `imagePrice`); recreate = key mới + trừ lại
+- [x] `upload-image`, `upload-audio` — multipart, prefix `{userId}/{tempId}/`
+- [x] `generate-description` — batch attrs, LLM, charge `descriptionPrice × missing`
+- [x] `cancel-manual` — `storage.DeleteDir` + dọn local cache
+- [x] Credit reason `CPR_MEDIA_INSTANT` (`credit.ModifyCredits`)
+
+| File | Thay đổi |
+|------|----------|
+| `internal/instantmedia/` | Service + staging keys + tests |
+| `internal/httpapi/routes/product_create_media.go` | HTTP handlers |
+| `internal/httpapi/routes/product_create.go` | Mount routes |
+| `internal/credit/modify_credits.go` | `ReasonCPRMediaInstant` |
+| `docs/API.md` | Document instant endpoints |
 
 ### Phase D — CreateProductRequest v2
 
