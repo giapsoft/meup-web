@@ -1,21 +1,51 @@
 import { API_PRODUCT_CREATE, API_PRODUCT_CREATE_PROGRESS } from '../config'
+import type { ProgramConfigWeb, SchemaAttrWeb } from '../types/webConfig'
 import { apiRequest } from './client'
 
-export type CreateProductJob = {
-  type: 'vocab'
-  content: string
-  limitCount: number
+export type ManualItem = {
+  values: Record<string, string>
 }
 
-export type CreateProductRequestBody = {
-  ownerId: string
-  productName: string
-  productDescription?: string
+type CreateProductRequestShared = {
+  description?: string
   nativeLangId: string
   studyLangId: string
-  payload: string
-  jobs: CreateProductJob[]
+  config?: ProgramConfigWeb | null
 }
+
+export type CreateProductRequestTitle = CreateProductRequestShared & {
+  type: 'title'
+  title: string
+  count: number
+}
+
+export type CreateProductRequestImage = CreateProductRequestShared & {
+  type: 'image'
+  title?: string
+  imageBase64: string
+  count: number
+}
+
+export type CreateProductRequestParagraph = CreateProductRequestShared & {
+  type: 'paragraph'
+  title?: string
+  paragraph: string
+  count: number
+}
+
+export type CreateProductRequestManual = CreateProductRequestShared & {
+  type: 'manual'
+  title: string
+  tempId: string
+  items: ManualItem[]
+  generateMediaForMissingItems: boolean
+}
+
+export type CreateProductRequestBody =
+  | CreateProductRequestTitle
+  | CreateProductRequestImage
+  | CreateProductRequestParagraph
+  | CreateProductRequestManual
 
 export type CreateProductRequestDto = {
   id: string
@@ -87,3 +117,5 @@ export async function pollProductCreateProgressWithUpdates(
   }
   throw new Error('product_create_timeout')
 }
+
+export type { SchemaAttrWeb }

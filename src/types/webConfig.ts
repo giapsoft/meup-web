@@ -1,4 +1,4 @@
-import type { DisplayElement, PlayStepDraft } from './program'
+import type { DisplayElement } from './program'
 
 export type SchemaAttrWeb = {
   key: string
@@ -8,10 +8,16 @@ export type SchemaAttrWeb = {
   langType?: string
 }
 
+export type PlayStepWeb = {
+  kind: 'play' | 'pause'
+  attributeIndex?: number
+  durationSeconds?: number
+}
+
 export type SideWeb = {
   backgroundColor: string
   display: DisplayElement[]
-  playSteps: PlayStepDraft[]
+  playSteps: PlayStepWeb[]
 }
 
 export type LevelWeb = {

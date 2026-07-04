@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ApiError } from '../../api/client'
-import { getAccount } from '../../api/emailAuth'
 import {
   createProductRequest,
   pollProductCreateProgressWithUpdates,
@@ -16,10 +15,10 @@ import {
   parseWordCountInput,
   validateWordCountInput,
 } from '../../utils/aiVocabWordCount'
-import { toProductCreatePayloadString } from '../../utils/compactProgramConfig'
 import { buildDefaultLevels } from '../../utils/defaultSides'
+import { estimateAIVocabCredits } from '../../utils/pricing'
+import { programConfigWebFromSchema } from '../../utils/programConfigWeb'
 import { schemaHasLangRole } from '../../utils/itemSchemaLayout'
-import { buildVocabJob, estimateVocabJobCredits } from '../../utils/productCreateJobs'
 import {
   createPresetItemSchemaEditor,
   itemSchemaFromEditor,
@@ -75,7 +74,7 @@ export function CreateProgramFromTitlePage() {
     if (parsed === null || parsed < App.get().itemMinCount()) {
       return null
     }
-    return estimateVocabJobCredits(parsed)
+    return estimateAIVocabCredits(parsed)
   }, [wordCountText])
 
   function handleContinueSetup() {
@@ -127,19 +126,15 @@ export function CreateProgramFromTitlePage() {
     setSubmitState({ phase: 'submitting' })
     setLiveProgress(null)
 
-    const payload = toProductCreatePayloadString(itemSchema, levels, [])
-    const job = buildVocabJob('fromTitle', topic, wordCount ?? App.get().itemMinCount())
-
     try {
-      const account = await getAccount()
       const created = await createProductRequest({
-        ownerId: account.userId,
-        productName: name.trim(),
-        productDescription: '',
+        type: 'title',
+        title: topic.trim(),
+        description: '',
+        count: wordCount ?? App.get().itemMinCount(),
         nativeLangId: nativeLang,
         studyLangId: studyLang,
-        payload,
-        jobs: [job],
+        config: programConfigWebFromSchema(itemSchema, levels),
       })
 
       await refreshAccount()
@@ -332,7 +327,7 @@ export function CreateProgramFromTitlePage() {
               <dt className="text-text-muted">{t('createAiTitle.review.credits')}</dt>
               <dd className="font-medium tabular-nums text-credit">
                 {wordCount != null
-                  ? t('createAiTitle.review.creditsValue', { credits: estimateVocabJobCredits(wordCount) })
+                  ? t('createAiTitle.review.creditsValue', { credits: estimateAIVocabCredits(wordCount) })
                   : '—'}
               </dd>
             </div>

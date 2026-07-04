@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ApiError } from '../../api/client'
-import { getAccount } from '../../api/emailAuth'
 import {
   createProductRequest,
   pollProductCreateProgressWithUpdates,
@@ -23,10 +22,10 @@ import {
   isAcceptedImageFile,
   type CompressedImage,
 } from '../../utils/compressImageForApi'
-import { toProductCreatePayloadString } from '../../utils/compactProgramConfig'
 import { buildDefaultLevels } from '../../utils/defaultSides'
+import { estimateAIVocabCredits } from '../../utils/pricing'
+import { programConfigWebFromSchema } from '../../utils/programConfigWeb'
 import { schemaHasLangRole } from '../../utils/itemSchemaLayout'
-import { buildVocabJob, estimateVocabJobCredits } from '../../utils/productCreateJobs'
 import {
   createPresetItemSchemaEditor,
   itemSchemaFromEditor,
@@ -92,7 +91,7 @@ export function CreateProgramFromImagePage() {
     if (parsed === null || parsed < App.get().itemMinCount()) {
       return null
     }
-    return estimateVocabJobCredits(parsed)
+    return estimateAIVocabCredits(parsed)
   }, [wordCountText])
 
   async function handleImageSelected(file: File | null) {
@@ -176,19 +175,16 @@ export function CreateProgramFromImagePage() {
     setSubmitState({ phase: 'submitting' })
     setLiveProgress(null)
 
-    const payload = toProductCreatePayloadString(itemSchema, levels, [])
-    const job = buildVocabJob('fromImage', image.base64, wordCount ?? App.get().itemMinCount())
-
     try {
-      const account = await getAccount()
       const created = await createProductRequest({
-        ownerId: account.userId,
-        productName: name.trim(),
-        productDescription: '',
+        type: 'image',
+        title: name.trim() || undefined,
+        imageBase64: image.base64,
+        description: '',
+        count: wordCount ?? App.get().itemMinCount(),
         nativeLangId: nativeLang,
         studyLangId: studyLang,
-        payload,
-        jobs: [job],
+        config: programConfigWebFromSchema(itemSchema, levels),
       })
 
       await refreshAccount()
@@ -425,7 +421,7 @@ export function CreateProgramFromImagePage() {
               <dt className="text-text-muted">{t('createAiTitle.review.credits')}</dt>
               <dd className="font-medium tabular-nums text-credit">
                 {wordCount != null
-                  ? t('createAiTitle.review.creditsValue', { credits: estimateVocabJobCredits(wordCount) })
+                  ? t('createAiTitle.review.creditsValue', { credits: estimateAIVocabCredits(wordCount) })
                   : '—'}
               </dd>
             </div>

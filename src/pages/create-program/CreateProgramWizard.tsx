@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ApiError } from '../../api/client'
-import { getAccount } from '../../api/emailAuth'
 import { createProductRequest, pollProductCreateProgress } from '../../api/productCreate'
 import { useLanguagePair } from '../../context/LanguagePairProvider'
 import { useAccount } from '../../context/AccountProvider'
 import { useWizardWideLayout } from '../../hooks/useMediaQuery'
 import type { TranslationKey } from '../../i18n/types'
 import type { ItemSchemaEditorState, LevelRangeDraft, SchemaFieldUiType, SideDraft, VocabItemDraft } from '../../types/program'
-import { toProductCreatePayloadString } from '../../utils/compactProgramConfig'
+import { randomUUID } from '../../utils/id'
 import { buildDefaultLevels } from '../../utils/defaultSides'
+import { programConfigWebFromSchema } from '../../utils/programConfigWeb'
 import { schemaHasLangRole } from '../../utils/itemSchemaLayout'
 import {
   createEmptyVocabItem,
@@ -80,11 +80,6 @@ export function CreateProgramWizard() {
   const editingSide = useMemo(
     () => (editingSideId ? findSide(levels, editingSideId) : undefined),
     [levels, editingSideId],
-  )
-
-  const exportPayload = useMemo(
-    () => toProductCreatePayloadString(itemSchema, levels, vocabItems),
-    [itemSchema, levels, vocabItems],
   )
 
   const totalSides = levels.reduce((n, l) => n + l.sides.length, 0)
@@ -161,15 +156,16 @@ export function CreateProgramWizard() {
     setStep('done')
 
     try {
-      const account = await getAccount()
       const created = await createProductRequest({
-        ownerId: account.userId,
-        productName: name.trim(),
-        productDescription: '',
+        type: 'manual',
+        title: name.trim(),
+        description: '',
         nativeLangId: nativeLang,
         studyLangId: studyLang,
-        payload: exportPayload,
-        jobs: [],
+        tempId: randomUUID(),
+        items: vocabItems.map((item) => ({ values: { ...item.values } })),
+        generateMediaForMissingItems: false,
+        config: programConfigWebFromSchema(itemSchema, levels),
       })
       await refreshAccount()
       const progress = await pollProductCreateProgress(created.id)

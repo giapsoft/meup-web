@@ -563,11 +563,13 @@ function onRefreshClick() {
 - [x] Wire logout → `App.onUserLogout()`; preload config khi authorized
 - [x] Thay `VOCAB_JOB_CREDITS_PER_UNIT` / `aiVocabWordCount` constants bằng `App.get()`
 
-### Phase 2 — API client v2
+### Phase 2 — API client v2 ✅ (2026-07-05)
 
-- [ ] `api/productCreate.ts` — types `CreateProductRequest*`, bỏ `CreateProductJob`
-- [ ] `api/productCreateMedia.ts` — generate/upload/cancel endpoints
-- [ ] `utils/pricing.ts` — `calculateManualMediaPrice`, `validateItemCount`
+- [x] `api/productCreate.ts` — types `CreateProductRequest*`, bỏ `CreateProductJob`
+- [x] `api/productCreateMedia.ts` — generate/upload/cancel endpoints
+- [x] `utils/pricing.ts` — `calculateManualMediaPrice`, `validateItemCount`, `estimateAIVocabCredits`
+- [x] `utils/programConfigWeb.ts` — map schema/levels → `ProgramConfigWeb`
+- [x] Create pages + wizard gọi body v2 (tạm giữ UI cũ; refactor UI Phase 4–5)
 
 ### Phase 3 — CustomConfigProcess
 
