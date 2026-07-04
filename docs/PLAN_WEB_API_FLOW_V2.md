@@ -447,7 +447,7 @@ function onRefreshClick() {
 | **B** Schema web metadata | ✅ Xong — chờ nghiệm thu | `jobcontent/web_schema.go` |
 | **C** Media instant | ✅ Xong — chờ nghiệm thu | `instantmedia/`, `routes/product_create_media.go` |
 | **D** CreateProduct v2 | ✅ Xong — chờ nghiệm thu | `productcreate/create_v2.go`, migration `000029` |
-| E Packaging + refund | ⏳ Chưa làm | |
+| **E** Packaging + refund | ✅ Xong — chờ nghiệm thu | `productrender/packaging_guard.go`, `vocab_completeness.go` |
 | F Dọn legacy API | ⏳ Chưa làm | |
 
 ### Phase A — WebConfig & system_config ✅ (2026-07-05)
@@ -528,13 +528,22 @@ function onRefreshClick() {
 | `internal/httpapi/routes/product_create.go` | V2 request body |
 | `docs/API.md` | V2 create body docs |
 
-### Phase E — Packaging guard + hoàn credit AI
+### Phase E — Packaging guard + hoàn credit AI ✅ (2026-07-05)
 
-- [ ] `productrender`: `skipAiMedia` khi manual `generateMediaForMissingItems=false`
-- [ ] Export manual flag=false: fail nếu `missingSlots/totalRequiredSlots >= 0.20`
-- [ ] **`countCompleteVocabItems(schema, items)`** — hoàn credit AI flows
-- [ ] Lúc đóng gói AI: `refundCount = requestedCount - completeCount`; hoàn `refundCount × vocabPrice`
-- [ ] Sau create manual thành công: xóa storage prefix `tempId`
+- [x] `productrender`: `skipAIMedia` khi manual `generateMediaForMissingItems=false`
+- [x] Export manual flag=false: fail nếu `missingSlots/totalRequiredSlots >= 0.20`
+- [x] `CountCompleteVocabItems` / `IsCompleteVocabItem` — `jobcontent/vocab_completeness.go`
+- [x] Lúc đóng gói AI: `refundCount = requestedCount - completeCount`; hoàn `refundCount × vocabPrice` (`RefundAIVocabSurplus`)
+- [x] Sau create manual thành công: xóa storage prefix `staging_temp_id` (`CancelManual`)
+
+| File | Thay đổi |
+|------|----------|
+| `internal/database/migrations/000030_*` | `generate_media_for_missing_items`, `staging_temp_id` |
+| `internal/jobcontent/vocab_completeness.go` | Complete count + media slot stats |
+| `internal/productrender/packaging_guard.go` | 20% guard + skip AI flag |
+| `internal/productrender/item_collector.go` | `skipAIMedia` — không fallback computed path |
+| `internal/productcreate/refund.go` | `RefundAIVocabSurplus` |
+| `internal/productrender/runner.go` | Guard, refund, temp cleanup |
 
 ### Phase F — Dọn legacy API
 
