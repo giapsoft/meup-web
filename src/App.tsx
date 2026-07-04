@@ -1,11 +1,10 @@
 import { useCallback } from 'react'
-import { Route, Routes, useNavigate } from 'react-router-dom'
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { Header } from './components/Header'
 import { VerifyEmailBanner } from './components/VerifyEmailBanner'
 import { useClearDeviceSession, useReauthorize } from './context/DeviceSessionProvider'
 import { useLanguagePair } from './context/LanguagePairProvider'
 import { HomePage } from './pages/HomePage'
-import { CreateProgramAiSoonPage } from './pages/create-program/CreateProgramAiSoonPage'
 import { CreateProgramFromImagePage } from './pages/create-program/CreateProgramFromImagePage'
 import { CreateProgramFromParagraphPage } from './pages/create-program/CreateProgramFromParagraphPage'
 import { CreateProgramFromTitlePage } from './pages/create-program/CreateProgramFromTitlePage'
@@ -43,7 +42,7 @@ function AppShell() {
         <Route path="/products/new/ai/title" element={<CreateProgramFromTitlePage key={uiLocale} />} />
         <Route path="/products/new/ai/paragraph" element={<CreateProgramFromParagraphPage key={uiLocale} />} />
         <Route path="/products/new/ai/image" element={<CreateProgramFromImagePage key={uiLocale} />} />
-        <Route path="/products/new/ai/:mode" element={<CreateProgramAiSoonPage />} />
+        <Route path="/products/new/ai/:mode" element={<Navigate to="/products/new" replace />} />
         <Route path="/products/:productId/edit" element={<EditProgramPage />} />
         <Route path="/programs/*" element={<LegacyProgramsRedirect />} />
       </Routes>

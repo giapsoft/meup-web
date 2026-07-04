@@ -593,12 +593,12 @@ function onRefreshClick() {
 - [x] `VocabEntryDialog` — icon media trên dòng, `tempId` cho upload
 - [x] Checkbox `generateMediaForMissingItems`
 
-### Phase 6 — Dọn legacy web
+### Phase 6 — Dọn legacy web ✅ (2026-07-05)
 
-- [ ] Xóa `CreateProgramWizard.tsx`, `productCreateJobs.ts`, `CreateProgramAiSoonPage.tsx`
-- [ ] Xóa `WizardProgress` usage trong create (giữ nếu edit cần)
-- [ ] Cập nhật i18n keys
-- [ ] Cập nhật `docs/API_UI_GAP.md`
+- [x] Xóa `CreateProgramWizard.tsx`, `CreateProgramAiSoonPage.tsx` (`productCreateJobs.ts` đã không còn)
+- [x] Xóa `pollProductCreateProgress*` khỏi client
+- [x] Cập nhật i18n keys (bỏ step/review/done cũ, soon page)
+- [x] Cập nhật `docs/API_UI_GAP.md`
 
 ### Phase 7 — Create requests tab
 

@@ -9,7 +9,6 @@ type CreateMode = {
   titleKey: TranslationKey
   descriptionKey: TranslationKey
   variant?: 'default' | 'primary'
-  soon?: boolean
 }
 
 const CREATE_MODES: CreateMode[] = [
@@ -53,21 +52,14 @@ export function CreateProgramHubPage() {
 
       <div className="mt-8 grid gap-3 sm:grid-cols-2 sm:gap-4">
         {CREATE_MODES.map((mode) => (
-          <div key={mode.to} className="relative">
-            {mode.soon && (
-              <span className="absolute right-3 top-3 z-10 rounded-md bg-surface-raised px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-text-muted">
-                {t('createHub.soonBadge')}
-              </span>
-            )}
-            <ActionCard
-              to={mode.to}
-              icon={mode.icon}
-              title={t(mode.titleKey)}
-              description={t(mode.descriptionKey)}
-              variant={mode.variant}
-              className={mode.soon ? 'opacity-90' : undefined}
-            />
-          </div>
+          <ActionCard
+            key={mode.to}
+            to={mode.to}
+            icon={mode.icon}
+            title={t(mode.titleKey)}
+            description={t(mode.descriptionKey)}
+            variant={mode.variant}
+          />
         ))}
       </div>
 

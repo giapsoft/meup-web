@@ -93,29 +93,4 @@ export async function getProductCreateProgress(requestId: string): Promise<Produ
   return apiRequest<ProductCreateProgressDto>(`${API_PRODUCT_CREATE_PROGRESS}/${encodeURIComponent(requestId)}/progress`)
 }
 
-export async function pollProductCreateProgress(
-  requestId: string,
-  opts: { intervalMs?: number; maxAttempts?: number } = {},
-): Promise<ProductCreateProgressDto> {
-  return pollProductCreateProgressWithUpdates(requestId, () => {}, opts)
-}
-
-export async function pollProductCreateProgressWithUpdates(
-  requestId: string,
-  onProgress: (progress: ProductCreateProgressDto) => void,
-  opts: { intervalMs?: number; maxAttempts?: number } = {},
-): Promise<ProductCreateProgressDto> {
-  const intervalMs = opts.intervalMs ?? 2000
-  const maxAttempts = opts.maxAttempts ?? 120
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const progress = await getProductCreateProgress(requestId)
-    onProgress(progress)
-    if (progress.status === 'success' || progress.status === 'failed') {
-      return progress
-    }
-    await new Promise((resolve) => setTimeout(resolve, intervalMs))
-  }
-  throw new Error('product_create_timeout')
-}
-
 export type { SchemaAttrWeb }
