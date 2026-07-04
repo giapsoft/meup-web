@@ -150,7 +150,7 @@ So sánh `meup-api` (`../meup-api`) với `meup-web`. Cập nhật: 2026-07-05.
 ## Tóm tắt
 
 - **Đã có UI:** auth, redeem QR, web-config cache, product marketplace (owned/purchased/shared/catalog/purchase/share/settings/edit/export/draft), product-create v2 client + list/progress.
-- **Thiếu UI (web, còn làm):** retry job (#3), EditProgramPage sync (Phase 8).
+- **Thiếu UI (web, còn làm):** retry job (#3).
 - **Admin UI:** `/admin` (gate) → `/admin/panel` (3 tab).
 - **Bỏ qua (web):** restore-version, package-link/download.
 - **Không cần UI web:** device handshake, payment webhook, health.

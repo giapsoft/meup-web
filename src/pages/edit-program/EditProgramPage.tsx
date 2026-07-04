@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ApiError } from '../../api/client'
+import { cancelProductCreateManual } from '../../api/productCreateMedia'
 import { getAccount } from '../../api/emailAuth'
 import {
   exportProductVersion,
@@ -10,46 +11,32 @@ import {
   saveProductDraft,
   type OwnedProductDto,
 } from '../../api/product'
+import { AiCreateFooter } from '../../components/create/AiCreateFooter'
+import { CustomConfigDialog } from '../../components/create/CustomConfigDialog'
+import { VocabEntryTable } from '../../components/create/VocabEntryTable'
 import { useLanguagePair } from '../../context/LanguagePairProvider'
-import { useWizardWideLayout } from '../../hooks/useMediaQuery'
-import type { TranslationKey } from '../../i18n/types'
-import type {
-  ItemSchemaEditorState,
-  LevelRangeDraft,
-  SchemaFieldUiType,
-  SideDraft,
-  VocabItemDraft,
-} from '../../types/program'
+import { App } from '../../app/App'
+import type { VocabItemDraft } from '../../types/program'
+import type { ProgramConfigWeb } from '../../types/webConfig'
+import { editorStateFromWebConfig } from '../../utils/customConfigState'
 import { toExportVersionTree } from '../../utils/exportVersionTree'
-import { buildDefaultLevels } from '../../utils/defaultSides'
-import { schemaHasLangRole } from '../../utils/itemSchemaLayout'
+import { importTreeToEditDraft } from '../../utils/importPackageToEditDraft'
+import { randomUUID } from '../../utils/id'
+import { itemSchemaFromWebConfig } from '../../utils/programConfigWeb'
+import { programConfigsEqual } from '../../utils/programConfigCompare'
 import {
   createDefaultEditDraft,
   draftToVocabItems,
   parseProductEditDraft,
   serializeProductEditDraft,
+  vocabItemsToDraftRows,
+  type ProductEditDraft,
 } from '../../utils/productEditDraft'
-import { importTreeToEditDraft } from '../../utils/importPackageToEditDraft'
+import { createEmptyVocabItem, validateVocabItems } from '../../utils/vocabItems'
 import {
-  createEmptyVocabItem,
-  validateVocabItems,
-} from '../../utils/vocabItems'
-import { createPresetItemSchemaEditor, itemSchemaFromEditor } from '../../utils/schemaField'
-import { CardSetupStep } from '../create-program/CardSetupStep'
-import { DisplayElementEditorStep } from '../create-program/DisplayElementEditorStep'
-import { ItemSchemaEditor } from '../create-program/ItemSchemaEditor'
-import { SideEditorStep } from '../create-program/SideEditorStep'
-import { VocabEntryStep } from '../create-program/VocabEntryStep'
-import { WizardProgress, wizardPhaseFromStep } from '../create-program/WizardProgress'
-import {
-  WIZARD_ACTION_PRIMARY,
-  WIZARD_ACTION_SECONDARY,
-  WIZARD_ACTIONS,
   WIZARD_MAIN,
   WIZARD_NARROW_SECTION,
 } from '../create-program/wizardLayout'
-
-type WizardStep = 'schema' | 'cardSetup' | 'sideEdit' | 'displayEdit' | 'vocabEntry' | 'done'
 
 type LoadState = 'loading' | 'ready' | 'notFound' | 'error'
 
@@ -62,23 +49,8 @@ type PublishState =
 type SaveDraftState =
   | { phase: 'idle' }
   | { phase: 'saving' }
-  | { phase: 'saved'; at: string }
+  | { phase: 'saved' }
   | { phase: 'failed' }
-
-const FIELD_TYPE_KEYS: Record<SchemaFieldUiType, TranslationKey> = {
-  text: 'createProgram.fieldType.text',
-  'text+audio': 'createProgram.fieldType.textAudio',
-}
-
-function findSide(levels: LevelRangeDraft[], sideId: string): SideDraft | undefined {
-  for (const level of levels) {
-    const side = level.sides.find((s) => s.id === sideId)
-    if (side) {
-      return side
-    }
-  }
-  return undefined
-}
 
 type EditLocationState = {
   product?: OwnedProductDto
@@ -89,53 +61,52 @@ export function EditProgramPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const { t, langPair, nativeLang, studyLang } = useLanguagePair()
-  const isWideLayout = useWizardWideLayout()
 
   const [loadState, setLoadState] = useState<LoadState>('loading')
   const [productMeta, setProductMeta] = useState<OwnedProductDto | null>(null)
-  const [step, setStep] = useState<WizardStep>('schema')
-  const [name, setName] = useState('')
-  const [itemSchemaEditor, setItemSchemaEditor] = useState<ItemSchemaEditorState>(() =>
-    createPresetItemSchemaEditor(t),
-  )
-  const [levels, setLevels] = useState<LevelRangeDraft[]>([])
-  const [activeLevelId, setActiveLevelId] = useState('')
-  const [editingSideId, setEditingSideId] = useState<string | null>(null)
-  const [editingDisplayIndex, setEditingDisplayIndex] = useState<number | null>(null)
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [programConfig, setProgramConfig] = useState<ProgramConfigWeb | null>(null)
+  const [defaultConfig, setDefaultConfig] = useState<ProgramConfigWeb | null>(null)
   const [vocabItems, setVocabItems] = useState<VocabItemDraft[]>([])
+  const [configDialogOpen, setConfigDialogOpen] = useState(false)
   const [publishState, setPublishState] = useState<PublishState>({ phase: 'idle' })
   const [saveDraftState, setSaveDraftState] = useState<SaveDraftState>({ phase: 'idle' })
+  const [tempId] = useState(() => randomUUID())
+  const stagingUsedRef = useRef(false)
 
-  const itemSchema = useMemo(() => itemSchemaFromEditor(itemSchemaEditor), [itemSchemaEditor])
-  const editingSide = useMemo(
-    () => (editingSideId ? findSide(levels, editingSideId) : undefined),
-    [levels, editingSideId],
+  const schema = useMemo(
+    () => (programConfig ? itemSchemaFromWebConfig(programConfig) : null),
+    [programConfig],
   )
-  const totalSides = levels.reduce((n, l) => n + l.sides.length, 0)
 
-  const draftPayload = useMemo(
-    () =>
-      serializeProductEditDraft({
-        version: 1,
-        name,
-        itemSchemaEditor,
-        levels,
-        vocabItems: vocabItems.map((item) => ({
-          id: item.id,
-          values: { ...item.values },
-        })),
-      }),
-    [name, itemSchemaEditor, levels, vocabItems],
-  )
+  const configIsCustom =
+    programConfig !== null && defaultConfig !== null
+      ? !programConfigsEqual(programConfig, defaultConfig)
+      : false
+
+  const draftPayload = useMemo(() => {
+    if (!programConfig) {
+      return ''
+    }
+    const draft: ProductEditDraft = {
+      version: 2,
+      title,
+      description: description.trim() || undefined,
+      programConfig,
+      vocabItems: vocabItemsToDraftRows(vocabItems),
+    }
+    return serializeProductEditDraft(draft)
+  }, [title, description, programConfig, vocabItems])
 
   const persistDraft = useCallback(async () => {
-    if (!productId) {
+    if (!productId || !draftPayload) {
       return
     }
     setSaveDraftState({ phase: 'saving' })
     try {
       await saveProductDraft(productId, draftPayload)
-      setSaveDraftState({ phase: 'saved', at: new Date().toISOString() })
+      setSaveDraftState({ phase: 'saved' })
     } catch (err) {
       const message = err instanceof ApiError ? err.code : 'request_failed'
       setSaveDraftState({ phase: 'failed' })
@@ -152,6 +123,7 @@ export function EditProgramPage() {
     async function load() {
       setLoadState('loading')
       try {
+        const webConfig = await App.get().config()
         const state = location.state as EditLocationState | null
         let meta = state?.product ?? null
         if (!meta || meta.productId !== productId) {
@@ -168,39 +140,43 @@ export function EditProgramPage() {
 
         const draftRes = await getProductDraft(productId!)
         const parsed = parseProductEditDraft(draftRes.draftData)
+        const defaultSnapshot = structuredClone(webConfig.defaultConfig)
 
         if (!cancelled) {
           setProductMeta(meta)
+          setDefaultConfig(defaultSnapshot)
+
           if (parsed.ok) {
-            setName(parsed.draft.name || meta.name)
-            setItemSchemaEditor(parsed.draft.itemSchemaEditor)
-            setLevels(parsed.draft.levels)
-            setActiveLevelId(parsed.draft.levels[0]?.id ?? '')
+            setTitle(parsed.draft.title || meta.name)
+            setDescription(parsed.draft.description ?? meta.description ?? '')
+            setProgramConfig(structuredClone(parsed.draft.programConfig))
             setVocabItems(draftToVocabItems(parsed.draft))
           } else {
-            let loadedFromPackage = false
+            let loaded = false
             try {
               const imported = await getProductImportPackage(productId!)
-              const fromPackage = importTreeToEditDraft(imported.tree, meta.name)
-              setName(fromPackage.name)
-              setItemSchemaEditor(fromPackage.itemSchemaEditor)
-              setLevels(fromPackage.levels)
-              setActiveLevelId(fromPackage.levels[0]?.id ?? '')
+              const fromPackage = importTreeToEditDraft(
+                imported.tree,
+                meta.name,
+                meta.description ?? '',
+              )
+              setTitle(fromPackage.title)
+              setDescription(fromPackage.description ?? '')
+              setProgramConfig(structuredClone(fromPackage.programConfig))
               setVocabItems(draftToVocabItems(fromPackage))
-              loadedFromPackage = true
+              loaded = true
             } catch (err) {
               if (err instanceof ApiError && err.code === 'no_published_package') {
-                // Never exported — fall back to preset wizard state.
+                // fall through to preset
               } else if (!(err instanceof ApiError)) {
                 throw err
               }
             }
-            if (!loadedFromPackage) {
-              const defaults = createDefaultEditDraft(meta.name, t)
-              setName(defaults.name)
-              setItemSchemaEditor(defaults.itemSchemaEditor)
-              setLevels(defaults.levels)
-              setActiveLevelId(defaults.levels[0]?.id ?? '')
+            if (!loaded) {
+              const defaults = createDefaultEditDraft(meta.name, meta.description ?? '', t)
+              setTitle(defaults.title)
+              setDescription(defaults.description ?? '')
+              setProgramConfig(structuredClone(defaults.programConfig))
               setVocabItems(draftToVocabItems(defaults))
             }
           }
@@ -220,57 +196,21 @@ export function EditProgramPage() {
   }, [productId, location.state, nativeLang, studyLang, t])
 
   useEffect(() => {
-    if (isWideLayout && step === 'displayEdit') {
-      setStep('sideEdit')
+    return () => {
+      if (stagingUsedRef.current) {
+        void cancelProductCreateManual(tempId).catch(() => {})
+      }
     }
-  }, [isWideLayout, step])
+  }, [tempId])
+
+  useEffect(() => {
+    stagingUsedRef.current = vocabItems.some((item) =>
+      Object.values(item.serverMedia ?? {}).some(Boolean),
+    )
+  }, [vocabItems])
 
   if (!productId) {
     return <Navigate to="/products" replace />
-  }
-
-  function openDisplayEditor(index: number) {
-    setEditingDisplayIndex(index)
-    if (!isWideLayout) {
-      setStep('displayEdit')
-    }
-  }
-
-  function closeDisplayEditor() {
-    setEditingDisplayIndex(null)
-    if (step === 'displayEdit') {
-      setStep('sideEdit')
-    }
-  }
-
-  function handleContinueSchema() {
-    const valid = itemSchemaEditor.fields.every((f) => f.label.trim())
-    if (!valid || itemSchemaEditor.fields.length === 0) {
-      window.alert(t('createProgram.validation.fieldsRequired'))
-      return
-    }
-    if (!schemaHasLangRole(itemSchema)) {
-      window.alert(t('createProgram.validation.schemaLangRequired'))
-      return
-    }
-    if (levels.length === 0) {
-      const defaultLevels = buildDefaultLevels(itemSchema)
-      setLevels(defaultLevels)
-      setActiveLevelId(defaultLevels[0].id)
-    }
-    setStep('cardSetup')
-  }
-
-  function handleContinueCardSetup() {
-    const hasSides = levels.every((l) => l.sides.length > 0)
-    if (!hasSides) {
-      window.alert(t('createProgram.validation.sidesRequired'))
-      return
-    }
-    if (vocabItems.length === 0) {
-      setVocabItems([createEmptyVocabItem(itemSchema)])
-    }
-    setStep('vocabEntry')
   }
 
   async function handleSaveDraftClick() {
@@ -283,7 +223,11 @@ export function EditProgramPage() {
   }
 
   async function handlePublish() {
-    const result = validateVocabItems(vocabItems, levels, itemSchema)
+    if (!programConfig || !schema) {
+      return
+    }
+    const levels = editorStateFromWebConfig(programConfig).levels
+    const result = validateVocabItems(vocabItems, levels, schema)
     if (!result.ok) {
       if (result.reason === 'empty') {
         window.alert(t('createProgram.validation.vocabEmpty'))
@@ -294,14 +238,13 @@ export function EditProgramPage() {
     }
 
     setPublishState({ phase: 'publishing' })
-    setStep('done')
 
     try {
       const tree = toExportVersionTree(
         nativeLang,
         studyLang,
-        name.trim() || productMeta?.name || 'Course',
-        itemSchema,
+        title.trim() || productMeta?.name || 'Course',
+        schema,
         levels,
         vocabItems,
       )
@@ -311,15 +254,6 @@ export function EditProgramPage() {
       const message = err instanceof ApiError ? err.code : 'request_failed'
       setPublishState({ phase: 'failed', message })
     }
-  }
-
-  function updateSide(sideId: string, nextSide: SideDraft) {
-    setLevels((prev) =>
-      prev.map((level) => ({
-        ...level,
-        sides: level.sides.map((s) => (s.id === sideId ? nextSide : s)),
-      })),
-    )
   }
 
   if (loadState === 'loading') {
@@ -352,6 +286,50 @@ export function EditProgramPage() {
     )
   }
 
+  if (publishState.phase === 'success' || publishState.phase === 'failed' || publishState.phase === 'publishing') {
+    return (
+      <main className={WIZARD_MAIN}>
+        <section className={WIZARD_NARROW_SECTION}>
+          <h1 className="text-xl font-semibold text-text sm:text-2xl">
+            {publishState.phase === 'publishing'
+              ? t('editProgram.done.publishing')
+              : publishState.phase === 'success'
+                ? t('editProgram.done.successTitle')
+                : t('editProgram.done.failedTitle')}
+          </h1>
+          <p className="mt-2 text-sm text-text-muted">
+            {publishState.phase === 'publishing'
+              ? t('editProgram.done.publishingHint')
+              : publishState.phase === 'success'
+                ? t('editProgram.done.successHint')
+                : publishState.message}
+          </p>
+          {publishState.phase === 'success' && (
+            <p className="mt-2 font-mono text-xs text-text-muted">
+              {t('editProgram.done.versionId', { id: publishState.versionId })}
+            </p>
+          )}
+          <div className="mt-6 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => setPublishState({ phase: 'idle' })}
+              className="rounded-xl border border-border bg-surface-card px-4 py-2.5 text-sm font-medium text-text"
+            >
+              {t('editProgram.done.continueEdit')}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/products')}
+              className="rounded-xl border border-accent/40 bg-accent-soft px-4 py-2.5 text-sm font-medium text-accent"
+            >
+              {t('editProgram.backProducts')}
+            </button>
+          </div>
+        </section>
+      </main>
+    )
+  }
+
   return (
     <main className={WIZARD_MAIN}>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -379,169 +357,91 @@ export function EditProgramPage() {
       </div>
 
       <p className="mt-2 text-xs text-text-muted lg:text-sm">
-        {t('editProgram.subtitle', { name: productMeta?.name ?? name, pair: langPair })}
+        {t('editProgram.subtitle', { name: title || productMeta?.name || '', pair: langPair })}
       </p>
 
-      {step !== 'done' && <WizardProgress current={wizardPhaseFromStep(step)} t={t} />}
+      <section className={`${WIZARD_NARROW_SECTION} mt-4`}>
+        <h1 className="text-xl font-semibold text-text sm:text-2xl">{t('editProgram.title')}</h1>
+        <p className="mt-2 text-sm text-text-muted">{t('editProgram.hint')}</p>
 
-      {step === 'schema' && (
-        <section className={WIZARD_NARROW_SECTION}>
-          <h1 className="text-xl font-semibold text-text sm:text-2xl">
-            {t('editProgram.stepSchema.title')}
-          </h1>
-          <p className="mt-2 text-sm text-text-muted">{t('createProgram.stepSchema.hint')}</p>
-          <p className="mt-1 text-xs text-text-muted">{name}</p>
+        <label className="mt-6 block text-sm font-medium text-text" htmlFor="edit-title">
+          {t('editProgram.titleLabel')}
+        </label>
+        <input
+          id="edit-title"
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="mt-1 w-full min-h-11 rounded-xl border border-border bg-surface px-3 py-2 text-text focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
+        />
 
-          <ItemSchemaEditor
-            value={itemSchemaEditor}
-            onChange={setItemSchemaEditor}
-            fieldTypeKeys={FIELD_TYPE_KEYS}
-            t={t}
-          />
+        <label className="mt-4 block text-sm font-medium text-text" htmlFor="edit-description">
+          {t('createAi.setup.descriptionLabel')}
+        </label>
+        <textarea
+          id="edit-description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={3}
+          placeholder={t('createAi.setup.descriptionPlaceholder')}
+          className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
+        />
 
-          <div className={`${WIZARD_ACTIONS} mt-6 sm:justify-end`}>
-            <button type="button" onClick={handleContinueSchema} className={WIZARD_ACTION_PRIMARY}>
-              {t('createProgram.stepSchema.continue')}
-            </button>
+        {schema && programConfig && (
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold text-text">{t('editProgram.vocabTitle')}</h2>
+            <p className="mt-1 text-sm text-text-muted">{t('editProgram.vocabHint')}</p>
+            <VocabEntryTable
+              programName={title}
+              schema={schema}
+              items={vocabItems}
+              onItemsChange={setVocabItems}
+              tempId={tempId}
+              nativeLang={nativeLang}
+              studyLang={studyLang}
+              t={t}
+            />
           </div>
-        </section>
-      )}
-
-      {step === 'cardSetup' && (
-        <CardSetupStep
-          programName={name}
-          schema={itemSchema}
-          levels={levels}
-          activeLevelId={activeLevelId}
-          onLevelsChange={setLevels}
-          onActiveLevelChange={setActiveLevelId}
-          onEditSide={(sideId) => {
-            setEditingSideId(sideId)
-            setStep('sideEdit')
-          }}
-          onBack={() => setStep('schema')}
-          onContinue={handleContinueCardSetup}
-          t={t}
-        />
-      )}
-
-      {step === 'sideEdit' && editingSide && (
-        <SideEditorStep
-          programName={name}
-          side={editingSide}
-          schema={itemSchema}
-          editingDisplayIndex={isWideLayout ? editingDisplayIndex : null}
-          onChange={(next) => updateSide(editingSide.id, next)}
-          onEditDisplay={openDisplayEditor}
-          onCloseDisplayEdit={closeDisplayEditor}
-          onBack={() => {
-            setEditingSideId(null)
-            setEditingDisplayIndex(null)
-            setStep('cardSetup')
-          }}
-          t={t}
-        />
-      )}
-
-      {step === 'displayEdit' &&
-        !isWideLayout &&
-        editingSide &&
-        editingDisplayIndex !== null &&
-        editingSide.display[editingDisplayIndex] && (
-          <DisplayElementEditorStep
-            side={editingSide}
-            displayIndex={editingDisplayIndex}
-            schema={itemSchema}
-            onChange={(next) => updateSide(editingSide.id, next)}
-            onSelectDisplayIndex={openDisplayEditor}
-            onBack={closeDisplayEditor}
-            t={t}
-          />
         )}
 
-      {step === 'vocabEntry' && (
-        <VocabEntryStep
-          programName={name}
-          schema={itemSchema}
-          levels={levels}
-          items={vocabItems}
-          onItemsChange={setVocabItems}
-          onBack={() => setStep('cardSetup')}
-          onContinue={() => void handlePublish()}
-          continueLabelKey="editProgram.publish"
+        <AiCreateFooter
+          onConfig={() => setConfigDialogOpen(true)}
+          onBack={() => navigate('/products')}
+          onSubmit={() => void handlePublish()}
+          submitLabel="editProgram.publish"
+          configIsCustom={configIsCustom}
+          submitDisabled={!programConfig}
           t={t}
         />
-      )}
+      </section>
 
-      {step === 'done' && (
-        <section className={WIZARD_NARROW_SECTION}>
-          <h1 className="text-xl font-semibold text-text sm:text-2xl">
-            {publishState.phase === 'publishing'
-              ? t('editProgram.done.publishing')
-              : publishState.phase === 'success'
-                ? t('editProgram.done.successTitle')
-                : publishState.phase === 'failed'
-                  ? t('editProgram.done.failedTitle')
-                  : t('editProgram.done.successTitle')}
-          </h1>
-          <p className="mt-2 text-sm text-text-muted">
-            {publishState.phase === 'publishing'
-              ? t('editProgram.done.publishingHint')
-              : publishState.phase === 'success'
-                ? t('editProgram.done.successHint')
-                : publishState.phase === 'failed'
-                  ? publishState.message
-                  : t('editProgram.done.successHint')}
-          </p>
-
-          {publishState.phase === 'success' && (
-            <p className="mt-2 font-mono text-xs text-text-muted">
-              {t('editProgram.done.versionId', { id: publishState.versionId })}
-            </p>
-          )}
-
-          <dl className="mt-5 space-y-3 text-sm">
-            <div>
-              <dt className="text-text-muted">{t('createProgram.stepName.label')}</dt>
-              <dd className="font-medium text-text">{name}</dd>
-            </div>
-            <div>
-              <dt className="text-text-muted">{t('createProgram.stepDone.vocabTitle')}</dt>
-              <dd className="font-medium text-text">
-                {t('createProgram.stepDone.vocabSummary', { count: vocabItems.length })}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-text-muted">{t('createProgram.stepDone.levelsTitle')}</dt>
-              <dd className="font-medium text-text">
-                {t('createProgram.stepDone.levelsSummary', {
-                  levels: levels.length,
-                  sides: totalSides,
-                })}
-              </dd>
-            </div>
-          </dl>
-
-          <div className="mt-6 flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                setPublishState({ phase: 'idle' })
-                setStep('vocabEntry')
-              }}
-              className={WIZARD_ACTION_SECONDARY}
-            >
-              {t('editProgram.done.continueEdit')}
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('/products')}
-              className={WIZARD_ACTION_PRIMARY}
-            >
-              {t('editProgram.backProducts')}
-            </button>
-          </div>
-        </section>
+      {programConfig && (
+        <CustomConfigDialog
+          open={configDialogOpen}
+          programName={title.trim() || productMeta?.name || t('editProgram.title')}
+          initialConfig={programConfig}
+          onClose={() => setConfigDialogOpen(false)}
+          onApply={(config) => {
+            setProgramConfig(config)
+            setConfigDialogOpen(false)
+            const nextSchema = itemSchemaFromWebConfig(config)
+            setVocabItems((prev) => {
+              if (prev.length === 0) {
+                return [createEmptyVocabItem(nextSchema)]
+              }
+              return prev.map((item) => {
+                const values = { ...item.values }
+                for (const attr of nextSchema.attrs) {
+                  if (!(attr.key in values)) {
+                    values[attr.key] = ''
+                  }
+                }
+                return { ...item, values }
+              })
+            })
+          }}
+          t={t}
+        />
       )}
     </main>
   )

@@ -606,12 +606,12 @@ function onRefreshClick() {
 - [x] Nút **Refresh** luôn enabled; rate limit 5s + toast khi ấn quá sớm
 - [x] Xóa auto-poll (`pollProductCreateProgress*`) — đã xong Phase 6
 
-### Phase 8 — EditProgramPage đồng bộ
+### Phase 8 — EditProgramPage đồng bộ ✅ (2026-07-05)
 
-- [ ] `EditProgramPage`: `label`/`description` thay `name`; `CustomConfigDialog` thay wizard schema/levels riêng
-- [ ] `MediaPickerDialog` trong vocab entry edit
-- [ ] Draft/import-package: map schema web metadata; strip khi export
-- [ ] Publish (`export-version`) không đổi path
+- [x] `EditProgramPage`: `title`/`description` + `CustomConfigDialog` thay wizard schema/levels
+- [x] `VocabEntryTable` + `MediaPickerDialog` trong vocab edit
+- [x] Draft v2 (`programConfig`); import v1 migrate; export compact (strip web metadata)
+- [x] Publish (`export-version`) không đổi path
 
 ---
 

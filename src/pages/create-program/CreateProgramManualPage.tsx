@@ -127,7 +127,6 @@ export function CreateProgramManualPage() {
           title={title}
           description={description}
           programConfig={programConfig}
-          schema={schema}
           tempId={tempId}
           nativeLang={nativeLang}
           studyLang={studyLang}
