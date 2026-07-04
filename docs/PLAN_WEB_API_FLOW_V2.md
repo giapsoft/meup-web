@@ -446,7 +446,7 @@ function onRefreshClick() {
 | **A** WebConfig | ✅ Xong | `GET /api/web-config` |
 | **B** Schema web metadata | ✅ Xong — chờ nghiệm thu | `jobcontent/web_schema.go` |
 | **C** Media instant | ✅ Xong — chờ nghiệm thu | `instantmedia/`, `routes/product_create_media.go` |
-| D CreateProduct v2 | ⏳ Chưa làm | |
+| **D** CreateProduct v2 | ✅ Xong — chờ nghiệm thu | `productcreate/create_v2.go`, migration `000029` |
 | E Packaging + refund | ⏳ Chưa làm | |
 | F Dọn legacy API | ⏳ Chưa làm | |
 
@@ -507,20 +507,26 @@ function onRefreshClick() {
 | `internal/credit/modify_credits.go` | `ReasonCPRMediaInstant` |
 | `docs/API.md` | Document instant endpoints |
 
-### Phase D — CreateProductRequest v2
+### Phase D — CreateProductRequest v2 ✅ (2026-07-05)
 
-- [ ] Refactor `productcreate/store.go`:
-  - Parse body theo `type`
-  - Build `payload` `{ config, items }` từ request
-  - **AI types:** charge `count × vocabPrice`; lưu `requested_vocab_count`; không bill media jobs riêng
-  - **Manual:** validate `objectKey` từ `tempId`; promote/move permanent; reject key lạ; `len(items) < 8` → 400
-  - **image/paragraph:** nếu `title` rỗng → sinh title server trước vocab job
-  - `generateMediaForMissingItems=false` → skip `CollectMediaJobsFromItems`
-  - Map `title` → DB `name`
-- [ ] Vocab jobs: `fromTitle` → content=title, `fromParagraph`, `fromImage` giữ logic handler cũ
-- [ ] Manual: không dùng `vocabPrice`
-- [ ] JWT owner, bỏ `ownerId` body
-- [ ] Xóa code path nhận `jobs[]` từ client (breaking)
+- [x] Refactor `productcreate/store.go` — typed `CreateV2Input`, JWT owner
+- [x] Parse body theo `type`; build `payload` `{ config, items }`
+- [x] AI types: `count × vocabPrice`; lưu `requested_vocab_count`; không bill media jobs riêng
+- [x] Manual: validate/promote `tempId` keys; `len(items) < 8` → 400; `generateMediaForMissingItems`
+- [x] image/paragraph: sinh `title` server nếu trống
+- [x] Vocab jobs: `fromTitle` / `fromParagraph` / `fromImage`
+- [x] Xóa code path nhận client `jobs[]`
+
+| File | Thay đổi |
+|------|----------|
+| `internal/productcreate/create_v2.go` | Prepare jobs + payload by type |
+| `internal/productcreate/staging_promote.go` | Promote staging media keys |
+| `internal/productcreate/title_generate.go` | LLM title for image/paragraph |
+| `internal/jobcontent/item_schema.go` | `RowFromManualValues` |
+| `internal/jobcontent/payload_marshal.go` | `MarshalProductPayload` |
+| `internal/database/migrations/000029_*` | `requested_vocab_count` column |
+| `internal/httpapi/routes/product_create.go` | V2 request body |
+| `docs/API.md` | V2 create body docs |
 
 ### Phase E — Packaging guard + hoàn credit AI
 
