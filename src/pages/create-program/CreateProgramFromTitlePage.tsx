@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { CustomConfigDialog } from '../../components/create/CustomConfigDialog'
 import { ApiError } from '../../api/client'
 import {
   createProductRequest,
@@ -17,7 +18,8 @@ import {
 } from '../../utils/aiVocabWordCount'
 import { buildDefaultLevels } from '../../utils/defaultSides'
 import { estimateAIVocabCredits } from '../../utils/pricing'
-import { programConfigWebFromSchema } from '../../utils/programConfigWeb'
+import { editorStateFromWebConfig } from '../../utils/customConfigState'
+import { programConfigWebFromEditor } from '../../utils/programConfigWeb'
 import { schemaHasLangRole } from '../../utils/itemSchemaLayout'
 import {
   createPresetItemSchemaEditor,
@@ -66,6 +68,7 @@ export function CreateProgramFromTitlePage() {
   const [levels, setLevels] = useState<LevelRangeDraft[]>([])
   const [submitState, setSubmitState] = useState<SubmitState>({ phase: 'idle' })
   const [liveProgress, setLiveProgress] = useState<ProductCreateProgressDto | null>(null)
+  const [configDialogOpen, setConfigDialogOpen] = useState(false)
 
   const itemSchema = useMemo(() => itemSchemaFromEditor(itemSchemaEditor), [itemSchemaEditor])
   const programId = useMemo(() => slugProgramId(name), [name])
@@ -108,7 +111,7 @@ export function CreateProgramFromTitlePage() {
   }
 
   function handleContinueSchema() {
-    const valid = itemSchemaEditor.fields.every((f) => f.name.trim())
+    const valid = itemSchemaEditor.fields.every((f) => f.label.trim())
     if (!valid || itemSchemaEditor.fields.length === 0) {
       window.alert(t('createProgram.validation.fieldsRequired'))
       return
@@ -134,7 +137,7 @@ export function CreateProgramFromTitlePage() {
         count: wordCount ?? App.get().itemMinCount(),
         nativeLangId: nativeLang,
         studyLangId: studyLang,
-        config: programConfigWebFromSchema(itemSchema, levels),
+        config: programConfigWebFromEditor(itemSchemaEditor, levels),
       })
 
       await refreshAccount()
@@ -287,6 +290,28 @@ export function CreateProgramFromTitlePage() {
             value={itemSchemaEditor}
             onChange={setItemSchemaEditor}
             fieldTypeKeys={FIELD_TYPE_KEYS}
+            t={t}
+            showGenerateDescriptions
+          />
+
+          <button
+            type="button"
+            onClick={() => setConfigDialogOpen(true)}
+            className="mt-4 text-sm text-accent hover:underline"
+          >
+            {t('createProgram.customConfig.open')}
+          </button>
+
+          <CustomConfigDialog
+            open={configDialogOpen}
+            programName={name.trim() || topic.trim()}
+            initialConfig={programConfigWebFromEditor(itemSchemaEditor, levels)}
+            onClose={() => setConfigDialogOpen(false)}
+            onApply={(config) => {
+              const next = editorStateFromWebConfig(config)
+              setItemSchemaEditor(next.itemSchemaEditor)
+              setLevels(next.levels)
+            }}
             t={t}
           />
 

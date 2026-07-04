@@ -24,7 +24,7 @@ import {
 } from '../../utils/compressImageForApi'
 import { buildDefaultLevels } from '../../utils/defaultSides'
 import { estimateAIVocabCredits } from '../../utils/pricing'
-import { programConfigWebFromSchema } from '../../utils/programConfigWeb'
+import { programConfigWebFromEditor } from '../../utils/programConfigWeb'
 import { schemaHasLangRole } from '../../utils/itemSchemaLayout'
 import {
   createPresetItemSchemaEditor,
@@ -153,7 +153,7 @@ export function CreateProgramFromImagePage() {
   }
 
   function handleContinueSchema() {
-    const valid = itemSchemaEditor.fields.every((f) => f.name.trim())
+    const valid = itemSchemaEditor.fields.every((f) => f.label.trim())
     if (!valid || itemSchemaEditor.fields.length === 0) {
       window.alert(t('createProgram.validation.fieldsRequired'))
       return
@@ -184,7 +184,7 @@ export function CreateProgramFromImagePage() {
         count: wordCount ?? App.get().itemMinCount(),
         nativeLangId: nativeLang,
         studyLangId: studyLang,
-        config: programConfigWebFromSchema(itemSchema, levels),
+        config: programConfigWebFromEditor(itemSchemaEditor, levels),
       })
 
       await refreshAccount()

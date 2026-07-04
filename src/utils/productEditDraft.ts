@@ -1,10 +1,25 @@
-import type { ItemSchemaEditorState, LevelRangeDraft, VocabItemDraft } from '../types/program'
+import type { ItemSchemaEditorState, LevelRangeDraft, SchemaFieldRow, VocabItemDraft } from '../types/program'
 import { buildDefaultLevels } from './defaultSides'
 import { randomUUID } from './id'
 import { createPresetItemSchemaEditor, itemSchemaFromEditor } from './schemaField'
 import { createEmptyVocabItem } from './vocabItems'
 
 export const PRODUCT_EDIT_DRAFT_VERSION = 1
+
+/** Migrate legacy draft fields (`name` → `label`). */
+function normalizeItemSchemaEditor(editor: ItemSchemaEditorState): ItemSchemaEditorState {
+  return {
+    ...editor,
+    fields: editor.fields.map((field) => {
+      const legacy = field as SchemaFieldRow & { name?: string }
+      return {
+        ...field,
+        label: field.label ?? legacy.name ?? '',
+        description: field.description ?? '',
+      }
+    }),
+  }
+}
 
 /** Serializable wizard state stored in `product.draft_data`. */
 export type ProductEditDraftV1 = {
@@ -52,7 +67,7 @@ export function parseProductEditDraft(raw: string): ParsedProductEditDraft {
       draft: {
         version: PRODUCT_EDIT_DRAFT_VERSION,
         name: parsed.name,
-        itemSchemaEditor: parsed.itemSchemaEditor,
+        itemSchemaEditor: normalizeItemSchemaEditor(parsed.itemSchemaEditor),
         levels: parsed.levels,
         vocabItems: parsed.vocabItems,
         savedAt: parsed.savedAt,

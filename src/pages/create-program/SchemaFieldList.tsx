@@ -76,10 +76,17 @@ function SortableFieldRow({ row, fieldTypeKeys, onUpdate, onRemove, t }: Sortabl
     >
       <input
         type="text"
-        value={row.name}
-        onChange={(e) => onUpdate(row.id, { name: e.target.value })}
+        value={row.label}
+        onChange={(e) => onUpdate(row.id, { label: e.target.value })}
         placeholder={t('createProgram.stepSchema.fieldLabel')}
         className="order-1 min-w-0 w-full flex-1 rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-text sm:order-2"
+      />
+      <input
+        type="text"
+        value={row.description ?? ''}
+        onChange={(e) => onUpdate(row.id, { description: e.target.value })}
+        placeholder={t('createProgram.stepSchema.fieldDescription')}
+        className="order-4 min-w-0 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text sm:order-5"
       />
       <div className="order-2 flex items-center gap-2 sm:contents">
         <button
@@ -102,10 +109,25 @@ function SortableFieldRow({ row, fieldTypeKeys, onUpdate, onRemove, t }: Sortabl
             </option>
           ))}
         </select>
+        <select
+          value={row.langType ?? ''}
+          onChange={(e) => {
+            const value = e.target.value
+            onUpdate(row.id, {
+              langType: value === 'study' || value === 'native' ? value : undefined,
+            })
+          }}
+          className="order-3 min-h-11 min-w-0 flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text sm:order-4 sm:w-auto sm:flex-none"
+          aria-label={t('createProgram.stepSchema.langTypeLabel')}
+        >
+          <option value="">{t('createProgram.stepSchema.langType.none')}</option>
+          <option value="study">{t('createProgram.stepSchema.langType.study')}</option>
+          <option value="native">{t('createProgram.stepSchema.langType.native')}</option>
+        </select>
         <button
           type="button"
           onClick={() => onRemove(row.id)}
-          className="order-3 flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-red-400 active:bg-red-500/10 sm:order-4"
+          className="order-5 flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-red-400 active:bg-red-500/10 sm:order-6"
           aria-label={t('createProgram.stepSchema.remove')}
         >
           ✕

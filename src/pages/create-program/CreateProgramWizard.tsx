@@ -9,7 +9,7 @@ import type { TranslationKey } from '../../i18n/types'
 import type { ItemSchemaEditorState, LevelRangeDraft, SchemaFieldUiType, SideDraft, VocabItemDraft } from '../../types/program'
 import { randomUUID } from '../../utils/id'
 import { buildDefaultLevels } from '../../utils/defaultSides'
-import { programConfigWebFromSchema } from '../../utils/programConfigWeb'
+import { programConfigWebFromEditor } from '../../utils/programConfigWeb'
 import { schemaHasLangRole } from '../../utils/itemSchemaLayout'
 import {
   createEmptyVocabItem,
@@ -114,7 +114,7 @@ export function CreateProgramWizard() {
   }
 
   function handleContinueSchema() {
-    const valid = itemSchemaEditor.fields.every((f) => f.name.trim())
+    const valid = itemSchemaEditor.fields.every((f) => f.label.trim())
     if (!valid || itemSchemaEditor.fields.length === 0) {
       window.alert(t('createProgram.validation.fieldsRequired'))
       return
@@ -165,7 +165,7 @@ export function CreateProgramWizard() {
         tempId: randomUUID(),
         items: vocabItems.map((item) => ({ values: { ...item.values } })),
         generateMediaForMissingItems: false,
-        config: programConfigWebFromSchema(itemSchema, levels),
+        config: programConfigWebFromEditor(itemSchemaEditor, levels),
       })
       await refreshAccount()
       const progress = await pollProductCreateProgress(created.id)

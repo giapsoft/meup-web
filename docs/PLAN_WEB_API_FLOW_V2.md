@@ -571,11 +571,13 @@ function onRefreshClick() {
 - [x] `utils/programConfigWeb.ts` — map schema/levels → `ProgramConfigWeb`
 - [x] Create pages + wizard gọi body v2 (tạm giữ UI cũ; refactor UI Phase 4–5)
 
-### Phase 3 — CustomConfigProcess
+### Phase 3 — CustomConfigProcess ✅ (2026-07-05)
 
-- [ ] `components/create/CustomConfigDialog.tsx` (step 1 + 2)
-- [ ] Cập nhật `ItemSchemaEditor` / `SchemaFieldRow`: `name` → `label`, thêm `description`
-- [ ] `generate-description` action trong step 1
+- [x] `components/create/CustomConfigDialog.tsx` (step 1 schema + step 2 levels/sides)
+- [x] `ItemSchemaEditor` / `SchemaFieldRow`: `label` + `description`, langType 3-state
+- [x] `generate-description` action trong step 1
+- [x] `utils/customConfigState.ts`, `utils/customConfigValidation.ts`
+- [x] Demo wire: `CreateProgramFromTitlePage` — nút "Cấu hình nâng cao"
 
 ### Phase 4 — AI create pages
 

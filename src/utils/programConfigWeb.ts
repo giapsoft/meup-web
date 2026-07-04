@@ -1,19 +1,21 @@
-import type { ItemSchema, LevelRangeDraft } from '../types/program'
+import type { ItemSchemaEditorState, LevelRangeDraft } from '../types/program'
 import type { ProgramConfigWeb } from '../types/webConfig'
+import { generateSchemaKey } from './schemaField'
 
-/** Map wizard/API item schema + levels to `ProgramConfigWeb` for create request body. */
-export function programConfigWebFromSchema(
-  schema: ItemSchema,
+/** Build `ProgramConfigWeb` from wizard editor state (for create request `config`). */
+export function programConfigWebFromEditor(
+  editor: ItemSchemaEditorState,
   levels: LevelRangeDraft[],
 ): ProgramConfigWeb {
   return {
     itemSchema: {
-      hasImage: schema.hasImage,
-      attrs: schema.attrs.map((attr) => ({
-        key: attr.key,
-        label: attr.name,
-        type: attr.type,
-        ...(attr.langType ? { langType: attr.langType } : {}),
+      hasImage: editor.hasImage,
+      attrs: editor.fields.map((row) => ({
+        key: row.key.trim() || generateSchemaKey(),
+        label: row.label.trim(),
+        ...(row.description?.trim() ? { description: row.description.trim() } : {}),
+        type: row.uiType,
+        ...(row.langType ? { langType: row.langType } : {}),
       })),
     },
     levels: levels.map((level) => ({
@@ -43,4 +45,25 @@ export function programConfigWebFromSchema(
       })),
     })),
   }
+}
+
+/** @deprecated Prefer programConfigWebFromEditor when editor state is available. */
+export function programConfigWebFromSchema(
+  schema: import('../types/program').ItemSchema,
+  levels: LevelRangeDraft[],
+): ProgramConfigWeb {
+  return programConfigWebFromEditor(
+    {
+      hasImage: schema.hasImage,
+      fields: schema.attrs.map((attr) => ({
+        id: '',
+        label: attr.name,
+        description: attr.description,
+        uiType: attr.type === 'text+audio' ? 'text+audio' : 'text',
+        key: attr.key,
+        langType: attr.langType,
+      })),
+    },
+    levels,
+  )
 }

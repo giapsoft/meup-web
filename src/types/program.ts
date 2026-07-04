@@ -11,8 +11,10 @@ export type LangType = 'native' | 'study'
 export type SchemaFieldRow = {
   /** Stable row id for React / drag-and-drop. */
   id: string
-  /** User-facing label. */
-  name: string
+  /** User-facing label (web `SchemaAttrWeb.label`). */
+  label: string
+  /** Optional AI hint for image/description generation. */
+  description?: string
   uiType: SchemaFieldUiType
   /** Auto-generated stable key. */
   key: string
@@ -26,6 +28,7 @@ export type SchemaAttrType = 'text' | 'text+audio'
 export type SchemaAttr = {
   key: string
   name: string
+  description?: string
   type: SchemaAttrType
   langType?: LangType
 }

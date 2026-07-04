@@ -14,7 +14,8 @@ function itemSchemaEditorFromSchema(schema: ItemSchema): ItemSchemaEditorState {
     hasImage: schema.hasImage,
     fields: schema.attrs.map((attr) => ({
       id: randomUUID(),
-      name: attr.name.trim() || attr.key,
+      label: attr.name.trim() || attr.key,
+      description: attr.description ?? '',
       uiType: attr.type === 'text+audio' ? 'text+audio' : 'text',
       key: attr.key,
       langType: attr.langType,

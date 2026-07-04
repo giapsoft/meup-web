@@ -97,7 +97,7 @@ So sánh `meup-api` (`../meup-api`) với `meup-web`. Cập nhật: 2026-07-05.
 |--------|------|--------|---------|
 | POST | `/api/product-create/generate-audio` | ❌ | Phase 5 — `MediaPickerDialog` |
 | POST | `/api/product-create/generate-image` | ❌ | Phase 5 |
-| POST | `/api/product-create/generate-description` | ❌ | Phase 3 — CustomConfig step 1 |
+| POST | `/api/product-create/generate-description` | ⚠️ | `ItemSchemaEditor` — Phase 3; full dialog Phase 4 |
 | POST | `/api/product-create/upload-audio` | ❌ | Phase 5 |
 | POST | `/api/product-create/upload-image` | ❌ | Phase 5 |
 | POST | `/api/product-create/cancel-manual` | ❌ | Phase 5 — cleanup staging |

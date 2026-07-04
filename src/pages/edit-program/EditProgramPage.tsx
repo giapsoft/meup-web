@@ -244,7 +244,7 @@ export function EditProgramPage() {
   }
 
   function handleContinueSchema() {
-    const valid = itemSchemaEditor.fields.every((f) => f.name.trim())
+    const valid = itemSchemaEditor.fields.every((f) => f.label.trim())
     if (!valid || itemSchemaEditor.fields.length === 0) {
       window.alert(t('createProgram.validation.fieldsRequired'))
       return
