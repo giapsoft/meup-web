@@ -1,8 +1,20 @@
 /** Base URL của meup-api. Override bằng env VITE_API_BASE_URL khi build/dev. */
-const rawBaseUrl =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8080'
+function resolveApiBaseUrl(): string {
+  const fromEnv = import.meta.env.VITE_API_BASE_URL as string | undefined
+  if (fromEnv?.trim()) {
+    return fromEnv.trim().replace(/\/+$/, '')
+  }
 
-export const API_BASE_URL = rawBaseUrl.replace(/\/+$/, '')
+  // Dev: gọi cùng origin (5173), Vite proxy `/api` → meup-api trên máy dev.
+  // Tránh gọi thẳng :8080 từ điện thoại (firewall/CORS) và tránh localhost trên thiết bị khác.
+  if (import.meta.env.DEV && typeof window !== 'undefined') {
+    return ''
+  }
+
+  return 'http://localhost:8080'
+}
+
+export const API_BASE_URL = resolveApiBaseUrl()
 
 /** Web đổi mã link (từ QR) lấy cặp token. */
 export const API_DEVICE_LINK_REDEEM = '/api/device/link/redeem'

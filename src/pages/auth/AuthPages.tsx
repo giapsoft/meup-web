@@ -1,5 +1,5 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
-import { Link, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
+import { Link, Navigate, Route, Routes } from 'react-router-dom'
 import { ApiError } from '../../api/client'
 import { GoogleSignInButton, GoogleSignInDivider } from '../../components/GoogleSignInButton'
 import { loginEmail, registerEmail } from '../../api/emailAuth'
@@ -109,7 +109,6 @@ function SubmitButton({ label, busy }: { label: string; busy: boolean }) {
 
 function LoginPage() {
   const { t } = useLanguagePair()
-  const navigate = useNavigate()
   const reauthorize = useReauthorize()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -117,7 +116,6 @@ function LoginPage() {
   const [busy, setBusy] = useState(false)
 
   function handleAuthenticated() {
-    navigate('/', { replace: true })
     reauthorize()
   }
 
@@ -133,6 +131,7 @@ function LoginPage() {
       handleAuthenticated()
     } catch (err) {
       setError(errorKey(err))
+    } finally {
       setBusy(false)
     }
   }
@@ -188,7 +187,6 @@ function LoginPage() {
 
 function RegisterPage() {
   const { t } = useLanguagePair()
-  const navigate = useNavigate()
   const reauthorize = useReauthorize()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -197,7 +195,6 @@ function RegisterPage() {
   const [busy, setBusy] = useState(false)
 
   function handleAuthenticated() {
-    navigate('/', { replace: true })
     reauthorize()
   }
 
@@ -217,6 +214,7 @@ function RegisterPage() {
       handleAuthenticated()
     } catch (err) {
       setError(errorKey(err))
+    } finally {
       setBusy(false)
     }
   }

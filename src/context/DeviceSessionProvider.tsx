@@ -100,8 +100,7 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
           }
         }
         saveDeviceSession(finalPair)
-        // Dọn mã khỏi URL (dùng-một-lần) và đưa về trang chủ.
-        if (pathAuthCode) {
+        if (pathAuthCode || location.pathname === '/login' || location.pathname === '/register') {
           navigate('/', { replace: true })
         }
         setLangs(finalPair)
@@ -118,7 +117,7 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [reloadToken, pendingAuthCode, pathAuthCode, navigate, searchParams])
+  }, [reloadToken, pendingAuthCode, pathAuthCode, navigate, searchParams, location.pathname])
 
   const actions = useMemo(() => ({ reauthorize }), [reauthorize])
 

@@ -55,6 +55,8 @@ export function storeTokenPair(pair: TokenPairDto): AuthTokens {
   return tokens
 }
 
+const REQUEST_TIMEOUT_MS = 30_000
+
 /** Một lần gọi mạng: bóc envelope `{ok,data,error}`, KHÔNG xử lý token. */
 async function rawRequest<T>(
   path: string,
@@ -73,6 +75,7 @@ async function rawRequest<T>(
         ...headers,
       },
       body: body !== undefined ? JSON.stringify(body) : undefined,
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     })
   } catch {
     throw new ApiError(0, 'network_error')
