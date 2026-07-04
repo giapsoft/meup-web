@@ -1,5 +1,6 @@
 import type { ItemSchemaEditorState, LevelRangeDraft, VocabItemDraft } from '../types/program'
 import { buildDefaultLevels } from './defaultSides'
+import { randomUUID } from './id'
 import { createPresetItemSchemaEditor, itemSchemaFromEditor } from './schemaField'
 import { createEmptyVocabItem } from './vocabItems'
 
@@ -80,7 +81,7 @@ export function createDefaultEditDraft(
 
 export function draftToVocabItems(draft: ProductEditDraftV1): VocabItemDraft[] {
   return draft.vocabItems.map((row) => ({
-    id: row.id || crypto.randomUUID(),
+    id: row.id || randomUUID(),
     values: { ...row.values },
   }))
 }

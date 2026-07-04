@@ -1,9 +1,10 @@
 import type { ItemSchema, VocabItemDraft } from '../types/program'
 import { IMAGE_MEDIA_KEY } from '../types/program'
+import { randomUUID } from './id'
 import { layoutSlotLabel, mediaSlots, type MediaSlot } from './itemSchemaLayout'
 
 export function createLocalResourceId(): string {
-  return crypto.randomUUID().replace(/-/g, '').slice(0, 32)
+  return randomUUID().replace(/-/g, '').slice(0, 32)
 }
 
 export function attachVocabItemMedia(

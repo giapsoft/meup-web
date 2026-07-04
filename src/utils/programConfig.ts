@@ -8,6 +8,7 @@ import type {
   SideDraft,
   VocabItemDraft,
 } from '../types/program'
+import { randomUUID } from './id'
 import {
   audioLayoutIndexForKey,
   audioLayoutIndexes,
@@ -24,9 +25,9 @@ export const DEFAULT_LEVEL_MAX = 10
 export function cloneSide(side: SideDraft): SideDraft {
   return {
     ...side,
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     display: side.display.map((d) => ({ ...d })),
-    playSteps: side.playSteps.map((s) => ({ ...s, id: crypto.randomUUID() })),
+    playSteps: side.playSteps.map((s) => ({ ...s, id: randomUUID() })),
   }
 }
 
@@ -47,7 +48,7 @@ export function sideNumberLabel(
 
 export function createDefaultLevel(sides: SideDraft[]): LevelRangeDraft {
   return {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     maxLvl: DEFAULT_LEVEL_MAX,
     sides: normalizePlayOrder(sides),
   }
@@ -114,7 +115,7 @@ export function applyDisplaySelection(
 
 export function createPlayStep(partial: Partial<PlayStepDraft> & Pick<PlayStepDraft, 'kind'>): PlayStepDraft {
   return {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     attributeIndex: partial.attributeIndex,
     durationSeconds: partial.durationSeconds,
     kind: partial.kind,
@@ -133,7 +134,7 @@ export function createEmptySide(schema: ItemSchema, playOrder: number): SideDraf
   const displayable = displayableLayoutIndexes(schema)
   const indices = displayable.slice(0, Math.min(3, displayable.length))
   return {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     playOrder,
     backgroundColor: '#1a1a2e',
     display: autoLayoutFromIndices(schema, indices),

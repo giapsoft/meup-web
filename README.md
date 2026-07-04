@@ -4,14 +4,38 @@ Web quản lý từ vựng cho thiết bị [MeUp](https://github.com/giapsoft/m
 
 Hiện tại chỉ có **mockup trang chủ** (chưa auth, chưa API).
 
-## Chạy local
+## Chạy local (npm trên máy)
 
 ```bash
 npm install
 npm run dev
 ```
 
-Mở http://localhost:5173
+Mở http://localhost:5173 — cần `meup-api` đang chạy ở `:8080` (Vite proxy `/api`).
+
+## Chạy full stack bằng Docker
+
+Web + API + PostgreSQL nằm **cùng nhóm Compose** với `meup-api`. Repo `meup-web` phải nằm cạnh `meup-api`:
+
+```
+gits/
+  meup-api/
+  meup-web/
+```
+
+Từ thư mục `meup-api`:
+
+```bash
+docker compose up --build
+```
+
+| Service | URL |
+|---------|-----|
+| web | http://localhost:5173 |
+| api | http://localhost:8080 |
+| postgres | `localhost:5432` (`postgres` / `postgres` / `meup_db`) |
+
+Sửa code trong `meup-web` trên host — Vite HMR trong container. Dừng: `Ctrl+C` hoặc `docker compose down`.
 
 ## Build
 

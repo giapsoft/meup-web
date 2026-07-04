@@ -2,6 +2,7 @@ import type { ItemSchema, ItemSchemaEditorState } from '../types/program'
 import type { ExportVersionTree } from './exportVersionTree'
 import { unmarshalCompactProgramConfig } from './compactProgramConfig'
 import { buildDefaultLevels } from './defaultSides'
+import { randomUUID } from './id'
 import type { ProductEditDraftV1 } from './productEditDraft'
 import { PRODUCT_EDIT_DRAFT_VERSION } from './productEditDraft'
 import { createEmptyVocabItem, fromCompactItemRow } from './vocabItems'
@@ -12,7 +13,7 @@ function itemSchemaEditorFromSchema(schema: ItemSchema): ItemSchemaEditorState {
   return {
     hasImage: schema.hasImage,
     fields: schema.attrs.map((attr) => ({
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       name: attr.name.trim() || attr.key,
       uiType: attr.type === 'text+audio' ? 'text+audio' : 'text',
       key: attr.key,
@@ -33,7 +34,7 @@ export function importTreeToEditDraft(
   const vocabItems =
     tree.items.length > 0
       ? tree.items.map((row) => ({
-          id: crypto.randomUUID(),
+          id: randomUUID(),
           values: fromCompactItemRow(schema, row),
         }))
       : [createEmptyVocabItem(schema)]

@@ -1,4 +1,5 @@
 import type { DisplayElement, ItemSchema, LevelRangeDraft, PlayStepDraft } from '../types/program'
+import { randomUUID } from './id'
 import { langTypeIndex } from './itemSchemaLayout'
 import { toCompactItemRow } from './vocabItems'
 import type { VocabItemDraft } from '../types/program'
@@ -193,13 +194,13 @@ function unmarshalCompactPlayStep(row: unknown): PlayStepDraft {
   const kindCode = asNumber(row[0], 'playStep kind')
   if (kindCode === 1) {
     return {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       kind: 'pause',
       durationSeconds: row.length > 1 ? asNumber(row[1], 'playStep durationSeconds') : undefined,
     }
   }
   return {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     kind: 'play',
     attributeIndex: row.length > 1 ? asNumber(row[1], 'playStep attributeIndex') : undefined,
     durationSeconds: row.length > 2 ? asNumber(row[2], 'playStep durationSeconds') : undefined,
@@ -213,7 +214,7 @@ function unmarshalCompactSide(row: unknown, playOrder: number): LevelRangeDraft[
   const displayRaw = row[1]
   const playStepsRaw = row[2]
   return {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     playOrder,
     backgroundColor: asString(row[0], 'side backgroundColor'),
     display: Array.isArray(displayRaw) ? displayRaw.map(unmarshalCompactDisplay) : [],
@@ -230,7 +231,7 @@ function unmarshalCompactLevel(row: unknown): LevelRangeDraft {
     ? sidesRaw.map((side, index) => unmarshalCompactSide(side, index + 1))
     : []
   return {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     maxLvl: asNumber(row[0], 'level maxLvl'),
     sides,
   }

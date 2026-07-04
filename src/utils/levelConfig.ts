@@ -4,6 +4,7 @@
  */
 import type { LevelRangeDraft, SideDraft } from '../types/program'
 import type { MessageParams, TranslationKey } from '../i18n/types'
+import { randomUUID } from './id'
 import { cloneSides } from './programConfig'
 
 export type ConfigLevelItem = {
@@ -67,12 +68,12 @@ export function configLevelItemLabel(
 /** Mirrors meup `insertNewLevelRange`. Returns a new levels array. */
 export function insertNewLevelRange(levels: LevelRangeDraft[]): LevelRangeDraft[] {
   if (levels.length === 0) {
-    return [{ id: crypto.randomUUID(), maxLvl: 0, sides: [] }]
+    return [{ id: randomUUID(), maxLvl: 0, sides: [] }]
   }
 
   const copy = cloneLevels(levels)
   const nr: LevelRangeDraft = {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     maxLvl: 0,
     sides: cloneSides(copy[copy.length - 1].sides),
   }

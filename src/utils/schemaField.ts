@@ -1,5 +1,6 @@
 import type { ItemSchema, ItemSchemaEditorState, LangType, SchemaFieldRow, SchemaFieldUiType } from '../types/program'
 import type { TranslationKey } from '../i18n/types'
+import { randomUUID } from './id'
 
 export const SCHEMA_UI_TYPES: SchemaFieldUiType[] = ['text', 'text+audio']
 
@@ -17,7 +18,7 @@ export function slugProgramId(name: string): string {
 
 /** Stable machine id for one schema attribute (independent of display name). */
 export function generateSchemaKey(): string {
-  const hex = crypto.randomUUID().replace(/-/g, '').slice(0, 8)
+  const hex = randomUUID().replace(/-/g, '').slice(0, 8)
   return `attr_${hex}`
 }
 
@@ -59,7 +60,7 @@ export function createSchemaRow(
   const name = partial.name.trim()
   const key = partial.key?.trim() || generateSchemaKey()
   return {
-    id: partial.id ?? crypto.randomUUID(),
+    id: partial.id ?? randomUUID(),
     name,
     uiType: partial.uiType,
     key,

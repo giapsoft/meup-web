@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { clearAuthTokens } from '../api/authTokens'
+import { clearAuthTokens, loadAuthTokens } from '../api/authTokens'
 import { ensureAccessToken } from '../api/client'
 import { getAccount } from '../api/emailAuth'
 import { redeemLink } from '../api/deviceLink'
@@ -69,7 +69,8 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
 
     async function run() {
       // Đã đăng nhập và không có mã QR/link mới → không chặn UI khi đổi tab/route.
-      if (statusRef.current === 'authorized' && !pendingAuthCode) {
+      // Bỏ qua early-return khi token đã bị xóa (logout) để chuyển sang AuthPages.
+      if (statusRef.current === 'authorized' && !pendingAuthCode && loadAuthTokens()) {
         return
       }
 

@@ -1,4 +1,5 @@
 import type { DisplayElement, ItemSchema, LevelRangeDraft, SideDraft } from '../types/program'
+import { randomUUID } from './id'
 import {
   imageLayoutIndex,
   layoutIndexForAttrKey,
@@ -131,7 +132,7 @@ function mapSideTemplate(
   }
 
   return {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     playOrder,
     backgroundColor: spec.backgroundColor,
     display,

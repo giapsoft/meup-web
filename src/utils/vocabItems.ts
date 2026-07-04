@@ -1,4 +1,5 @@
 import type { ItemSchema, LevelRangeDraft, VocabItemDraft } from '../types/program'
+import { randomUUID } from './id'
 import { revokeVocabItemMedia } from './vocabMedia'
 import { rowLength } from './itemSchemaLayout'
 
@@ -11,7 +12,7 @@ export function createEmptyVocabItem(schema: ItemSchema): VocabItemDraft {
   for (const attr of schema.attrs) {
     values[attr.key] = ''
   }
-  return { id: crypto.randomUUID(), values }
+  return { id: randomUUID(), values }
 }
 
 export function addVocabItem(items: VocabItemDraft[], schema: ItemSchema): VocabItemDraft[] {
