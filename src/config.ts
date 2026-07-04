@@ -43,6 +43,9 @@ export const API_AUTH_ME = '/api/auth/me'
 /** Tạo bộ từ vựng (create_product_request). */
 export const API_PRODUCT_CREATE = '/api/product-create'
 
+/** Web pricing, limits, default program config. */
+export const API_WEB_CONFIG = '/api/web-config'
+
 /** Poll tiến độ tạo bộ từ — path prefix, thêm `/{requestId}/progress`. */
 export const API_PRODUCT_CREATE_PROGRESS = '/api/product-create'
 

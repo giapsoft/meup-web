@@ -448,7 +448,7 @@ function onRefreshClick() {
 | **C** Media instant | ✅ Xong — chờ nghiệm thu | `instantmedia/`, `routes/product_create_media.go` |
 | **D** CreateProduct v2 | ✅ Xong — chờ nghiệm thu | `productcreate/create_v2.go`, migration `000029` |
 | **E** Packaging + refund | ✅ Xong — chờ nghiệm thu | `productrender/packaging_guard.go`, `vocab_completeness.go` |
-| F Dọn legacy API | ⏳ Chưa làm | |
+| **F** Dọn legacy API | ✅ Xong — chờ nghiệm thu | Postman + docs |
 
 ### Phase A — WebConfig & system_config ✅ (2026-07-05)
 
@@ -545,21 +545,23 @@ function onRefreshClick() {
 | `internal/productcreate/refund.go` | `RefundAIVocabSurplus` |
 | `internal/productrender/runner.go` | Guard, refund, temp cleanup |
 
-### Phase F — Dọn legacy API
+### Phase F — Dọn legacy API ✅ (2026-07-05)
 
-- [ ] Xóa validation/normalize cho client-sent `jobs[]`
-- [ ] Cập nhật Postman / `docs/API.md`
-- [ ] Cập nhật `docs/API_UI_GAP.md` phía web
+- [x] Handler chỉ nhận body v2 (không `ownerId` / `jobs[]` / `payload` từ client)
+- [x] Cập nhật `docs/POSTMAN.md` + `postman/meup-api.postman_collection.json`
+- [x] Cập nhật `docs/DATABASE.md`
+- [x] Cập nhật `meup-web/docs/API_UI_GAP.md`
 
 ---
 
 ## 7. Kế hoạch triển khai meup-web
 
-### Phase 1 — Foundation
+### Phase 1 — Foundation ✅ (2026-07-05)
 
-- [ ] `src/app/App.ts` singleton + `api/webConfig.ts`
-- [ ] Wire logout → `App.onUserLogout()`
-- [ ] Thay mọi `VOCAB_JOB_CREDITS_PER_UNIT` / `aiVocabWordCount` bằng `App.get().config()`
+- [x] `src/app/App.ts` singleton + `api/webConfig.ts` + `types/webConfig.ts`
+- [x] `API_WEB_CONFIG` trong `src/config.ts`
+- [x] Wire logout → `App.onUserLogout()`; preload config khi authorized
+- [x] Thay `VOCAB_JOB_CREDITS_PER_UNIT` / `aiVocabWordCount` constants bằng `App.get()`
 
 ### Phase 2 — API client v2
 
@@ -790,7 +792,7 @@ flowchart TD
 - [ ] `CustomConfigProcess` dùng chung create + edit
 - [ ] `EditProgramPage` đồng bộ schema web + MediaPickerDialog
 - [ ] `tempId` promote keys + xóa folder sau create thành công
-- [ ] `GET /api/web-config` + `docs/API.md` + `API_UI_GAP.md` cập nhật
+- [x] `GET /api/web-config` + `docs/API.md` + `API_UI_GAP.md` cập nhật
 - [ ] Create requests: refresh thủ công 5s, không auto-poll, nút Refresh không disable
 - [ ] Mục 12 — toàn bộ quyết định đã chốt
 

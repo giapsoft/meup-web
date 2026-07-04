@@ -25,6 +25,7 @@ import {
   saveDeviceSession,
   type DeviceSession,
 } from '../utils/deviceSessionStorage'
+import { App } from '../app/App'
 import { getAuthCode, getPathAuthCode, resolveLangPair } from '../utils/linkParams'
 import { langPairFromAccount } from '../utils/accountLangPrefs'
 
@@ -106,6 +107,7 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
         }
         setLangs(finalPair)
         setStatus('authorized')
+        void App.get().config()
       } else {
         clearAuthTokens()
         clearDeviceSession()
@@ -191,6 +193,7 @@ async function authorizeSession(authCode: string | null): Promise<boolean> {
 function clearSession(): void {
   clearAuthTokens()
   clearDeviceSession()
+  App.onUserLogout()
 }
 
 export function useDeviceSession(): DeviceSessionContextValue {

@@ -11,9 +11,8 @@ import { useLanguagePair } from '../../context/LanguagePairProvider'
 import { useAccount } from '../../context/AccountProvider'
 import type { TranslationKey } from '../../i18n/types'
 import type { ItemSchemaEditorState, LevelRangeDraft, SchemaFieldUiType } from '../../types/program'
+import { App } from '../../app/App'
 import {
-  AI_VOCAB_MAX_WORD_COUNT,
-  AI_VOCAB_MIN_WORD_COUNT,
   parseWordCountInput,
   validateWordCountInput,
 } from '../../utils/aiVocabWordCount'
@@ -83,7 +82,7 @@ export function CreateProgramFromParagraphPage() {
   const programId = useMemo(() => slugProgramId(name), [name])
   const estimatedCredits = useMemo(() => {
     const parsed = parseWordCountInput(wordCountText)
-    if (parsed === null || parsed < AI_VOCAB_MIN_WORD_COUNT) {
+    if (parsed === null || parsed < App.get().itemMinCount()) {
       return null
     }
     return estimateVocabJobCredits(parsed)
@@ -139,7 +138,7 @@ export function CreateProgramFromParagraphPage() {
     setLiveProgress(null)
 
     const payload = toProductCreatePayloadString(itemSchema, levels, [])
-    const job = buildVocabJob('fromParagraph', paragraph, wordCount ?? AI_VOCAB_MIN_WORD_COUNT)
+    const job = buildVocabJob('fromParagraph', paragraph, wordCount ?? App.get().itemMinCount())
 
     try {
       const account = await getAccount()
@@ -263,8 +262,8 @@ export function CreateProgramFromParagraphPage() {
           <input
             id="ai-paragraph-word-count"
             type="number"
-            min={AI_VOCAB_MIN_WORD_COUNT}
-            max={AI_VOCAB_MAX_WORD_COUNT}
+            min={App.get().itemMinCount()}
+            max={App.get().itemMaxCount()}
             step={1}
             inputMode="numeric"
             value={wordCountText}
@@ -280,8 +279,8 @@ export function CreateProgramFromParagraphPage() {
           {wordCountError && <p className="mt-2 text-sm text-warning">{wordCountError}</p>}
           <p className="mt-1 text-xs text-text-muted">
             {t('createAiTitle.setup.wordCountHint', {
-              min: AI_VOCAB_MIN_WORD_COUNT,
-              max: AI_VOCAB_MAX_WORD_COUNT,
+              min: App.get().itemMinCount(),
+              max: App.get().itemMaxCount(),
             })}
           </p>
           {estimatedCredits != null && (

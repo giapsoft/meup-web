@@ -1,6 +1,6 @@
 # API ↔ Web UI — tra cứu tiến độ
 
-So sánh `meup-api` (`../meup-api`) với `meup-web`. Cập nhật: 2026-07-01.
+So sánh `meup-api` (`../meup-api`) với `meup-web`. Cập nhật: 2026-07-05.
 
 ## Chú thích trạng thái
 
@@ -83,11 +83,32 @@ So sánh `meup-api` (`../meup-api`) với `meup-web`. Cập nhật: 2026-07-01.
 
 ---
 
+## Web config — `/api/web-config`
+
+| Method | Path | Web UI | Ghi chú |
+|--------|------|--------|---------|
+| GET | `/api/web-config` | ✅ | `src/app/App.ts` + `src/api/webConfig.ts` — cache giá/limits/defaultConfig |
+
+---
+
+## Product create media (instant) — `/api/product-create/*`
+
+| Method | Path | Web UI | Ghi chú |
+|--------|------|--------|---------|
+| POST | `/api/product-create/generate-audio` | ❌ | Phase 5 — `MediaPickerDialog` |
+| POST | `/api/product-create/generate-image` | ❌ | Phase 5 |
+| POST | `/api/product-create/generate-description` | ❌ | Phase 3 — CustomConfig step 1 |
+| POST | `/api/product-create/upload-audio` | ❌ | Phase 5 |
+| POST | `/api/product-create/upload-image` | ❌ | Phase 5 |
+| POST | `/api/product-create/cancel-manual` | ❌ | Phase 5 — cleanup staging |
+
+---
+
 ## Product create — `/api/product-create`
 
 | Method | Path | Web UI | Ghi chú |
 |--------|------|--------|---------|
-| POST | `/api/product-create` | ✅ | Wizard + AI create pages |
+| POST | `/api/product-create` | ⚠️ | Wizard + AI pages — **legacy body** (`jobs[]`); v2 client Phase 2 |
 | GET | `/api/product-create` | ✅ | `ProductsPage` tab Requests |
 | GET | `/api/product-create/{requestId}/progress` | ✅ | `ProductsPage` — refresh progress |
 | POST | `/api/product-create/{requestId}/jobs/{jobId}/retry` | ❌ | **#3** — cần `jobId`; list/progress API không trả danh sách job |
@@ -128,8 +149,8 @@ So sánh `meup-api` (`../meup-api`) với `meup-web`. Cập nhật: 2026-07-01.
 
 ## Tóm tắt
 
-- **Đã có UI:** auth, redeem QR, product marketplace (owned/purchased/shared/catalog/purchase/share/settings/edit/export/draft), product-create (tạo + list + progress).
-- **Thiếu UI (web, còn làm):** retry job (#3).
+- **Đã có UI:** auth, redeem QR, web-config cache, product marketplace (owned/purchased/shared/catalog/purchase/share/settings/edit/export/draft), product-create list + progress (create body v1).
+- **Thiếu UI (web, còn làm):** product-create v2 body, instant media endpoints, retry job (#3).
 - **Admin UI:** `/admin` (gate) → `/admin/panel` (3 tab).
 - **Bỏ qua (web):** restore-version, package-link/download.
 - **Không cần UI web:** device handshake, payment webhook, health.

@@ -1,7 +1,5 @@
 import type { TranslationKey } from '../i18n/types'
-
-export const AI_VOCAB_MIN_WORD_COUNT = 20
-export const AI_VOCAB_MAX_WORD_COUNT = 1000
+import { App } from '../app/App'
 
 export function parseWordCountInput(text: string): number | null {
   const trimmed = text.trim()
@@ -19,20 +17,22 @@ export function validateWordCountInput(
   text: string,
   t: (key: TranslationKey, params?: { min?: number; max?: number }) => string,
 ): { ok: true; value: number } | { ok: false; message: string } {
+  const min = App.get().itemMinCount()
+  const max = App.get().itemMaxCount()
   const n = parseWordCountInput(text)
   if (n === null) {
     return { ok: false, message: t('createAiTitle.validation.wordCountRequired') }
   }
-  if (n < AI_VOCAB_MIN_WORD_COUNT) {
+  if (n < min) {
     return {
       ok: false,
-      message: t('createAiTitle.validation.wordCountMin', { min: AI_VOCAB_MIN_WORD_COUNT }),
+      message: t('createAiTitle.validation.wordCountMin', { min }),
     }
   }
-  if (n > AI_VOCAB_MAX_WORD_COUNT) {
+  if (n > max) {
     return {
       ok: false,
-      message: t('createAiTitle.validation.wordCountMax', { max: AI_VOCAB_MAX_WORD_COUNT }),
+      message: t('createAiTitle.validation.wordCountMax', { max }),
     }
   }
   return { ok: true, value: n }
