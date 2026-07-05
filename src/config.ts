@@ -5,13 +5,13 @@ function resolveApiBaseUrl(): string {
     return fromEnv.trim().replace(/\/+$/, '')
   }
 
-  // Dev: gọi cùng origin (5173), Vite proxy `/api` → meup-api trên máy dev.
-  // Tránh gọi thẳng :8080 từ điện thoại (firewall/CORS) và tránh localhost trên thiết bị khác.
+  // Dev: gọi cùng origin (8082), Vite proxy `/api` → meup-api trên máy dev.
+  // Tránh gọi thẳng :8082 từ điện thoại (firewall/CORS) và tránh localhost trên thiết bị khác.
   if (import.meta.env.DEV && typeof window !== 'undefined') {
     return ''
   }
 
-  return 'http://localhost:8080'
+  return 'http://localhost:8082'
 }
 
 export const API_BASE_URL = resolveApiBaseUrl()
