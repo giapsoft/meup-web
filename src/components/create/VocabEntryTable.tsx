@@ -51,6 +51,89 @@ type MediaAttachButtonProps = {
   t: VocabEntryTableProps['t']
 }
 
+function MediaIcon({ kind, attached }: { kind: 'audio' | 'image'; attached: boolean }) {
+  const className = 'h-[18px] w-[18px] shrink-0'
+  if (kind === 'audio') {
+    if (attached) {
+      return (
+        <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M11 5 6 9H3v6h3l5 4V5z"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M15.5 8.5a4.5 4.5 0 0 1 0 7M18.5 5.5a8.5 8.5 0 0 1 0 13"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+          />
+        </svg>
+      )
+    }
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" strokeWidth="1.75" />
+        <path
+          d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+        />
+        <path d="M19 5v6M16 8h6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      </svg>
+    )
+  }
+
+  if (attached) {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.75" />
+        <circle cx="8.5" cy="10" r="1.75" fill="currentColor" />
+        <path
+          d="m3 16 5.5-5.5L14 16"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    )
+  }
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.75" />
+      <circle cx="8.5" cy="10" r="1.75" stroke="currentColor" strokeWidth="1.75" />
+      <path
+        d="m3 16 5.5-5.5L14 16"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M19 5v6M16 8h6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function PlayPauseIcon({ playing }: { playing: boolean }) {
+  const className = 'h-[18px] w-[18px] shrink-0'
+  if (playing) {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <rect x="6" y="5" width="4" height="14" rx="1" />
+        <rect x="14" y="5" width="4" height="14" rx="1" />
+      </svg>
+    )
+  }
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M8 5.5v13l11-6.5-11-6.5z" />
+    </svg>
+  )
+}
+
 function MediaAttachButton({ slot, item, onOpen, t }: MediaAttachButtonProps) {
   const valueKey = mediaValueKey(slot)
   const staged = getStagedMedia(item, valueKey)
@@ -73,14 +156,8 @@ function MediaAttachButton({ slot, item, onOpen, t }: MediaAttachButtonProps) {
     >
       {staged?.previewUrl && slot.kind === 'image' ? (
         <img src={staged.previewUrl} alt="" className="h-6 w-6 rounded object-cover" />
-      ) : hasMedia && slot.kind === 'audio' ? (
-        '♪'
-      ) : hasMedia && slot.kind === 'image' ? (
-        '🖼'
-      ) : slot.kind === 'image' ? (
-        '+🖼'
       ) : (
-        '+♪'
+        <MediaIcon kind={slot.kind} attached={hasMedia} />
       )}
     </button>
   )
@@ -258,7 +335,7 @@ export function VocabEntryTable({
                                     : t('createProgram.stepVocab.mediaPlay')
                                 }
                               >
-                                {isPlaying ? '⏸' : '▶'}
+                                <PlayPauseIcon playing={isPlaying} />
                               </button>
                             )}
                           </>
