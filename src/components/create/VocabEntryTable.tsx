@@ -15,6 +15,8 @@ import {
   mediaValueKey,
 } from '../../utils/manualMedia'
 import { mediaSlots, type MediaSlot } from '../../utils/itemSchemaLayout'
+import { resolveMediaPlayUrl } from '../../utils/mediaPreviewCache'
+import { isStoredMediaRef } from '../../utils/storedMediaRef'
 import { VocabCsvImportBar } from '../../pages/create-program/VocabCsvImportBar'
 import { MediaPickerDialog } from './MediaPickerDialog'
 
@@ -40,8 +42,9 @@ function hasAttachedMedia(item: VocabItemDraft, valueKey: string): boolean {
   return Boolean(getStagedMedia(item, valueKey)) || Boolean(item.values[valueKey]?.trim())
 }
 
-function audioPreviewUrl(item: VocabItemDraft, textAttrKey: string): string | undefined {
-  return getStagedMedia(item, audioMediaValueKey(textAttrKey))?.previewUrl
+function mediaRefForSlot(item: VocabItemDraft, valueKey: string): string | undefined {
+  const staged = getStagedMedia(item, valueKey)
+  return staged?.objectKey ?? (item.values[valueKey]?.trim() || undefined)
 }
 
 type MediaAttachButtonProps = {
@@ -134,10 +137,51 @@ function PlayPauseIcon({ playing }: { playing: boolean }) {
   )
 }
 
+function MediaImageThumb({ previewUrl }: { previewUrl: string }) {
+  return <img src={previewUrl} alt="" className="h-6 w-6 rounded object-cover" />
+}
+
 function MediaAttachButton({ slot, item, onOpen, t }: MediaAttachButtonProps) {
   const valueKey = mediaValueKey(slot)
   const staged = getStagedMedia(item, valueKey)
   const hasMedia = hasAttachedMedia(item, valueKey)
+  const mediaRef = mediaRefForSlot(item, valueKey)
+  const [lazyPreviewUrl, setLazyPreviewUrl] = useState<string | undefined>(
+    staged?.previewUrl,
+  )
+
+  useEffect(() => {
+    if (slot.kind !== 'image' || !hasMedia) {
+      setLazyPreviewUrl(staged?.previewUrl)
+      return
+    }
+    if (staged?.previewUrl) {
+      setLazyPreviewUrl(staged.previewUrl)
+      return
+    }
+    if (!mediaRef || !isStoredMediaRef(mediaRef)) {
+      setLazyPreviewUrl(undefined)
+      return
+    }
+    let cancelled = false
+    void resolveMediaPlayUrl(mediaRef)
+      .then((url) => {
+        if (!cancelled) {
+          setLazyPreviewUrl(url)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setLazyPreviewUrl(undefined)
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [slot.kind, hasMedia, staged?.previewUrl, mediaRef])
+
+  const imagePreviewUrl = slot.kind === 'image' ? lazyPreviewUrl : undefined
+
   return (
     <button
       type="button"
@@ -154,8 +198,8 @@ function MediaAttachButton({ slot, item, onOpen, t }: MediaAttachButtonProps) {
         slot.kind === 'image' ? t('createManual.vocab.addImage') : t('createManual.vocab.addAudio')
       }
     >
-      {staged?.previewUrl && slot.kind === 'image' ? (
-        <img src={staged.previewUrl} alt="" className="h-6 w-6 rounded object-cover" />
+      {imagePreviewUrl ? (
+        <MediaImageThumb previewUrl={imagePreviewUrl} />
       ) : (
         <MediaIcon kind={slot.kind} attached={hasMedia} />
       )}
@@ -235,6 +279,32 @@ export function VocabEntryTable({
     })
   }
 
+  async function handleAudioPlay(
+    playKey: string,
+    item: VocabItemDraft,
+    audioValueKey: string,
+  ) {
+    if (playingAudioKey === playKey && audioRef.current && !audioRef.current.paused) {
+      stopAudioPlayback()
+      return
+    }
+    const staged = getStagedMedia(item, audioValueKey)
+    if (staged?.previewUrl) {
+      toggleAudioPlayback(playKey, staged.previewUrl)
+      return
+    }
+    const ref = mediaRefForSlot(item, audioValueKey)
+    if (!ref) {
+      return
+    }
+    try {
+      const previewUrl = await resolveMediaPlayUrl(ref)
+      toggleAudioPlayback(playKey, previewUrl)
+    } catch {
+      stopAudioPlayback()
+    }
+  }
+
   function updateCell(itemId: string, key: string, value: string) {
     onItemsChange(updateVocabItemValue(items, itemId, key, value))
   }
@@ -297,7 +367,6 @@ export function VocabEntryTable({
                   const audioSlot = audioSlotByTextKey.get(attr.key)
                   const audioValueKey = audioSlot ? audioMediaValueKey(attr.key) : ''
                   const hasAudio = audioSlot ? hasAttachedMedia(item, audioValueKey) : false
-                  const previewUrl = audioSlot ? audioPreviewUrl(item, attr.key) : undefined
                   const playKey = audioSlot ? `${item.id}:${audioValueKey}` : ''
                   const isPlaying = playingAudioKey === playKey
 
@@ -319,10 +388,10 @@ export function VocabEntryTable({
                               onOpen={() => openMediaPicker(item, audioSlot)}
                               t={t}
                             />
-                            {hasAudio && previewUrl && (
+                            {hasAudio && (
                               <button
                                 type="button"
-                                onClick={() => toggleAudioPlayback(playKey, previewUrl)}
+                                onClick={() => void handleAudioPlay(playKey, item, audioValueKey)}
                                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border text-xs text-text-muted hover:border-accent hover:text-accent"
                                 aria-label={
                                   isPlaying

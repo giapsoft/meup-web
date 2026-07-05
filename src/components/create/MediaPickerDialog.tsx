@@ -8,6 +8,7 @@ import {
 } from '../../api/productCreateMedia'
 import type { MessageParams, TranslationKey } from '../../i18n/types'
 import type { MediaSlot } from '../../utils/itemSchemaLayout'
+import { resolveMediaPlayUrl } from '../../utils/mediaPreviewCache'
 import { acceptMimeForMediaSlot } from '../../utils/vocabMedia'
 import {
   WIZARD_ACTION_PRIMARY,
@@ -64,6 +65,9 @@ export function MediaPickerDialog({
   const [applying, setApplying] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [resolvedCurrentPreview, setResolvedCurrentPreview] = useState<string | undefined>(
+    currentPreviewUrl,
+  )
 
   useEffect(() => {
     if (!open) {
@@ -76,6 +80,37 @@ export function MediaPickerDialog({
     setApplying(false)
     setGenerating(false)
   }, [open, slot.key])
+
+  useEffect(() => {
+    if (!open) {
+      setResolvedCurrentPreview(undefined)
+      return
+    }
+    if (currentPreviewUrl) {
+      setResolvedCurrentPreview(currentPreviewUrl)
+      return
+    }
+    const ref = currentObjectKey?.trim()
+    if (!ref) {
+      setResolvedCurrentPreview(undefined)
+      return
+    }
+    let cancelled = false
+    void resolveMediaPlayUrl(ref)
+      .then((url) => {
+        if (!cancelled) {
+          setResolvedCurrentPreview(url)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setResolvedCurrentPreview(undefined)
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [open, currentPreviewUrl, currentObjectKey])
 
   useEffect(() => {
     return () => revokeDraftPreview(draft)
@@ -234,11 +269,11 @@ export function MediaPickerDialog({
               {t('createManual.mediaPicker.current')}
             </p>
             <div className="mt-2 flex min-h-[140px] items-center justify-center rounded-lg bg-surface-card">
-              {currentPreviewUrl ? (
+              {resolvedCurrentPreview ? (
                 slot.kind === 'image' ? (
-                  <img src={currentPreviewUrl} alt="" className="max-h-36 max-w-full rounded object-contain" />
+                  <img src={resolvedCurrentPreview} alt="" className="max-h-36 max-w-full rounded object-contain" />
                 ) : (
-                  <audio controls src={currentPreviewUrl} className="w-full max-w-xs" />
+                  <audio controls src={resolvedCurrentPreview} className="w-full max-w-xs" />
                 )
               ) : (
                 <p className="text-sm text-text-muted">{t('createManual.mediaPicker.currentEmpty')}</p>

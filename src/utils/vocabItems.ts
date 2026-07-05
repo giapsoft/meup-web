@@ -1,7 +1,14 @@
 import type { ItemSchema, LevelRangeDraft, VocabItemDraft } from '../types/program'
+import { IMAGE_MEDIA_KEY } from '../types/program'
 import { randomUUID } from './id'
+import {
+  audioLayoutIndexForKey,
+  imageLayoutIndex,
+  rowLength,
+  textAudioAttrs,
+} from './itemSchemaLayout'
+import { audioMediaValueKey } from './manualMedia'
 import { revokeVocabItemMedia } from './vocabMedia'
-import { rowLength } from './itemSchemaLayout'
 
 export function textAttrs(schema: ItemSchema) {
   return schema.attrs
@@ -84,15 +91,47 @@ export function toCompactItemRow(schema: ItemSchema, item: VocabItemDraft): stri
     const attr = schema.attrs[i]
     row[i] = (item.values[attr.key] ?? '').trim()
   }
+  for (const attr of textAudioAttrs(schema)) {
+    const audioIdx = audioLayoutIndexForKey(schema, attr.key)
+    const ref = (item.values[audioMediaValueKey(attr.key)] ?? '').trim()
+    if (audioIdx >= 0 && ref) {
+      row[audioIdx] = ref
+    }
+  }
+  if (schema.hasImage) {
+    const imgIdx = imageLayoutIndex(schema)
+    const ref = (item.values[IMAGE_MEDIA_KEY] ?? '').trim()
+    if (imgIdx >= 0 && ref) {
+      row[imgIdx] = ref
+    }
+  }
   return row
 }
 
-/** Map one published compact item row into wizard text values (text columns only). */
+/** Map one published compact item row into editor values (text + media refs). */
 export function fromCompactItemRow(schema: ItemSchema, row: string[]): Record<string, string> {
   const values: Record<string, string> = {}
   for (let i = 0; i < schema.attrs.length; i++) {
     const attr = schema.attrs[i]
     values[attr.key] = (row[i] ?? '').trim()
+  }
+  for (const attr of textAudioAttrs(schema)) {
+    const audioIdx = audioLayoutIndexForKey(schema, attr.key)
+    if (audioIdx >= 0) {
+      const ref = (row[audioIdx] ?? '').trim()
+      if (ref) {
+        values[audioMediaValueKey(attr.key)] = ref
+      }
+    }
+  }
+  if (schema.hasImage) {
+    const imgIdx = imageLayoutIndex(schema)
+    if (imgIdx >= 0) {
+      const ref = (row[imgIdx] ?? '').trim()
+      if (ref) {
+        values[IMAGE_MEDIA_KEY] = ref
+      }
+    }
   }
   return values
 }
