@@ -550,6 +550,7 @@
   "createProgram.stepVocab.mediaReplace": "Replace",
   "createProgram.stepVocab.mediaClear": "Remove",
   "createProgram.stepVocab.mediaPlay": "Play",
+  "createProgram.stepVocab.mediaPause": "Pause",
   "createProgram.stepVocab.mediaPreview": "Preview",
   "createProgram.stepVocab.mediaPreviewClose": "Close",
   "createProgram.stepDone.levelsTitle": "Levels & faces",

@@ -552,6 +552,7 @@ export type TranslationKey =
   | 'createProgram.stepVocab.mediaReplace'
   | 'createProgram.stepVocab.mediaClear'
   | 'createProgram.stepVocab.mediaPlay'
+  | 'createProgram.stepVocab.mediaPause'
   | 'createProgram.stepVocab.mediaPreview'
   | 'createProgram.stepVocab.mediaPreviewClose'
   | 'createProgram.stepDone.levelsTitle'

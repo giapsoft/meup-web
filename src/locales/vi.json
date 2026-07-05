@@ -550,6 +550,7 @@
   "createProgram.stepVocab.mediaReplace": "Đổi file",
   "createProgram.stepVocab.mediaClear": "Xóa",
   "createProgram.stepVocab.mediaPlay": "Nghe",
+  "createProgram.stepVocab.mediaPause": "Dừng",
   "createProgram.stepVocab.mediaPreview": "Xem",
   "createProgram.stepVocab.mediaPreviewClose": "Đóng",
   "createProgram.stepDone.levelsTitle": "Level & mặt thẻ",
