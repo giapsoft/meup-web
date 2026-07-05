@@ -1,5 +1,6 @@
 import {
   API_ADMIN_CREDIT_PACKAGES,
+  API_ADMIN_CREDITS_ADJUST,
   API_ADMIN_SELLER_BALANCES,
   API_ADMIN_SELLER_RECORD,
 } from '../config'
@@ -50,6 +51,24 @@ export type RecordSellerPayoutResult = {
   detail: unknown
 }
 
+export type AdminCreditAdjustBody = {
+  userIds?: string[]
+  emails?: string[]
+  deviceOrders?: number[]
+  direction: 'increase' | 'decrease'
+  creditAmount: number
+  note: string
+}
+
+export type AdminCreditAdjustResult = {
+  id: string
+  userId: string
+  email: string
+  delta: number
+  newBalance: number
+  note: string
+}
+
 export async function listAdminSellerBalances(secret: string): Promise<SellerBalanceDto[]> {
   const data = await adminRequest<{ sellers: SellerBalanceDto[] }>(secret, API_ADMIN_SELLER_BALANCES)
   return data.sellers ?? []
@@ -81,4 +100,16 @@ export async function syncAdminCreditPackages(
     body: { packages },
   })
   return data.packages ?? []
+}
+
+export async function adjustAdminUserCredits(
+  secret: string,
+  body: AdminCreditAdjustBody,
+): Promise<AdminCreditAdjustResult[]> {
+  const data = await adminRequest<{ adjustments: AdminCreditAdjustResult[] }>(
+    secret,
+    API_ADMIN_CREDITS_ADJUST,
+    { method: 'POST', body },
+  )
+  return data.adjustments ?? []
 }

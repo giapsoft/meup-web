@@ -2,18 +2,25 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { ApiError } from '../../api/client'
 import {
+  adjustAdminUserCredits,
   listAdminSellerBalances,
   recordAdminSellerPayouts,
   syncAdminCreditPackages,
+  type AdminCreditAdjustResult,
   type CreditPackageInput,
   type RecordSellerPayoutEntry,
   type SellerBalanceDto,
 } from '../../api/admin'
+import {
+  AdminUserTargetFields,
+  parseAdminUserTargets,
+  type AdminUserTargetDraft,
+} from '../../components/admin/AdminUserTargetFields'
 import { useLanguagePair } from '../../context/LanguagePairProvider'
 import type { TranslationKey } from '../../i18n/types'
 import { clearAdminSecret, loadAdminSecret } from '../../utils/adminSecretStorage'
 
-type Tab = 'balances' | 'payout' | 'packages'
+type Tab = 'balances' | 'payout' | 'packages' | 'credits'
 
 type LoadState =
   | { phase: 'loading' }
@@ -32,6 +39,7 @@ const TAB_KEYS: Record<Tab, TranslationKey> = {
   balances: 'admin.tab.balances',
   payout: 'admin.tab.payout',
   packages: 'admin.tab.packages',
+  credits: 'admin.tab.credits',
 }
 
 const EMPTY_PACKAGE: CreditPackageInput = {
@@ -70,6 +78,17 @@ export function AdminPanelPage() {
   const [syncBusy, setSyncBusy] = useState(false)
   const [syncMessage, setSyncMessage] = useState<string | null>(null)
   const [lastSyncAt, setLastSyncAt] = useState<string | null>(null)
+  const [creditTarget, setCreditTarget] = useState<AdminUserTargetDraft>({
+    userId: '',
+    email: '',
+    deviceOrderInput: '',
+  })
+  const [creditAmount, setCreditAmount] = useState('')
+  const [creditDirection, setCreditDirection] = useState<'increase' | 'decrease'>('increase')
+  const [creditNote, setCreditNote] = useState('')
+  const [creditBusy, setCreditBusy] = useState(false)
+  const [creditMessage, setCreditMessage] = useState<string | null>(null)
+  const [creditResults, setCreditResults] = useState<AdminCreditAdjustResult[]>([])
 
   const locale = uiLocale === 'vi' ? 'vi-VN' : uiLocale === 'ja' ? 'ja-JP' : 'en-US'
 
@@ -215,6 +234,57 @@ export function AdminPanelPage() {
     }
   }, [syncBusy, packages, secret, t, navigate])
 
+  const handleAdjustCredits = useCallback(async () => {
+    if (creditBusy || !secret) {
+      return
+    }
+    const parsedTargets = parseAdminUserTargets(creditTarget, t)
+    if (!parsedTargets.ok) {
+      setCreditMessage(parsedTargets.message)
+      return
+    }
+    const amount = Number.parseInt(creditAmount.trim(), 10)
+    const note = creditNote.trim()
+    if (!Number.isFinite(amount) || amount <= 0 || !note) {
+      setCreditMessage(t('admin.credits.validation'))
+      return
+    }
+
+    setCreditBusy(true)
+    setCreditMessage(null)
+    setCreditResults([])
+    try {
+      const adjustments = await adjustAdminUserCredits(secret, {
+        ...parsedTargets.body,
+        direction: creditDirection,
+        creditAmount: amount,
+        note,
+      })
+      setCreditResults(adjustments)
+      setCreditMessage(t('admin.credits.success', { count: adjustments.length }))
+      setCreditTarget({ userId: '', email: '', deviceOrderInput: '' })
+      setCreditAmount('')
+      setCreditNote('')
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        clearAdminSecret()
+        navigate('/admin', { replace: true })
+        return
+      }
+      if (err instanceof ApiError) {
+        const codeKey = {
+          user_not_found: 'admin.credits.error.user_not_found',
+          insufficient_credits: 'admin.credits.error.insufficient_credits',
+        }[err.code] as TranslationKey | undefined
+        setCreditMessage(codeKey ? t(codeKey) : t('admin.errorCode', { code: err.code }))
+        return
+      }
+      setCreditMessage(t('admin.errorGeneric'))
+    } finally {
+      setCreditBusy(false)
+    }
+  }, [creditBusy, creditTarget, creditAmount, creditDirection, creditNote, secret, t, navigate])
+
   const packageRows = useMemo(
     () =>
       packages.map((pkg, index) => (
@@ -329,7 +399,7 @@ export function AdminPanelPage() {
           role="tablist"
           aria-label={t('admin.tabsLabel')}
         >
-          {(['balances', 'payout', 'packages'] as const).map((key) => (
+          {(['balances', 'payout', 'packages', 'credits'] as const).map((key) => (
             <button
               key={key}
               type="button"
@@ -535,6 +605,91 @@ export function AdminPanelPage() {
                   })}
                 </p>
               ) : null}
+            </div>
+          )}
+
+          {tab === 'credits' && (
+            <div className="max-w-xl rounded-2xl border border-border bg-surface-card p-4 sm:p-5">
+              <h2 className="text-base font-semibold text-text">{t('admin.credits.title')}</h2>
+              <p className="mt-1 text-sm text-text-muted">{t('admin.credits.hint')}</p>
+              <div className="mt-4 space-y-4">
+                <AdminUserTargetFields
+                  draft={creditTarget}
+                  onChange={setCreditTarget}
+                  disabled={creditBusy}
+                  idPrefix="admin-credits"
+                  t={t}
+                />
+                <label className="block text-sm">
+                  <span className="mb-1 block font-medium text-text">{t('admin.payout.direction')}</span>
+                  <select
+                    value={creditDirection}
+                    onChange={(e) =>
+                      setCreditDirection(e.target.value as 'increase' | 'decrease')
+                    }
+                    disabled={creditBusy}
+                    className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm disabled:opacity-60"
+                  >
+                    <option value="increase">{t('admin.payout.directionIncrease')}</option>
+                    <option value="decrease">{t('admin.payout.directionDecrease')}</option>
+                  </select>
+                </label>
+                <label className="block text-sm">
+                  <span className="mb-1 block font-medium text-text">{t('admin.credits.amount')}</span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={creditAmount}
+                    onChange={(e) => setCreditAmount(e.target.value)}
+                    disabled={creditBusy}
+                    className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm tabular-nums disabled:opacity-60"
+                  />
+                </label>
+                <label className="block text-sm">
+                  <span className="mb-1 block font-medium text-text">{t('admin.credits.note')}</span>
+                  <textarea
+                    value={creditNote}
+                    onChange={(e) => setCreditNote(e.target.value)}
+                    disabled={creditBusy}
+                    rows={3}
+                    placeholder={t('admin.credits.notePlaceholder')}
+                    className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm disabled:opacity-60"
+                  />
+                </label>
+              </div>
+              {creditMessage ? (
+                <p
+                  role="status"
+                  className={`mt-3 text-sm ${creditResults.length > 0 ? 'text-credit' : 'text-warning'}`}
+                >
+                  {creditMessage}
+                </p>
+              ) : null}
+              {creditResults.length > 0 ? (
+                <ul className="mt-3 space-y-2 text-sm text-text-muted">
+                  {creditResults.map((row) => {
+                    const label = row.email.trim() || row.userId
+                    const deltaLabel = row.delta > 0 ? `+${row.delta}` : String(row.delta)
+                    return (
+                      <li key={row.id} className="rounded-lg border border-border bg-surface px-3 py-2">
+                        {t('admin.credits.resultLine', {
+                          label,
+                          delta: deltaLabel,
+                          balance: row.newBalance,
+                        })}
+                      </li>
+                    )
+                  })}
+                </ul>
+              ) : null}
+              <button
+                type="button"
+                disabled={creditBusy}
+                onClick={() => void handleAdjustCredits()}
+                className="mt-4 rounded-xl border border-accent/40 bg-accent-soft px-4 py-2.5 text-sm font-medium text-accent transition hover:border-accent hover:bg-accent/20 disabled:opacity-60"
+              >
+                {creditBusy ? t('admin.credits.submitting') : t('admin.credits.submit')}
+              </button>
             </div>
           )}
         </section>
