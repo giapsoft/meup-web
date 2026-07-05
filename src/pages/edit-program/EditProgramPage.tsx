@@ -147,6 +147,12 @@ export function EditProgramPage() {
           setDefaultConfig(defaultSnapshot)
 
           if (parsed.ok) {
+            console.log('[editProgram] load source: saved draft (import-package skipped)', {
+              productId,
+              vocabRowCount: parsed.draft.vocabItems.length,
+              firstRowValues: parsed.draft.vocabItems[0]?.values,
+              firstRowServerMedia: parsed.draft.vocabItems[0]?.serverMedia,
+            })
             setTitle(parsed.draft.title || meta.name)
             setDescription(parsed.draft.description ?? meta.description ?? '')
             setProgramConfig(structuredClone(parsed.draft.programConfig))
@@ -155,6 +161,14 @@ export function EditProgramPage() {
             let loaded = false
             try {
               const imported = await getProductImportPackage(productId!)
+              console.log('[editProgram] import-package raw response:', imported)
+              console.log('[editProgram] import-package items (compact rows):', imported.tree.items)
+              if (imported.tree.items[0]) {
+                console.log('[editProgram] first compact row:', imported.tree.items[0], {
+                  slotCount: imported.tree.items[0].length,
+                  note: 'text slots = indices 0..attrs.length-1; audio/image follow schema layout',
+                })
+              }
               const fromPackage = importTreeToEditDraft(
                 imported.tree,
                 meta.name,
