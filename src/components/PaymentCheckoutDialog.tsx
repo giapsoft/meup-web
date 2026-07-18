@@ -26,6 +26,13 @@ function formatVnd(amount: number, locale: string): string {
   }
 }
 
+function mapCheckoutError(err: unknown): TranslationKey {
+  const code = err instanceof ApiError ? err.code : ''
+  if (code === 'payment_bank_unconfigured') return 'credits.dialog.errorBank'
+  if (code === 'fake_payment_disabled') return 'credits.dialog.errorFake'
+  return 'credits.dialog.error'
+}
+
 export function PaymentCheckoutDialog({ package: pkg, onClose }: PaymentCheckoutDialogProps) {
   const { t, uiLocale } = useLanguagePair()
   const { setCreditBalance, refreshAccount } = useAccount()
@@ -67,7 +74,17 @@ export function PaymentCheckoutDialog({ package: pkg, onClose }: PaymentCheckout
     async function start() {
       setPhase('loading')
       try {
-        const created = await createCheckout({ packageId: pkg.id })
+        let created: CheckoutSessionDto
+        try {
+          created = await createCheckout({ packageId: pkg.id })
+        } catch (err) {
+          // Local/dev: bank env missing → fall back to fake instructor when allowed.
+          if (err instanceof ApiError && err.code === 'payment_bank_unconfigured') {
+            created = await createCheckout({ packageId: pkg.id, provider: 'fake' })
+          } else {
+            throw err
+          }
+        }
         if (cancelled) {
           return
         }
@@ -82,14 +99,7 @@ export function PaymentCheckoutDialog({ package: pkg, onClose }: PaymentCheckout
         if (cancelled) {
           return
         }
-        const code = err instanceof ApiError ? err.code : ''
-        const key: TranslationKey =
-          code === 'payment_bank_unconfigured'
-            ? 'credits.dialog.errorBank'
-            : code === 'fake_payment_disabled'
-              ? 'credits.dialog.errorFake'
-              : 'credits.dialog.error'
-        setErrorKey(key)
+        setErrorKey(mapCheckoutError(err))
         setPhase('error')
       }
     }
@@ -111,6 +121,11 @@ export function PaymentCheckoutDialog({ package: pkg, onClose }: PaymentCheckout
       if (pollAbortRef.current || !session) {
         return
       }
+      if (Date.parse(session.expiresAt) <= Date.now()) {
+        setErrorKey('credits.dialog.expired')
+        setPhase('error')
+        return
+      }
       try {
         const status = await getCheckout(session.checkoutId)
         if (pollAbortRef.current) {
@@ -122,7 +137,11 @@ export function PaymentCheckoutDialog({ package: pkg, onClose }: PaymentCheckout
           void refreshAccount()
           return
         }
-        if (status.status === 'expired' || status.status === 'cancelled') {
+        if (
+          status.status === 'expired' ||
+          status.status === 'cancelled' ||
+          Date.parse(status.expiresAt) <= Date.now()
+        ) {
           setErrorKey('credits.dialog.expired')
           setPhase('error')
           return
@@ -180,6 +199,8 @@ export function PaymentCheckoutDialog({ package: pkg, onClose }: PaymentCheckout
 
   const instructions = session?.instructions
   const isQr = instructions?.method === 'bank_transfer_qr'
+  const isFakeMethod = instructions?.method === 'none'
+  const showFakeButton = Boolean(session?.fakePaymentEnabled || isFakeMethod)
 
   return (
     <div className="fixed inset-0 z-[70]" role="presentation">
@@ -302,9 +323,11 @@ export function PaymentCheckoutDialog({ package: pkg, onClose }: PaymentCheckout
                 </dl>
               ) : null}
 
-              <p className="text-xs text-text-muted">{t('credits.dialog.waiting')}</p>
+              <p className="text-xs text-text-muted">
+                {isFakeMethod ? t('credits.dialog.waitingFake') : t('credits.dialog.waiting')}
+              </p>
 
-              {session.fakePaymentEnabled ? (
+              {showFakeButton ? (
                 <button
                   type="button"
                   disabled={fakeBusy}

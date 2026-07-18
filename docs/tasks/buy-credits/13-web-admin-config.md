@@ -22,9 +22,5 @@ UI Admin **riêng** để sửa gói tháng / năm (không bắt sửa JSON thô
 
 ## Done khi
 
-- [ ] Admin đổi giá/credits trên form → refresh `/credits` (user) thấy đúng (sau cache).
-- [ ] Không còn nút Sync full catalog kiểu cũ trên tab Packages.
-
-## Không làm
-
-Endpoint admin wrapper mới (dùng system-config API là đủ).
+- [x] Admin đổi giá/credits trên form → refresh `/credits` (user) thấy đúng (sau cache).
+- [x] Không còn nút Sync full catalog kiểu cũ trên tab Packages.

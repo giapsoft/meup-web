@@ -35,10 +35,17 @@ type CatalogCardProps = {
   product: CatalogProductDto
   purchasing: boolean
   purchaseError: string | null
+  purchaseErrorCode: string | null
   onPurchase: (productId: string) => void
 }
 
-function CatalogCard({ product, purchasing, purchaseError, onPurchase }: CatalogCardProps) {
+function CatalogCard({
+  product,
+  purchasing,
+  purchaseError,
+  purchaseErrorCode,
+  onPurchase,
+}: CatalogCardProps) {
   const { t } = useLanguagePair()
   const canUse = userCanUseCatalogProduct(product)
 
@@ -80,6 +87,14 @@ function CatalogCard({ product, purchasing, purchaseError, onPurchase }: Catalog
           {purchaseError ? (
             <p role="alert" className="mt-2 text-xs text-warning">
               {purchaseError}
+              {purchaseErrorCode === 'insufficient_credits' ? (
+                <>
+                  {' '}
+                  <Link to="/credits" className="font-medium text-accent underline">
+                    {t('explore.purchase.getCredits')}
+                  </Link>
+                </>
+              ) : null}
             </p>
           ) : null}
         </div>
@@ -97,6 +112,7 @@ export function ExplorePage() {
   const [totalPages, setTotalPages] = useState(1)
   const [purchasingId, setPurchasingId] = useState<string | null>(null)
   const [purchaseErrors, setPurchaseErrors] = useState<Record<string, string>>({})
+  const [purchaseErrorCodes, setPurchaseErrorCodes] = useState<Record<string, string>>({})
 
   const load = useCallback(async () => {
     setLoadState({ phase: 'loading' })
@@ -130,6 +146,11 @@ export function ExplorePage() {
         delete next[productId]
         return next
       })
+      setPurchaseErrorCodes((prev) => {
+        const next = { ...prev }
+        delete next[productId]
+        return next
+      })
       try {
         await purchaseProduct(productId)
         setProducts((prev) =>
@@ -141,6 +162,9 @@ export function ExplorePage() {
           ...prev,
           [productId]: purchaseErrorMessage(t, err),
         }))
+        if (err instanceof ApiError) {
+          setPurchaseErrorCodes((prev) => ({ ...prev, [productId]: err.code }))
+        }
       } finally {
         setPurchasingId(null)
       }
@@ -199,6 +223,7 @@ export function ExplorePage() {
                       product={product}
                       purchasing={purchasingId === product.productId}
                       purchaseError={purchaseErrors[product.productId] ?? null}
+                      purchaseErrorCode={purchaseErrorCodes[product.productId] ?? null}
                       onPurchase={(id) => void handlePurchase(id)}
                     />
                   </li>

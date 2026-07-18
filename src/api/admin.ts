@@ -1,5 +1,4 @@
 import {
-  API_ADMIN_CREDIT_PACKAGES,
   API_ADMIN_CREDITS_ADJUST,
   API_ADMIN_SELLER_BALANCES,
   API_ADMIN_SELLER_RECORD,
@@ -13,26 +12,6 @@ export type SellerBalanceDto = {
   earnedCredits: number
   totalSellerPayout: number
   payableCredits: number
-}
-
-/** Matches `PUT /api/admin/credit-packages` item (response includes timestamps). */
-export type CreditPackageDto = {
-  id: string
-  name: string
-  amount: number
-  term: string
-  monthCount: number
-  active: boolean
-  createdAt: string
-  updatedAt: string
-}
-
-export type CreditPackageInput = {
-  id: string
-  name: string
-  amount: number
-  term: string
-  monthCount: number
 }
 
 export type RecordSellerPayoutEntry = {
@@ -90,17 +69,6 @@ export async function recordAdminSellerPayouts(
     { method: 'POST', body: { entries } },
   )
   return data.records ?? []
-}
-
-export async function syncAdminCreditPackages(
-  secret: string,
-  packages: CreditPackageInput[],
-): Promise<CreditPackageDto[]> {
-  const data = await adminRequest<{ packages: CreditPackageDto[] }>(secret, API_ADMIN_CREDIT_PACKAGES, {
-    method: 'PUT',
-    body: { packages },
-  })
-  return data.packages ?? []
 }
 
 export async function adjustAdminUserCredits(

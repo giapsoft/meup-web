@@ -1,16 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { ApiError } from '../../api/client'
 import {
   adjustAdminUserCredits,
   listAdminSellerBalances,
   recordAdminSellerPayouts,
-  syncAdminCreditPackages,
   type AdminCreditAdjustResult,
-  type CreditPackageInput,
   type RecordSellerPayoutEntry,
   type SellerBalanceDto,
 } from '../../api/admin'
+import { AdminCreditPackagesPanel } from '../../components/admin/AdminCreditPackagesPanel'
 import {
   AdminUserTargetFields,
   parseAdminUserTargets,
@@ -42,14 +41,6 @@ const TAB_KEYS: Record<Tab, TranslationKey> = {
   credits: 'admin.tab.credits',
 }
 
-const EMPTY_PACKAGE: CreditPackageInput = {
-  id: '',
-  name: '',
-  amount: 1000,
-  term: 'MONTHLY',
-  monthCount: 1,
-}
-
 function parseDetailJson(raw: string): unknown | undefined {
   const trimmed = raw.trim()
   if (!trimmed) {
@@ -59,13 +50,12 @@ function parseDetailJson(raw: string): unknown | undefined {
 }
 
 export function AdminPanelPage() {
-  const { t, uiLocale } = useLanguagePair()
+  const { t } = useLanguagePair()
   const navigate = useNavigate()
   const secret = loadAdminSecret()
   const [tab, setTab] = useState<Tab>('balances')
   const [loadState, setLoadState] = useState<LoadState>({ phase: 'loading' })
   const [balances, setBalances] = useState<SellerBalanceDto[]>([])
-  const [packages, setPackages] = useState<CreditPackageInput[]>([])
   const [payoutDraft, setPayoutDraft] = useState<PayoutDraft>({
     userId: '',
     creditAmount: '',
@@ -75,9 +65,6 @@ export function AdminPanelPage() {
   })
   const [payoutBusy, setPayoutBusy] = useState(false)
   const [payoutMessage, setPayoutMessage] = useState<string | null>(null)
-  const [syncBusy, setSyncBusy] = useState(false)
-  const [syncMessage, setSyncMessage] = useState<string | null>(null)
-  const [lastSyncAt, setLastSyncAt] = useState<string | null>(null)
   const [creditTarget, setCreditTarget] = useState<AdminUserTargetDraft>({
     userId: '',
     email: '',
@@ -89,8 +76,6 @@ export function AdminPanelPage() {
   const [creditBusy, setCreditBusy] = useState(false)
   const [creditMessage, setCreditMessage] = useState<string | null>(null)
   const [creditResults, setCreditResults] = useState<AdminCreditAdjustResult[]>([])
-
-  const locale = uiLocale === 'vi' ? 'vi-VN' : uiLocale === 'ja' ? 'ja-JP' : 'en-US'
 
   const loadBalances = useCallback(async () => {
     if (!secret) {
@@ -186,54 +171,6 @@ export function AdminPanelPage() {
     }
   }, [payoutBusy, payoutDraft, secret, t, loadBalances, navigate])
 
-  const handleSyncPackages = useCallback(async () => {
-    if (syncBusy || !secret) {
-      return
-    }
-    for (const pkg of packages) {
-      if (!pkg.id.trim() || !pkg.name.trim() || pkg.amount <= 0 || pkg.monthCount <= 0) {
-        setSyncMessage(t('admin.packages.validation'))
-        return
-      }
-    }
-    setSyncBusy(true)
-    setSyncMessage(null)
-    try {
-      const synced = await syncAdminCreditPackages(
-        secret,
-        packages.map((pkg) => ({
-          id: pkg.id.trim(),
-          name: pkg.name.trim(),
-          amount: pkg.amount,
-          term: pkg.term.trim(),
-          monthCount: pkg.monthCount,
-        })),
-      )
-      setPackages(
-        synced.map((pkg) => ({
-          id: pkg.id,
-          name: pkg.name,
-          amount: pkg.amount,
-          term: pkg.term,
-          monthCount: pkg.monthCount,
-        })),
-      )
-      setSyncMessage(t('admin.packages.syncSuccess', { count: synced.length }))
-      setLastSyncAt(new Date().toISOString())
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 401) {
-        clearAdminSecret()
-        navigate('/admin', { replace: true })
-        return
-      }
-      setSyncMessage(
-        err instanceof ApiError ? t('admin.errorCode', { code: err.code }) : t('admin.errorGeneric'),
-      )
-    } finally {
-      setSyncBusy(false)
-    }
-  }, [syncBusy, packages, secret, t, navigate])
-
   const handleAdjustCredits = useCallback(async () => {
     if (creditBusy || !secret) {
       return
@@ -284,92 +221,6 @@ export function AdminPanelPage() {
       setCreditBusy(false)
     }
   }, [creditBusy, creditTarget, creditAmount, creditDirection, creditNote, secret, t, navigate])
-
-  const packageRows = useMemo(
-    () =>
-      packages.map((pkg, index) => (
-        <tr key={index} className="border-b border-border/60">
-          <td className="px-2 py-2">
-            <input
-              value={pkg.id}
-              onChange={(e) =>
-                setPackages((prev) =>
-                  prev.map((row, i) => (i === index ? { ...row, id: e.target.value } : row)),
-                )
-              }
-              className="w-full min-w-[7rem] rounded-lg border border-border bg-surface px-2 py-1.5 text-xs font-mono"
-            />
-          </td>
-          <td className="px-2 py-2">
-            <input
-              value={pkg.name}
-              onChange={(e) =>
-                setPackages((prev) =>
-                  prev.map((row, i) => (i === index ? { ...row, name: e.target.value } : row)),
-                )
-              }
-              className="w-full min-w-[10rem] rounded-lg border border-border bg-surface px-2 py-1.5 text-xs"
-            />
-          </td>
-          <td className="px-2 py-2">
-            <input
-              type="number"
-              min={1}
-              value={pkg.amount}
-              onChange={(e) =>
-                setPackages((prev) =>
-                  prev.map((row, i) =>
-                    i === index ? { ...row, amount: Number.parseInt(e.target.value, 10) || 0 } : row,
-                  ),
-                )
-              }
-              className="w-24 rounded-lg border border-border bg-surface px-2 py-1.5 text-xs tabular-nums"
-            />
-          </td>
-          <td className="px-2 py-2">
-            <select
-              value={pkg.term}
-              onChange={(e) =>
-                setPackages((prev) =>
-                  prev.map((row, i) => (i === index ? { ...row, term: e.target.value } : row)),
-                )
-              }
-              className="rounded-lg border border-border bg-surface px-2 py-1.5 text-xs"
-            >
-              <option value="MONTHLY">{t('admin.packages.termMonthly')}</option>
-              <option value="YEARLY">{t('admin.packages.termYearly')}</option>
-            </select>
-          </td>
-          <td className="px-2 py-2">
-            <input
-              type="number"
-              min={1}
-              value={pkg.monthCount}
-              onChange={(e) =>
-                setPackages((prev) =>
-                  prev.map((row, i) =>
-                    i === index
-                      ? { ...row, monthCount: Number.parseInt(e.target.value, 10) || 0 }
-                      : row,
-                  ),
-                )
-              }
-              className="w-16 rounded-lg border border-border bg-surface px-2 py-1.5 text-xs tabular-nums"
-            />
-          </td>
-          <td className="px-2 py-2">
-            <button
-              type="button"
-              onClick={() => setPackages((prev) => prev.filter((_, i) => i !== index))}
-              className="text-xs text-warning hover:underline"
-            >
-              {t('admin.packages.remove')}
-            </button>
-          </td>
-        </tr>
-      )),
-    [packages, t],
-  )
 
   if (!secret) {
     return <Navigate to="/admin" replace />
@@ -563,58 +414,7 @@ export function AdminPanelPage() {
             </div>
           )}
 
-          {tab === 'packages' && (
-            <div className="space-y-4">
-              <p className="text-sm text-text-muted">{t('admin.packages.hint')}</p>
-              <div className="overflow-x-auto rounded-2xl border border-border">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="bg-surface-raised text-xs text-text-muted">
-                    <tr>
-                      <th className="px-2 py-2 font-medium">{t('admin.packages.id')}</th>
-                      <th className="px-2 py-2 font-medium">{t('admin.packages.name')}</th>
-                      <th className="px-2 py-2 font-medium">{t('admin.packages.amount')}</th>
-                      <th className="px-2 py-2 font-medium">{t('admin.packages.term')}</th>
-                      <th className="px-2 py-2 font-medium">{t('admin.packages.monthCount')}</th>
-                      <th className="px-2 py-2 font-medium" />
-                    </tr>
-                  </thead>
-                  <tbody>{packageRows}</tbody>
-                </table>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPackages((prev) => [...prev, { ...EMPTY_PACKAGE }])}
-                  className="rounded-lg border border-border bg-surface-raised px-3 py-1.5 text-sm text-text"
-                >
-                  {t('admin.packages.add')}
-                </button>
-                <button
-                  type="button"
-                  disabled={syncBusy}
-                  onClick={() => void handleSyncPackages()}
-                  className="rounded-lg border border-accent/40 bg-accent-soft px-3 py-1.5 text-sm font-medium text-accent disabled:opacity-60"
-                >
-                  {syncBusy ? t('admin.packages.syncing') : t('admin.packages.sync')}
-                </button>
-              </div>
-              {syncMessage ? (
-                <p role="status" className="text-sm text-text-muted">
-                  {syncMessage}
-                </p>
-              ) : null}
-              {lastSyncAt ? (
-                <p className="text-xs text-text-muted">
-                  {t('admin.packages.lastSync', {
-                    when: new Intl.DateTimeFormat(locale, {
-                      dateStyle: 'medium',
-                      timeStyle: 'short',
-                    }).format(new Date(lastSyncAt)),
-                  })}
-                </p>
-              ) : null}
-            </div>
-          )}
+          {tab === 'packages' && <AdminCreditPackagesPanel secret={secret} />}
 
           {tab === 'credits' && (
             <div className="max-w-xl rounded-2xl border border-border bg-surface-card p-4 sm:p-5">

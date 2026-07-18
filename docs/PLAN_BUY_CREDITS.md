@@ -257,9 +257,9 @@ Q16 đã chốt **A**. Có thể bắt đầu task 01.
 - [x] Catalog = 2 key `system_config` (`CREDIT_PACKAGE_MONTHLY` / `_YEARLY`)  
 - [x] UX user + 2 gói + env bank  
 - [x] Tận dụng `Provider` registry + thêm `CheckoutInstructor`  
-- [x] Admin UI form riêng cho 2 gói (§8.1)  
+- [x] Admin UI form riêng cho 2 gói (§8.1) — task 13  
 - [x] **Q16 = A** (drop FK, lookup config)  
-- [ ] Task 01+ implementation  
+- [ ] Task 14 staging E2E  
 
 ---
 
