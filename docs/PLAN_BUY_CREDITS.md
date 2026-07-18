@@ -1,7 +1,7 @@
 # Kế hoạch: Mua / nạp credits (meup-api + meup-web)
 
-> **Trạng thái:** Draft — 2 key `system_config`: `CREDIT_PACKAGE_MONTHLY` / `CREDIT_PACKAGE_YEARLY`.  
-> **Ngày:** 2026-07-18  
+> **Trạng thái:** **Shipped (code)** — 2026-07-18. Staging SePay E2E thật: checklist task 14 (ops).  
+> **Catalog:** 2 key `system_config`: `CREDIT_PACKAGE_MONTHLY` / `CREDIT_PACKAGE_YEARLY`.  
 > **Phạm vi:** User nạp credits trên meup-web; v1 **bank-transfer QR** qua SePay (+ fake). Payment registry hiện có được tận dụng / mở rộng checkout.  
 > **Tham chiếu UX:** `remyset_dolphin` (CapyLala).  
 > **Không v1:** Stripe/MoMo implement, seller payout, đổi quy tắc trừ credit AI / Explore.
@@ -259,7 +259,8 @@ Q16 đã chốt **A**. Có thể bắt đầu task 01.
 - [x] Tận dụng `Provider` registry + thêm `CheckoutInstructor`  
 - [x] Admin UI form riêng cho 2 gói (§8.1) — task 13  
 - [x] **Q16 = A** (drop FK, lookup config)  
-- [ ] Task 14 staging E2E  
+- [x] Tasks 01–13 implementation  
+- [ ] Task 14 staging SePay E2E (≥1 CK thật) — xem checklist task file  
 
 ---
 

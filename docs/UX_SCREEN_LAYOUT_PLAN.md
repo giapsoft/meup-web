@@ -145,6 +145,7 @@ Tap Config → full-height drawer (steps)
 | `/products/new/manual` · `ai/title` · `ai/paragraph` · `ai/image` | Create forms | Form tạo + Config modal + Vocab (manual) |
 | `/products/:id/edit` | Edit | Metadata + Vocab table + Config + Publish |
 | `/explore` | Explore | Catalog mua bằng credits |
+| `/credits` | Buy credits | 2 gói + dialog QR / fake poll |
 | `/seller` | Seller | Sales / Payout history |
 | Auth / gate | Shell riêng | Login, Register, Verify email, QR loading (chi tiết **Phụ lục D**; **Admin loại trừ**) |
 
@@ -165,7 +166,7 @@ Tap Config → full-height drawer (steps)
 | P3 | **Vocab UX lệch Create vs Edit** | Manual create = table trong dialog; Edit = table trên trang |
 | P4 | **Nav trùng Home shortcuts** | Home ≈ bản thu nhỏ của nav; Seller thiếu trên Home |
 | P4b | **Mobile nav = dropdown mỏng** | Hamburger mở panel nhỏ, dễ lệch/đóng sớm; không đủ chỗ pair + account + badge Jobs |
-| P5 | **Account surface mỏng** | Credits chỉ hiện số; không có mua credits / profile / settings rõ ràng |
+| P5 | **Account surface mỏng** | ~~Credits chỉ hiện số~~ → đã có `/credits` (2026-07-18); profile/settings vẫn mỏng |
 | P6 | **Products = 4 tab trong 1 trang dày** | Owned vs requests vs purchased cạnh nhau → khó progressive disclosure |
 | P7 | **Create = nav item + hub + 4 form** | OK về discovery, nhưng thiếu “tiến độ / trạng thái job” gần chỗ tạo |
 | P8 | **i18n wizard cũ còn sót** (`Name → Schema → Cards → Words → Done`) | IA thật ≠ copy cũ → dễ confuse khi chỉnh i18n / docs |
@@ -695,10 +696,10 @@ Gate: loading | unauthorized → /login|/register
 
 | UI | Cách mở | File | Loại | Công năng chính |
 |----|---------|------|------|-----------------|
-| Header | Luôn trong `App` | `Header.tsx` | Chrome | Brand → Home; credits; account menu |
+| Header | Luôn trong `App` | `Header.tsx` | Chrome | Credits chip → `/credits`; account menu (theme/logout) desktop |
 | Main nav desktop | Header | `MainNav.tsx` + `config/nav.ts` | Chrome | Home · My products · Create · Explore · Seller |
 | Mobile nav (hiện tại) | ☰ | Dropdown trong `Header` | Overlay | Cùng 5 link — **plan: thay bằng Nav Drawer** |
-| Credits / account menu | Nút credits | `Header.tsx` | Overlay | Số credits; Dark mode; Logout |
+| Credits / account | Nút credits / account | `Header.tsx` + `/credits` | Nav + page | Chip → nạp; menu account theme/logout |
 | Theme | Trong account menu | `ThemeProvider` | Control | Light / dark |
 | Logout | Account menu | `App.handleLogout` | Action | Clear session → `/login` |
 | Verify email banner | Email chưa verify | `VerifyEmailBanner.tsx` | Banner | Message; Resend; Sending / Sent / Error |
@@ -861,7 +862,7 @@ Mở từ: Manual, 3 AI create, Edit.
 | Công năng | Trạng thái | Ghi chú |
 |-----------|------------|---------|
 | Retry create job | **Chưa có UI** | API `…/jobs/{jobId}/retry`; list chưa trả `jobId` ổn định |
-| Get / top-up credits (user) | **Chưa có UI** | Header chỉ hiện số; plan để chỗ trong drawer |
+| Get / top-up credits (user) | **✅ Có UI** (2026-07-18) | `/credits` + dialog; Header/Drawer → `/credits`; Explore link khi thiếu credits |
 | Restore version | Bỏ qua | Không có API list version |
 | Package-link download (web) | Bỏ qua | Sync chủ yếu qua device |
 | NotFound QR page | i18n sẵn, chưa gắn | Fail hiện Login |
@@ -879,12 +880,13 @@ Mở từ: Manual, 3 AI create, Edit.
 | Home + language pair | ✅ D3.1 | ✅ §4.2 |
 | Products 4 tabs + Settings/Share | ✅ D3.2 | ✅ §4.3 |
 | Explore purchase | ✅ D3.3 | ✅ §4.6 |
+| Buy / top-up credits | ✅ `/credits` | ✅ `PLAN_BUY_CREDITS` |
 | Seller sales/payout | ✅ D3.4 | ✅ §4.7 |
 | Create hub + 4 modes | ✅ D4 | ✅ §4.4–4.5 |
 | Edit draft/publish/import | ✅ D5 | ✅ §4.5 |
 | Config 4 steps + color picker | ✅ D6 | ✅ §4.5 sheet/drawer |
 | Vocab + CSV + Media 4 sources | ✅ D7 | ✅ §4.5 |
 | Admin | — | **Loại trừ** |
-| Retry job / Get credits | ✅ D9 (thiếu UI) | Get credits: chỗ drawer; Retry: sau khi API sẵn |
+| Retry job | ✅ D9 (thiếu UI) | Sau khi API trả `jobId` |
 
-**Kết luận phụ lục:** Plan đã liệt kê **đầy đủ màn hình & công năng user** (trừ Admin). Phần còn thiếu UI thật (retry job, mua credits, NotFound QR) được ghi ở **D9**, không bỏ sót khỏi checklist.
+**Kết luận phụ lục:** Plan đã liệt kê **đầy đủ màn hình & công năng user** (trừ Admin). Phần còn thiếu UI thật: **retry job**, NotFound QR — xem **D9**.

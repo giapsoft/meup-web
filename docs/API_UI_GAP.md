@@ -1,6 +1,6 @@
 # API ↔ Web UI — tra cứu tiến độ
 
-So sánh `meup-api` (`../meup-api`) với `meup-web`. Cập nhật: 2026-07-05.
+So sánh `meup-api` (`../meup-api`) với `meup-web`. Cập nhật: 2026-07-18.
 
 ## Chú thích trạng thái
 
@@ -53,11 +53,17 @@ So sánh `meup-api` (`../meup-api`) với `meup-web`. Cập nhật: 2026-07-05.
 
 ---
 
-## Payment — `/api/payment`
+## Payment / credits — `/api/credit-packages`, `/api/payment`
 
 | Method | Path | Web UI | Ghi chú |
 |--------|------|--------|---------|
-| POST | `/api/payment/{provider}/webhook` | ⏭️ | Server-to-server; không có API public list gói nạp cho user |
+| GET | `/api/credit-packages` | ✅ | `CreditsPage` — `/credits` |
+| POST | `/api/payment/checkout` | ✅ | `PaymentCheckoutDialog` |
+| GET | `/api/payment/checkout/{id}` | ✅ | Poll trong dialog |
+| POST | `/api/payment/fake/topup` | ✅ | Nút fake khi flag / fallback bank |
+| POST | `/api/payment/{provider}/webhook` | ⏭️ | Server-to-server (SePay / fake) |
+
+Plan: [`PLAN_BUY_CREDITS.md`](./PLAN_BUY_CREDITS.md). Staging SePay E2E: [`tasks/buy-credits/14-staging-e2e-docs.md`](./tasks/buy-credits/14-staging-e2e-docs.md).
 
 ---
 
@@ -130,7 +136,9 @@ So sánh `meup-api` (`../meup-api`) với `meup-web`. Cập nhật: 2026-07-05.
 |--------|------|--------|---------|
 | GET | `/api/admin/seller-payout/balances` | ✅ | `AdminPanelPage` tab Seller balances — `/admin` |
 | POST | `/api/admin/seller-payout/record` | ✅ | `AdminPanelPage` tab Record payout |
-| PUT | `/api/admin/credit-packages` | ✅ | `AdminPanelPage` tab Credit packages |
+| PUT | `/api/admin/credit-packages` | 🚫 | **Deprecated 410** — catalog = system_config |
+| POST | `/api/admin/credits/adjust` | ✅ | `AdminPanelPage` tab Credits |
+| GET/PUT | `/api/admin/system-config` | ✅ | `/admin/config` + tab Packages (2 gói `CREDIT_PACKAGE_*`) |
 
 ---
 
@@ -143,14 +151,15 @@ So sánh `meup-api` (`../meup-api`) với `meup-web`. Cập nhật: 2026-07-05.
 | 3 | `POST /api/product-create/.../retry` | ❌ chưa làm | List/progress không trả `jobId` — cần quyết trước khi làm UI |
 | 4 | `GET /api/seller-payout/sales` | ✅ xong | `src/pages/SellerPage.tsx` — 2026-07-01 |
 | 5 | `GET /api/seller-payout/history` | ✅ xong | Gộp `SellerPage` — 2026-07-01 |
-| 6–8 | `/api/admin/*` (3 endpoint) | ✅ xong | `/admin` + `X-Admin-Secret` — 2026-07-01 |
+| 6–8 | `/api/admin/*` (payout + adjust) | ✅ xong | `/admin` + `X-Admin-Secret` — 2026-07-01 |
+| 9 | Buy / top-up credits | ✅ xong | `/credits` + checkout dialog — 2026-07-18 |
 
 ---
 
 ## Tóm tắt
 
-- **Đã có UI:** auth, redeem QR, web-config cache, product marketplace (owned/purchased/shared/catalog/purchase/share/settings/edit/export/draft), product-create v2 client + list/progress.
+- **Đã có UI:** auth, redeem QR, web-config cache, product marketplace, product-create, **mua/nạp credits** (`/credits`).
 - **Thiếu UI (web, còn làm):** retry job (#3).
-- **Admin UI:** `/admin` (gate) → `/admin/panel` (3 tab).
-- **Bỏ qua (web):** restore-version, package-link/download.
+- **Admin UI:** `/admin` (gate) → `/admin/panel` (balances / payout / packages form / credits) + `/admin/config`.
+- **Bỏ qua (web):** restore-version, package-link/download; admin `PUT /credit-packages` (410).
 - **Không cần UI web:** device handshake, payment webhook, health.
