@@ -18,4 +18,8 @@ HTTP đủ cho web: list gói (config), tạo/poll checkout.
 
 ## Done khi
 
-- [ ] list → checkout → fake → poll `completed`.
+- [x] Store findOrCreate / get / complete `credit_checkout`
+- [x] `GET /api/credit-packages` (auth)
+- [x] `POST /api/payment/checkout`, `GET /api/payment/checkout/{id}`
+- [x] Fulfill / fake topup đánh dấu checkout `completed`
+- [ ] Postman smoke local + fake (cần DB + flag + bank env)
