@@ -2,7 +2,7 @@
 
 Spec: [`../PLAN_BUY_CREDITS.md`](../PLAN_BUY_CREDITS.md) — `CREDIT_PACKAGE_MONTHLY` + `CREDIT_PACKAGE_YEARLY`.
 
-**Blocker:** không (Q16 = **A** đã chốt).
+**Trạng thái:** 01–13 ✅ code; **14** docs ✅ — còn tick **CK SePay staging** (ops).
 
 Làm theo số. Repo ghi trên từng file.
 
