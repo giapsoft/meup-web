@@ -19,8 +19,9 @@ Mỗi gói một key `system_config`; fulfill/list đọc từ đây.
 
 ## Done khi
 
-- [ ] Fulfill resolve amount từ đúng key, không `SELECT credit_package`.
-- [ ] Admin PUT từng key nhận JSON hợp lệ / từ chối JSON xấu.
+- [x] Fulfill resolve amount từ đúng key, không `SELECT credit_package`.
+- [x] Admin PUT từng key nhận JSON hợp lệ / từ chối JSON xấu.
+- [x] Unit tests parse/default/list + admin validate.
 
 ## Không làm
 
