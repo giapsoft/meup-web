@@ -9,6 +9,7 @@ import { CreateProgramFromParagraphPage } from './pages/create-program/CreatePro
 import { CreateProgramFromTitlePage } from './pages/create-program/CreateProgramFromTitlePage'
 import { CreateProgramHubPage } from './pages/create-program/CreateProgramHubPage'
 import { CreateProgramManualPage } from './pages/create-program/CreateProgramManualPage'
+import { CreditsPage } from './pages/CreditsPage'
 import { ExplorePage } from './pages/ExplorePage'
 import { EditProgramPage } from './pages/edit-program/EditProgramPage'
 import { ProductsPage } from './pages/ProductsPage'
@@ -33,6 +34,7 @@ function AppShell() {
         <Route path="/" element={<HomePage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/explore" element={<ExplorePage />} />
+        <Route path="/credits" element={<CreditsPage />} />
         <Route path="/seller" element={<Navigate to="/" replace />} />
         {/* SellerPage ẩn tạm — bật lại khi sẵn sàng: element={<SellerPage />} */}
         <Route path="/products/new" element={<CreateProgramHubPage />} />

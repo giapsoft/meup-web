@@ -12,4 +12,4 @@
 
 ## Done khi
 
-- [ ] Compile; không hardcode SePay URL.
+- [x] Compile; không hardcode SePay URL.

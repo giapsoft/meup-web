@@ -12,4 +12,4 @@
 
 ## Done khi
 
-- [ ] Local fake: success tự hiện, balance đổi.
+- [x] Local fake: success tự hiện, balance đổi.

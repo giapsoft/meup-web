@@ -12,4 +12,4 @@
 
 ## Done khi
 
-- [ ] Một bước từ Header/Drawer tới trang nạp.
+- [x] Một bước từ Header/Drawer tới trang nạp.

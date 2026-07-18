@@ -64,7 +64,7 @@ export const API_ADMIN_SELLER_BALANCES = '/api/admin/seller-payout/balances'
 /** Admin: ghi nhận thanh toán seller. */
 export const API_ADMIN_SELLER_RECORD = '/api/admin/seller-payout/record'
 
-/** Admin: đồng bộ catalog gói nạp credits. */
+/** Admin: đồng bộ catalog gói nạp credits — deprecated (410). */
 export const API_ADMIN_CREDIT_PACKAGES = '/api/admin/credit-packages'
 
 /** Admin: điều chỉnh credit ví user. */
@@ -72,6 +72,18 @@ export const API_ADMIN_CREDITS_ADJUST = '/api/admin/credits/adjust'
 
 /** Admin: đọc/ghi system_config. */
 export const API_ADMIN_SYSTEM_CONFIG = '/api/admin/system-config'
+
+/** Danh sách gói nạp credits (JWT). */
+export const API_CREDIT_PACKAGES = '/api/credit-packages'
+
+/** Tạo / tái sử dụng checkout session. */
+export const API_PAYMENT_CHECKOUT = '/api/payment/checkout'
+
+/** Poll checkout — thêm `/{checkoutId}`. */
+export const API_PAYMENT_CHECKOUT_PREFIX = '/api/payment/checkout'
+
+/** Fake topup (JWT + ALLOW_FAKE_PAYMENT_PROVIDER). */
+export const API_PAYMENT_FAKE_TOPUP = '/api/payment/fake/topup'
 
 /** Khoảng đệm (ms) coi access token là "sắp hết hạn" để refresh trước, tránh lỗi 401. */
 export const ACCESS_TOKEN_SKEW_MS = 30_000

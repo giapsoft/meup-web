@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { CreditIcon } from './CreditIcon'
 import { LanguagePairChip } from './LanguagePairChip'
 import { MainNav } from './MainNav'
@@ -25,26 +26,25 @@ export function Header({ onLogout }: HeaderProps) {
 
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [pairOpen, setPairOpen] = useState(false)
-  const [creditsMenuOpen, setCreditsMenuOpen] = useState(false)
-  const creditsMenuRef = useRef<HTMLDivElement>(null)
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false)
+  const accountMenuRef = useRef<HTMLDivElement>(null)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
 
   const closeDrawer = useCallback(() => setDrawerOpen(false), [])
 
-  // Desktop-only credits menu (theme / logout / get credits). Mobile uses drawer.
   useEffect(() => {
-    if (!creditsMenuOpen) {
+    if (!accountMenuOpen) {
       return
     }
     function onDocumentClick(event: MouseEvent) {
       const target = event.target as Node
-      if (creditsMenuRef.current && !creditsMenuRef.current.contains(target)) {
-        setCreditsMenuOpen(false)
+      if (accountMenuRef.current && !accountMenuRef.current.contains(target)) {
+        setAccountMenuOpen(false)
       }
     }
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
-        setCreditsMenuOpen(false)
+        setAccountMenuOpen(false)
         menuButtonRef.current?.focus()
       }
     }
@@ -54,20 +54,19 @@ export function Header({ onLogout }: HeaderProps) {
       document.removeEventListener('mousedown', onDocumentClick)
       document.removeEventListener('keydown', onKeyDown)
     }
-  }, [creditsMenuOpen])
+  }, [accountMenuOpen])
 
-  // Avoid two overlays at once.
   useEffect(() => {
     if (drawerOpen) {
       setPairOpen(false)
-      setCreditsMenuOpen(false)
+      setAccountMenuOpen(false)
     }
   }, [drawerOpen])
 
   useEffect(() => {
     if (pairOpen) {
       setDrawerOpen(false)
-      setCreditsMenuOpen(false)
+      setAccountMenuOpen(false)
     }
   }, [pairOpen])
 
@@ -75,7 +74,6 @@ export function Header({ onLogout }: HeaderProps) {
     if (isDesktop) {
       setDrawerOpen(false)
     }
-    // Avoid a stuck mobile sheet after breakpoint change (invisible overlay).
     setPairOpen(false)
   }, [isDesktop])
 
@@ -85,10 +83,13 @@ export function Header({ onLogout }: HeaderProps) {
   }
 
   function handleLogout() {
-    setCreditsMenuOpen(false)
+    setAccountMenuOpen(false)
     setDrawerOpen(false)
     onLogout()
   }
+
+  const creditsChipClass =
+    'flex items-center gap-1.5 rounded-full border border-border bg-surface-raised px-2.5 py-1.5 no-underline transition hover:border-amber-400/40 hover:bg-surface-hover sm:px-3 sm:py-2'
 
   return (
     <>
@@ -122,50 +123,58 @@ export function Header({ onLogout }: HeaderProps) {
               variant={isDesktop ? 'popover' : 'sheet'}
             />
 
-            {/* Mobile: compact C + balance — account actions live in the drawer. */}
-            <div
-              className="flex items-center gap-1.5 rounded-full border border-border bg-surface-raised px-2.5 py-1.5 md:hidden"
+            <Link
+              to="/credits"
+              className={`${creditsChipClass} md:hidden`}
               title={t('nav.creditsTitle')}
+              aria-label={t('nav.getCredits')}
             >
               <CreditIcon />
               <span className="min-w-[1ch] text-sm font-semibold tabular-nums text-amber-400">
                 {creditBalance}
               </span>
-            </div>
+            </Link>
 
-            {/* Desktop: credits opens account menu (no drawer on md+). */}
-            <div className="relative hidden md:block" ref={creditsMenuRef}>
-              <button
-                ref={menuButtonRef}
-                type="button"
-                onClick={() => setCreditsMenuOpen((open) => !open)}
-                aria-expanded={creditsMenuOpen}
-                aria-haspopup="menu"
-                aria-label={t('nav.accountMenu')}
-                className="flex items-center gap-1.5 rounded-full border border-border bg-surface-raised px-2.5 py-1.5 transition hover:border-amber-400/40 hover:bg-surface-hover sm:px-3 sm:py-2"
+            <div className="relative hidden items-center gap-2 md:flex" ref={accountMenuRef}>
+              <Link
+                to="/credits"
+                className={creditsChipClass}
                 title={t('nav.creditsTitle')}
+                aria-label={t('nav.getCredits')}
               >
                 <CreditIcon size="md" />
                 <span className="min-w-[1ch] text-sm font-semibold tabular-nums text-amber-400 sm:text-base">
                   {creditBalance}
                 </span>
+              </Link>
+
+              <button
+                ref={menuButtonRef}
+                type="button"
+                onClick={() => setAccountMenuOpen((open) => !open)}
+                aria-expanded={accountMenuOpen}
+                aria-haspopup="menu"
+                aria-label={t('nav.accountMenu')}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface-raised text-text transition hover:border-accent/40 hover:bg-surface-hover"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="12" cy="8" r="3.25" stroke="currentColor" strokeWidth="1.75" />
+                  <path
+                    d="M5.5 18.5c1.6-2.6 3.9-4 6.5-4s4.9 1.4 6.5 4"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                    strokeLinecap="round"
+                  />
+                </svg>
               </button>
 
-              {creditsMenuOpen && (
+              {accountMenuOpen && (
                 <div
                   role="menu"
                   className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-border bg-surface-raised py-1 shadow-xl"
                 >
                   <div role="none" className="border-b border-border px-2 py-2 empty:hidden">
                     <VerifyEmailNotice />
-                  </div>
-                  <div
-                    role="none"
-                    className="border-b border-border px-4 py-3 opacity-60"
-                    title={t('nav.getCreditsSoon')}
-                  >
-                    <p className="text-sm text-text">{t('nav.getCredits')}</p>
-                    <p className="mt-0.5 text-xs text-text-muted">{t('nav.getCreditsSoon')}</p>
                   </div>
                   <div
                     role="none"

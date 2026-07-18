@@ -139,46 +139,41 @@ export function NavDrawer({
           </ul>
         </nav>
 
-        <div className="mt-auto border-t border-border px-2 py-2">
-          <VerifyEmailNotice className="mx-1 mb-2" />
+          <div className="mt-auto border-t border-border px-2 py-2">
+            <VerifyEmailNotice className="mx-1 mb-2" />
 
-          <div className="flex items-center justify-between gap-2 rounded-lg px-3 py-2.5">
-            <span className="flex items-center gap-2 text-sm text-text-muted">
-              <CreditIcon />
-              {t('nav.credits')}
-            </span>
-            <span className="text-sm font-semibold tabular-nums text-amber-400">{creditBalance}</span>
+            <Link
+              to="/credits"
+              onClick={onClose}
+              className="flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 no-underline transition hover:bg-surface-hover"
+            >
+              <span className="flex items-center gap-2 text-sm text-text">
+                <CreditIcon />
+                {t('nav.getCredits')}
+              </span>
+              <span className="text-sm font-semibold tabular-nums text-amber-400">{creditBalance}</span>
+            </Link>
+
+            <div className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5">
+              <span className="text-sm text-text">{t('nav.darkMode')}</span>
+              <ThemeToggle
+                checked={darkMode}
+                onChange={() => setDarkMode(!darkMode)}
+                label={t('nav.darkMode')}
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                onClose()
+                onLogout()
+              }}
+              className="w-full rounded-lg px-3 py-3 text-left text-sm text-text-muted transition hover:bg-surface-hover hover:text-text"
+            >
+              {t('nav.logout')}
+            </button>
           </div>
-
-          <div
-            className="rounded-lg px-3 py-2.5 opacity-60"
-            title={t('nav.getCreditsSoon')}
-            aria-disabled="true"
-          >
-            <p className="text-sm text-text">{t('nav.getCredits')}</p>
-            <p className="mt-0.5 text-xs text-text-muted">{t('nav.getCreditsSoon')}</p>
-          </div>
-
-          <div className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5">
-            <span className="text-sm text-text">{t('nav.darkMode')}</span>
-            <ThemeToggle
-              checked={darkMode}
-              onChange={() => setDarkMode(!darkMode)}
-              label={t('nav.darkMode')}
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              onClose()
-              onLogout()
-            }}
-            className="w-full rounded-lg px-3 py-3 text-left text-sm text-text-muted transition hover:bg-surface-hover hover:text-text"
-          >
-            {t('nav.logout')}
-          </button>
-        </div>
       </div>
     </div>
   )

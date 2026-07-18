@@ -12,4 +12,4 @@
 
 ## Done khi
 
-- [ ] Thấy monthly/yearly đúng giá từ API config.
+- [x] Thấy monthly/yearly đúng giá từ API config.
