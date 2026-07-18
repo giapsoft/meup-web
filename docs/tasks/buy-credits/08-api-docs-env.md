@@ -12,4 +12,4 @@
 
 ## Done khi
 
-- [ ] Người khác chạy fake E2E theo doc.
+- [x] Người khác chạy fake E2E theo doc (POSTMAN §7.2 + collection Payment folder).

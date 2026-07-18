@@ -16,5 +16,6 @@ Không còn hai nguồn catalog.
 
 ## Done khi
 
-- [ ] Một SoT: system_config.
-- [ ] Fulfill không phụ thuộc row active trong bảng package.
+- [x] Một SoT: system_config.
+- [x] Fulfill không phụ thuộc row active trong bảng package.
+- [x] `PUT /api/admin/credit-packages` → 410 `endpoint_gone`; `SyncPackages` removed.
