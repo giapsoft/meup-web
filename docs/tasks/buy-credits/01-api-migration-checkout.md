@@ -18,9 +18,9 @@ Bảng session checkout để poll; gỡ FK package để lookup chuyển sang c
 
 ## Done khi
 
-- [ ] Migrate up/down sạch.
-- [ ] Insert `credit_purchase` với `credit_package_id` không còn row trong `credit_package` vẫn được (FK đã drop).
-
+- [x] Migration `000036_credit_checkout` up/down đã thêm (meup-api `ccbd000`).
+- [ ] `migrate up` chạy trên DB thật / test DB (chưa verify trong môi trường agent — không có DATABASE_URL).
+- [x] Schema: FK `credit_purchase_credit_package_id_fkey` được drop trên up.
 ## Không làm
 
 `CREDIT_PACKAGE_*` config (task 02), HTTP, payment instructor.
