@@ -73,6 +73,12 @@ export const API_ADMIN_CREDITS_ADJUST = '/api/admin/credits/adjust'
 /** Admin: đọc/ghi system_config. */
 export const API_ADMIN_SYSTEM_CONFIG = '/api/admin/system-config'
 
+/** Admin: publish firmware OTA (multipart). */
+export const API_ADMIN_APP_VERSION_PUBLISH = '/api/admin/app-version/publish'
+
+/** Admin: clear APP_VERSION (disable forced OTA). */
+export const API_ADMIN_APP_VERSION_CLEAR = '/api/admin/app-version/clear'
+
 /** Danh sách gói nạp credits (JWT). */
 export const API_CREDIT_PACKAGES = '/api/credit-packages'
 

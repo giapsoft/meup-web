@@ -10,6 +10,7 @@ import {
   type SellerBalanceDto,
 } from '../../api/admin'
 import { AdminCreditPackagesPanel } from '../../components/admin/AdminCreditPackagesPanel'
+import { AdminFirmwarePanel } from '../../components/admin/AdminFirmwarePanel'
 import {
   AdminUserTargetFields,
   parseAdminUserTargets,
@@ -19,7 +20,7 @@ import { useLanguagePair } from '../../context/LanguagePairProvider'
 import type { TranslationKey } from '../../i18n/types'
 import { clearAdminSecret, loadAdminSecret } from '../../utils/adminSecretStorage'
 
-type Tab = 'balances' | 'payout' | 'packages' | 'credits'
+type Tab = 'balances' | 'payout' | 'packages' | 'credits' | 'firmware'
 
 type LoadState =
   | { phase: 'loading' }
@@ -39,6 +40,7 @@ const TAB_KEYS: Record<Tab, TranslationKey> = {
   payout: 'admin.tab.payout',
   packages: 'admin.tab.packages',
   credits: 'admin.tab.credits',
+  firmware: 'admin.tab.firmware',
 }
 
 function parseDetailJson(raw: string): unknown | undefined {
@@ -258,7 +260,7 @@ export function AdminPanelPage() {
           role="tablist"
           aria-label={t('admin.tabsLabel')}
         >
-          {(['balances', 'payout', 'packages', 'credits'] as const).map((key) => (
+          {(['balances', 'payout', 'packages', 'credits', 'firmware'] as const).map((key) => (
             <button
               key={key}
               type="button"
@@ -415,6 +417,8 @@ export function AdminPanelPage() {
           )}
 
           {tab === 'packages' && <AdminCreditPackagesPanel secret={secret} />}
+
+          {tab === 'firmware' && <AdminFirmwarePanel secret={secret} />}
 
           {tab === 'credits' && (
             <div className="max-w-xl rounded-2xl border border-border bg-surface-card p-4 sm:p-5">

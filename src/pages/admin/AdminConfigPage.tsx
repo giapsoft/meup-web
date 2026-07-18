@@ -64,11 +64,16 @@ export function AdminConfigPage() {
     void load()
   }, [load])
 
+  const visibleEntries = useMemo(
+    () => entries.filter((entry) => !entry.key.startsWith('APP_VERSION')),
+    [entries],
+  )
+
   const dirtyKeys = useMemo(() => {
-    return entries
+    return visibleEntries
       .filter((entry) => (draft[entry.key] ?? '') !== entry.value)
       .map((entry) => entry.key)
-  }, [entries, draft])
+  }, [visibleEntries, draft])
 
   const handleExit = useCallback(() => {
     clearAdminSecret()
@@ -176,7 +181,7 @@ export function AdminConfigPage() {
             )}
 
             <div className="mt-4 space-y-4">
-              {entries.map((entry) => {
+              {visibleEntries.map((entry) => {
                 const value = draft[entry.key] ?? ''
                 const dirty = value !== entry.value
                 const multiline = isMultilineKind(entry.kind)

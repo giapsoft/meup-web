@@ -1,10 +1,12 @@
 import {
+  API_ADMIN_APP_VERSION_CLEAR,
+  API_ADMIN_APP_VERSION_PUBLISH,
   API_ADMIN_CREDITS_ADJUST,
   API_ADMIN_SELLER_BALANCES,
   API_ADMIN_SELLER_RECORD,
   API_ADMIN_SYSTEM_CONFIG,
 } from '../config'
-import { adminRequest } from './adminClient'
+import { adminRequest, adminRequestForm } from './adminClient'
 
 /** Matches `GET /api/admin/seller-payout/balances` list item. */
 export type SellerBalanceDto = {
@@ -112,4 +114,32 @@ export async function updateAdminSystemConfig(
     { method: 'PUT', body: { entries } },
   )
   return data.entries ?? []
+}
+
+export type AdminAppVersionPublishResult = {
+  appVersion: string
+  path: string
+  sha256: string
+  fileSize: number
+}
+
+export async function publishAdminAppVersion(
+  secret: string,
+  input: { appVersion: string; file: File },
+): Promise<AdminAppVersionPublishResult> {
+  const form = new FormData()
+  form.append('appVersion', input.appVersion.trim())
+  form.append('file', input.file)
+  return adminRequestForm<AdminAppVersionPublishResult>(
+    secret,
+    API_ADMIN_APP_VERSION_PUBLISH,
+    form,
+  )
+}
+
+export async function clearAdminAppVersion(secret: string): Promise<{ cleared: boolean }> {
+  return adminRequest<{ cleared: boolean }>(secret, API_ADMIN_APP_VERSION_CLEAR, {
+    method: 'POST',
+    body: {},
+  })
 }
