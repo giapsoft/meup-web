@@ -17,4 +17,6 @@ Nạp thử an toàn cho local/dev.
 
 ## Done khi
 
-- [ ] Không topup arbitrary userId từ body.
+- [x] Không topup arbitrary userId từ body (lấy từ JWT).
+- [x] `BuildInstructions` method=none khi flag bật.
+- [x] `POST /api/payment/fake/topup` (complete checkout gắn ở task 06).

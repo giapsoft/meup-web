@@ -17,5 +17,5 @@ SePay trả QR/bank; webhook từ chối sai tiền so với config.
 
 ## Done khi
 
-- [ ] Instructions đủ cho UI.
-- [ ] Sai tiền → không fulfill.
+- [x] Instructions đủ cho UI.
+- [x] Sai tiền → không fulfill.
