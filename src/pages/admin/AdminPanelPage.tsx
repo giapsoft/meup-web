@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { ApiError } from '../../api/client'
 import {
   adjustAdminUserCredits,
@@ -383,13 +383,21 @@ export function AdminPanelPage() {
             <p className="text-xs font-medium uppercase tracking-wide text-warning">Admin</p>
             <h1 className="text-lg font-semibold text-text">{t('admin.panel.title')}</h1>
           </div>
-          <button
-            type="button"
-            onClick={handleExit}
-            className="rounded-lg border border-border bg-surface-raised px-3 py-1.5 text-sm text-text-muted transition hover:border-warning/40 hover:text-text"
-          >
-            {t('admin.panel.exit')}
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              to="/admin/config"
+              className="rounded-lg border border-border bg-surface-raised px-3 py-1.5 text-sm text-text-muted no-underline transition hover:border-accent/40 hover:text-text"
+            >
+              {t('admin.config.open')}
+            </Link>
+            <button
+              type="button"
+              onClick={handleExit}
+              className="rounded-lg border border-border bg-surface-raised px-3 py-1.5 text-sm text-text-muted transition hover:border-warning/40 hover:text-text"
+            >
+              {t('admin.panel.exit')}
+            </button>
+          </div>
         </div>
       </header>
 

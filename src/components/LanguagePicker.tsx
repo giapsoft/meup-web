@@ -1,5 +1,4 @@
-import { findLanguage, formatLanguageOption, type Language } from '../data/mock'
-import { useLanguagePair } from '../context/LanguagePairProvider'
+import { formatLanguageOption, type Language } from '../data/mock'
 
 type LanguagePickerProps = {
   id: string
@@ -18,9 +17,6 @@ export function LanguagePicker({
   languages,
   onChange,
 }: LanguagePickerProps) {
-  const { t } = useLanguagePair()
-  const selected = findLanguage(value)
-
   return (
     <div className="flex flex-col gap-2">
       <div>
@@ -50,15 +46,6 @@ export function LanguagePicker({
           ▾
         </span>
       </div>
-
-      {selected && (
-        <p className="text-xs text-text-muted">
-          {t('languagePicker.selected', {
-            name: selected.nativeName,
-            englishName: selected.name,
-          })}
-        </p>
-      )}
     </div>
   )
 }

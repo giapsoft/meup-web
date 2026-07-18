@@ -3,6 +3,7 @@ import {
   API_ADMIN_CREDITS_ADJUST,
   API_ADMIN_SELLER_BALANCES,
   API_ADMIN_SELLER_RECORD,
+  API_ADMIN_SYSTEM_CONFIG,
 } from '../config'
 import { adminRequest } from './adminClient'
 
@@ -112,4 +113,35 @@ export async function adjustAdminUserCredits(
     { method: 'POST', body },
   )
   return data.adjustments ?? []
+}
+
+export type AdminSystemConfigKind = 'bool' | 'int' | 'text' | 'json' | 'compact'
+
+export type AdminSystemConfigEntry = {
+  key: string
+  kind: AdminSystemConfigKind
+  value: string
+  defaultValue: string
+  inDatabase: boolean
+  description: string
+}
+
+export async function listAdminSystemConfig(secret: string): Promise<AdminSystemConfigEntry[]> {
+  const data = await adminRequest<{ entries: AdminSystemConfigEntry[] }>(
+    secret,
+    API_ADMIN_SYSTEM_CONFIG,
+  )
+  return data.entries ?? []
+}
+
+export async function updateAdminSystemConfig(
+  secret: string,
+  entries: Array<{ key: string; value: string }>,
+): Promise<AdminSystemConfigEntry[]> {
+  const data = await adminRequest<{ entries: AdminSystemConfigEntry[] }>(
+    secret,
+    API_ADMIN_SYSTEM_CONFIG,
+    { method: 'PUT', body: { entries } },
+  )
+  return data.entries ?? []
 }

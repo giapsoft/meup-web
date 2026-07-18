@@ -1,7 +1,6 @@
 import { useCallback } from 'react'
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { Header } from './components/Header'
-import { VerifyEmailBanner } from './components/VerifyEmailBanner'
 import { useClearDeviceSession, useReauthorize } from './context/DeviceSessionProvider'
 import { useLanguagePair } from './context/LanguagePairProvider'
 import { HomePage } from './pages/HomePage'
@@ -11,7 +10,6 @@ import { CreateProgramFromTitlePage } from './pages/create-program/CreateProgram
 import { CreateProgramHubPage } from './pages/create-program/CreateProgramHubPage'
 import { CreateProgramManualPage } from './pages/create-program/CreateProgramManualPage'
 import { ExplorePage } from './pages/ExplorePage'
-import { SellerPage } from './pages/SellerPage'
 import { EditProgramPage } from './pages/edit-program/EditProgramPage'
 import { ProductsPage } from './pages/ProductsPage'
 import { LegacyProgramsRedirect } from './pages/LegacyProgramsRedirect'
@@ -31,12 +29,12 @@ function AppShell() {
   return (
     <div className="flex min-h-svh flex-col">
       <Header onLogout={handleLogout} />
-      <VerifyEmailBanner />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/explore" element={<ExplorePage />} />
-        <Route path="/seller" element={<SellerPage />} />
+        <Route path="/seller" element={<Navigate to="/" replace />} />
+        {/* SellerPage ẩn tạm — bật lại khi sẵn sàng: element={<SellerPage />} */}
         <Route path="/products/new" element={<CreateProgramHubPage />} />
         <Route path="/products/new/manual" element={<CreateProgramManualPage key={uiLocale} />} />
         <Route path="/products/new/ai/title" element={<CreateProgramFromTitlePage key={uiLocale} />} />

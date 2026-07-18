@@ -70,6 +70,9 @@ export const API_ADMIN_CREDIT_PACKAGES = '/api/admin/credit-packages'
 /** Admin: điều chỉnh credit ví user. */
 export const API_ADMIN_CREDITS_ADJUST = '/api/admin/credits/adjust'
 
+/** Admin: đọc/ghi system_config. */
+export const API_ADMIN_SYSTEM_CONFIG = '/api/admin/system-config'
+
 /** Khoảng đệm (ms) coi access token là "sắp hết hạn" để refresh trước, tránh lỗi 401. */
 export const ACCESS_TOKEN_SKEW_MS = 30_000
 

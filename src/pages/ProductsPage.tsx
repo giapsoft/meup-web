@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { getAccount } from '../api/emailAuth'
 import {
@@ -13,6 +13,7 @@ import {
   type PurchasedProductDto,
 } from '../api/product'
 import { getProductCreateProgress, type ProductCreateProgressDto } from '../api/productCreate'
+import { ActionSheet } from '../components/ActionSheet'
 import { ProductSettingsModal } from '../components/ProductSettingsModal'
 import { ProductShareModal } from '../components/ProductShareModal'
 import { useLanguagePair } from '../context/LanguagePairProvider'
@@ -22,21 +23,20 @@ import {
   type DeviceProgramProductDto,
 } from '../utils/deviceProgramsCompact'
 
-type Tab = 'owned' | 'purchased' | 'shared' | 'requests'
+type PrimaryTab = 'owned' | 'collected' | 'requests'
+type CollectedFilter = 'all' | 'purchased' | 'shared'
 
 const REFRESH_COOLDOWN_MS = 5000
 
-const TAB_LABEL_KEYS: Record<Tab, TranslationKey> = {
-  owned: 'products.tabOwned',
-  purchased: 'products.tabPurchased',
-  shared: 'products.tabShared',
-  requests: 'products.tabRequests',
+const PRIMARY_TAB_KEYS: Record<PrimaryTab, TranslationKey> = {
+  owned: 'products.tabMine',
+  collected: 'products.tabCollected',
+  requests: 'products.tabJobs',
 }
 
-const FILTER_PAIR_KEYS: Record<Tab, TranslationKey> = {
+const FILTER_PAIR_KEYS: Record<PrimaryTab, TranslationKey> = {
   owned: 'products.filterPair',
-  purchased: 'products.filterPairPurchased',
-  shared: 'products.filterPairShared',
+  collected: 'products.filterPairCollected',
   requests: 'products.filterPairRequests',
 }
 
@@ -133,61 +133,80 @@ function OwnedProductCard({
   locale,
   onOpenSettings,
   onOpenShare,
+  onOpenActions,
 }: {
   product: OwnedProductDto
   locale: string
   onOpenSettings: () => void
   onOpenShare: () => void
+  onOpenActions: () => void
 }) {
   const { t } = useLanguagePair()
   const shareKey = SHARE_MODE_KEYS[product.shareMode]
 
   return (
     <article className="rounded-2xl border border-border bg-surface-card p-4 sm:p-5">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <h3 className="text-base font-semibold text-text">{product.name}</h3>
-        <div className="flex flex-wrap items-center gap-2">
-          {shareKey ? (
-            <span className="rounded-md border border-border bg-surface-raised px-2 py-0.5 text-xs font-medium text-text-muted">
-              {t(shareKey)}
-            </span>
-          ) : (
-            <span className="rounded-md border border-border bg-surface-raised px-2 py-0.5 text-xs text-text-muted">
-              {product.shareMode}
-            </span>
-          )}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-base font-semibold text-text">{product.name}</h3>
+            {shareKey ? (
+              <span className="rounded-md border border-border bg-surface-raised px-2 py-0.5 text-xs font-medium text-text-muted">
+                {t(shareKey)}
+              </span>
+            ) : (
+              <span className="rounded-md border border-border bg-surface-raised px-2 py-0.5 text-xs text-text-muted">
+                {product.shareMode}
+              </span>
+            )}
+          </div>
+          {product.description ? (
+            <p className="mt-2 text-sm leading-relaxed text-text-muted line-clamp-2">
+              {product.description}
+            </p>
+          ) : null}
+          <p className="mt-2 text-xs text-text-muted">
+            {t('products.updatedAt')}: {formatWhen(product.updatedAt, locale)}
+          </p>
+        </div>
+
+        {/* Mobile: overflow → action sheet */}
+        <button
+          type="button"
+          onClick={onOpenActions}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-raised text-text md:hidden"
+          aria-label={t('products.actionsMenu')}
+        >
+          <span aria-hidden className="text-lg leading-none">
+            ⋯
+          </span>
+        </button>
+
+        {/* Desktop: inline actions */}
+        <div className="hidden shrink-0 flex-wrap items-center gap-2 md:flex">
           <Link
             to={`/products/${product.productId}/edit`}
             state={{ product }}
-            className="rounded-lg border border-accent/40 bg-accent-soft px-3 py-1 text-xs font-medium text-accent no-underline transition hover:border-accent hover:bg-accent/20"
+            className="rounded-lg border border-accent/40 bg-accent-soft px-3 py-1.5 text-xs font-medium text-accent no-underline transition hover:border-accent hover:bg-accent/20"
           >
             {t('products.edit.open')}
           </Link>
           <button
             type="button"
             onClick={onOpenShare}
-            className="rounded-lg border border-border bg-surface-raised px-3 py-1 text-xs font-medium text-text transition hover:border-accent/40 hover:bg-surface-hover"
+            className="rounded-lg border border-border bg-surface-raised px-3 py-1.5 text-xs font-medium text-text transition hover:border-accent/40 hover:bg-surface-hover"
           >
             {t('products.share.open')}
           </button>
           <button
             type="button"
             onClick={onOpenSettings}
-            className="rounded-lg border border-border bg-surface-raised px-3 py-1 text-xs font-medium text-text transition hover:border-accent/40 hover:bg-surface-hover"
+            className="rounded-lg border border-border bg-surface-raised px-3 py-1.5 text-xs font-medium text-text transition hover:border-accent/40 hover:bg-surface-hover"
           >
             {t('products.settings.open')}
           </button>
         </div>
       </div>
-      {product.description ? (
-        <p className="mt-2 text-sm leading-relaxed text-text-muted">{product.description}</p>
-      ) : null}
-      <dl className="mt-3 grid gap-1 text-xs text-text-muted sm:grid-cols-2">
-        <div className="sm:col-span-2">
-          <dt className="inline">{t('products.updatedAt')}: </dt>
-          <dd className="inline">{formatWhen(product.updatedAt, locale)}</dd>
-        </div>
-      </dl>
       {product.shareMode === 'public' && (
         <Link
           to="/explore"
@@ -372,7 +391,15 @@ function CreateRequestsTab({
         <p className="text-sm text-text-muted">{t('products.emptyRequests')}</p>
       ) : (
         <ul className="grid gap-3 sm:gap-4">
-          {requests.map((request) => (
+          {[...requests]
+            .sort((a, b) => {
+              const rank = (s: string) =>
+                s === 'working' || s === 'pending' ? 0 : s === 'failed' ? 1 : 2
+              const d = rank(a.status) - rank(b.status)
+              if (d !== 0) return d
+              return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+            })
+            .map((request) => (
             <li key={request.id}>
               <CreateRequestCard
                 request={request}
@@ -413,7 +440,25 @@ function CreateRequestsTab({
 
 export function ProductsPage() {
   const { t, uiLocale, nativeLang, studyLang, langPair } = useLanguagePair()
-  const [tab, setTab] = useState<Tab>('owned')
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const tab = useMemo((): PrimaryTab => {
+    const raw = searchParams.get('tab')
+    if (raw === 'requests' || raw === 'jobs') return 'requests'
+    if (raw === 'collected' || raw === 'purchased' || raw === 'shared') return 'collected'
+    return 'owned'
+  }, [searchParams])
+
+  const collectedFilter = useMemo((): CollectedFilter => {
+    const raw = searchParams.get('tab')
+    if (raw === 'purchased') return 'purchased'
+    if (raw === 'shared') return 'shared'
+    const sub = searchParams.get('collected')
+    if (sub === 'purchased' || sub === 'shared') return sub
+    return 'all'
+  }, [searchParams])
+
   const [loadState, setLoadState] = useState<LoadState>({ phase: 'loading' })
   const [owned, setOwned] = useState<OwnedProductDto[]>([])
   const [purchased, setPurchased] = useState<PurchasedProductDto[]>([])
@@ -426,9 +471,33 @@ export function ProductsPage() {
   const [requestsToast, setRequestsToast] = useState<string | null>(null)
   const [settingsProduct, setSettingsProduct] = useState<OwnedProductDto | null>(null)
   const [shareProductState, setShareProductState] = useState<OwnedProductDto | null>(null)
+  const [actionsProduct, setActionsProduct] = useState<OwnedProductDto | null>(null)
+  const [activeJobsCount, setActiveJobsCount] = useState(0)
   const langPairKey = `${nativeLang}_${studyLang}`
   const prevLangPairRef = useRef(langPairKey)
   const lastRequestsRefreshAtRef = useRef(0)
+
+  function setPrimaryTab(next: PrimaryTab) {
+    const params = new URLSearchParams()
+    if (next === 'owned') {
+      params.set('tab', 'owned')
+    } else if (next === 'collected') {
+      params.set('tab', 'collected')
+    } else {
+      params.set('tab', 'requests')
+      setRequestPage(1)
+    }
+    setSearchParams(params, { replace: true })
+  }
+
+  function setCollectedFilter(next: CollectedFilter) {
+    const params = new URLSearchParams()
+    params.set('tab', 'collected')
+    if (next !== 'all') {
+      params.set('collected', next)
+    }
+    setSearchParams(params, { replace: true })
+  }
 
   const handleSettingsSaved = useCallback((updated: ProductSettingsDto) => {
     setOwned((prev) =>
@@ -456,6 +525,7 @@ export function ProductsPage() {
     })
     setRequests(res.requests)
     setRequestTotalPages(Math.max(1, res.pagination.totalPages))
+    setActiveJobsCount(res.requests.filter((r) => isActiveCreateRequest(r.status)).length)
     return res.requests
   }, [nativeLang, studyLang, requestPage])
 
@@ -513,11 +583,12 @@ export function ProductsPage() {
       if (tab === 'owned') {
         const res = await listOwnedProducts(account.userId, { nativeLang, studyLang })
         setOwned(res.products)
-      } else if (tab === 'purchased') {
-        const res = await listPurchasedProducts(account.userId, { nativeLang, studyLang })
-        setPurchased(res.products)
-      } else if (tab === 'shared') {
-        const programs = await getDevicePrograms()
+      } else if (tab === 'collected') {
+        const [purchasedRes, programs] = await Promise.all([
+          listPurchasedProducts(account.userId, { nativeLang, studyLang }),
+          getDevicePrograms(),
+        ])
+        setPurchased(purchasedRes.products)
         setShared(sharedProductsForLangPair(programs, langPair))
       } else {
         await loadRequestsList()
@@ -553,54 +624,109 @@ export function ProductsPage() {
     return () => window.clearTimeout(timer)
   }, [requestsToast])
 
+  // Keep Jobs badge fresh even when not on the requests tab.
+  useEffect(() => {
+    let cancelled = false
+    void listProductCreateRequests({ nativeLang, studyLang, page: 1, limit: 20 })
+      .then((res) => {
+        if (!cancelled) {
+          setActiveJobsCount(res.requests.filter((r) => isActiveCreateRequest(r.status)).length)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setActiveJobsCount(0)
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [nativeLang, studyLang, langPairKey])
+
   const locale = uiLocale === 'vi' ? 'vi-VN' : uiLocale === 'ja' ? 'ja-JP' : 'en-US'
+
+  const showPurchased =
+    tab === 'collected' && (collectedFilter === 'all' || collectedFilter === 'purchased')
+  const showShared =
+    tab === 'collected' && (collectedFilter === 'all' || collectedFilter === 'shared')
+
+  const collectedEmpty =
+    (collectedFilter === 'all' && purchased.length === 0 && shared.length === 0) ||
+    (collectedFilter === 'purchased' && purchased.length === 0) ||
+    (collectedFilter === 'shared' && shared.length === 0)
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-text sm:text-3xl">
-            {t('products.my.title')}
+            {t('nav.products')}
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-text-muted">{t('products.my.description')}</p>
           <p className="mt-1 text-xs text-text-muted">{t(FILTER_PAIR_KEYS[tab], { pair: langPair })}</p>
         </div>
         <Link
           to="/products/new"
-          className="inline-flex shrink-0 items-center rounded-xl border border-accent/40 bg-accent-soft px-4 py-2.5 text-sm font-medium text-accent no-underline transition hover:border-accent hover:bg-accent/20"
+          className="inline-flex min-h-11 shrink-0 items-center rounded-xl border border-accent/40 bg-accent-soft px-4 py-2.5 text-sm font-medium text-accent no-underline transition hover:border-accent hover:bg-accent/20"
         >
           {t('products.createCta')}
         </Link>
       </div>
 
       <div
-        className="mt-6 flex gap-1 rounded-xl border border-border bg-surface-raised p-1"
+        className="mt-6 flex gap-1 overflow-x-auto rounded-xl border border-border bg-surface-raised p-1"
         role="tablist"
         aria-label={t('products.tabsLabel')}
       >
-        {(['owned', 'purchased', 'shared', 'requests'] as const).map((key) => (
+        {(['owned', 'collected', 'requests'] as const).map((key) => (
           <button
             key={key}
             type="button"
             role="tab"
             aria-selected={tab === key}
-            onClick={() => {
-              setTab(key)
-              if (key === 'requests') {
-                setRequestPage(1)
-              }
-            }}
+            onClick={() => setPrimaryTab(key)}
             className={[
-              'flex-1 rounded-lg px-1.5 py-2 text-xs font-medium transition sm:px-2 sm:text-sm',
+              'relative flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium transition sm:text-sm',
               tab === key
                 ? 'bg-surface-card text-text shadow-sm'
                 : 'text-text-muted hover:text-text',
             ].join(' ')}
           >
-            {t(TAB_LABEL_KEYS[key])}
+            <span className="truncate">{t(PRIMARY_TAB_KEYS[key])}</span>
+            {key === 'requests' && activeJobsCount > 0 && (
+              <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-white">
+                {activeJobsCount > 99 ? '99+' : activeJobsCount}
+              </span>
+            )}
           </button>
         ))}
       </div>
+
+      {tab === 'collected' && (
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          {(['all', 'purchased', 'shared'] as const).map((key) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setCollectedFilter(key)}
+              className={[
+                'shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition',
+                collectedFilter === key
+                  ? 'border-accent/40 bg-accent-soft text-accent'
+                  : 'border-border bg-surface-card text-text-muted hover:text-text',
+              ].join(' ')}
+            >
+              {t(
+                key === 'all'
+                  ? 'products.collectedAll'
+                  : key === 'purchased'
+                    ? 'products.tabPurchased'
+                    : 'products.tabShared',
+              )}
+            </button>
+          ))}
+        </div>
+      )}
 
       <section className="mt-6" aria-live="polite">
         {loadState.phase === 'loading' && (
@@ -620,7 +746,15 @@ export function ProductsPage() {
         )}
         {loadState.phase === 'ready' && tab === 'owned' && (
           owned.length === 0 ? (
-            <p className="text-sm text-text-muted">{t('products.emptyOwned')}</p>
+            <div className="rounded-xl border border-dashed border-border px-4 py-8 text-center">
+              <p className="text-sm text-text-muted">{t('products.emptyOwned')}</p>
+              <Link
+                to="/products/new"
+                className="mt-3 inline-flex text-sm font-medium text-accent no-underline hover:underline"
+              >
+                {t('products.createCta')}
+              </Link>
+            </div>
           ) : (
             <ul className="grid gap-3 sm:gap-4">
               {owned.map((product) => (
@@ -630,35 +764,44 @@ export function ProductsPage() {
                     locale={locale}
                     onOpenSettings={() => setSettingsProduct(product)}
                     onOpenShare={() => setShareProductState(product)}
+                    onOpenActions={() => setActionsProduct(product)}
                   />
                 </li>
               ))}
             </ul>
           )
         )}
-        {loadState.phase === 'ready' && tab === 'purchased' && (
-          purchased.length === 0 ? (
-            <p className="text-sm text-text-muted">{t('products.emptyPurchased')}</p>
+        {loadState.phase === 'ready' && tab === 'collected' && (
+          collectedEmpty ? (
+            <div className="rounded-xl border border-dashed border-border px-4 py-8 text-center">
+              <p className="text-sm text-text-muted">
+                {collectedFilter === 'shared'
+                  ? t('products.emptyShared')
+                  : collectedFilter === 'purchased'
+                    ? t('products.emptyPurchased')
+                    : t('products.emptyCollected')}
+              </p>
+              <Link
+                to="/explore"
+                className="mt-3 inline-flex text-sm font-medium text-accent no-underline hover:underline"
+              >
+                {t('products.explore.title')}
+              </Link>
+            </div>
           ) : (
             <ul className="grid gap-3 sm:gap-4">
-              {purchased.map((product) => (
-                <li key={product.transactionId}>
-                  <PurchasedProductCard product={product} locale={locale} />
-                </li>
-              ))}
-            </ul>
-          )
-        )}
-        {loadState.phase === 'ready' && tab === 'shared' && (
-          shared.length === 0 ? (
-            <p className="text-sm text-text-muted">{t('products.emptyShared')}</p>
-          ) : (
-            <ul className="grid gap-3 sm:gap-4">
-              {shared.map((product) => (
-                <li key={product.id}>
-                  <SharedProductCard product={product} />
-                </li>
-              ))}
+              {showPurchased &&
+                purchased.map((product) => (
+                  <li key={`p-${product.transactionId}`}>
+                    <PurchasedProductCard product={product} locale={locale} />
+                  </li>
+                ))}
+              {showShared &&
+                shared.map((product) => (
+                  <li key={`s-${product.id}`}>
+                    <SharedProductCard product={product} />
+                  </li>
+                ))}
             </ul>
           )
         )}
@@ -690,6 +833,37 @@ export function ProductsPage() {
           onClose={() => setShareProductState(null)}
         />
       )}
+
+      <ActionSheet
+        open={actionsProduct != null}
+        title={actionsProduct?.name ?? ''}
+        onClose={() => setActionsProduct(null)}
+        items={
+          actionsProduct
+            ? [
+                {
+                  id: 'edit',
+                  label: t('products.edit.open'),
+                  variant: 'accent',
+                  onSelect: () =>
+                    navigate(`/products/${actionsProduct.productId}/edit`, {
+                      state: { product: actionsProduct },
+                    }),
+                },
+                {
+                  id: 'share',
+                  label: t('products.share.open'),
+                  onSelect: () => setShareProductState(actionsProduct),
+                },
+                {
+                  id: 'settings',
+                  label: t('products.settings.open'),
+                  onSelect: () => setSettingsProduct(actionsProduct),
+                },
+              ]
+            : []
+        }
+      />
     </main>
   )
 }

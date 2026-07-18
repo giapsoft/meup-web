@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-Mở http://localhost:5173 — cần `meup-api` đang chạy ở `:8080` (Vite proxy `/api`).
+Mở http://localhost:8086 — cần `meup-api` đang chạy ở `:8082` (Vite proxy `/api`). Docker web vẫn `:8082`.
 
 ## Chạy full stack bằng Docker
 
@@ -31,7 +31,7 @@ docker compose up --build
 
 | Service | URL |
 |---------|-----|
-| web | http://localhost:5173 |
+| web | http://localhost:8082 |
 | api | http://localhost:8080 |
 | postgres | `localhost:5432` (`postgres` / `postgres` / `meup_db`) |
 

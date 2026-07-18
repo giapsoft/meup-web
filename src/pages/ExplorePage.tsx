@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import {
   listProductCatalog,
@@ -158,7 +159,7 @@ export function ExplorePage() {
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
       <h1 className="text-2xl font-semibold tracking-tight text-text sm:text-3xl">
-        {t('products.explore.title')}
+        {t('nav.explore')}
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-text-muted">{t('products.explore.description')}</p>
       <p className="mt-3 text-sm text-text-muted">
@@ -179,10 +180,19 @@ export function ExplorePage() {
         )}
         {loadState.phase === 'ready' &&
           (products.length === 0 ? (
-            <p className="text-sm text-text-muted">{t('explore.empty')}</p>
+            <div className="rounded-xl border border-dashed border-border px-4 py-8 text-center">
+              <p className="text-sm text-text-muted">{t('explore.empty')}</p>
+              <p className="mt-2 text-xs text-text-muted">{t('explore.emptyHint')}</p>
+              <Link
+                to="/products/new"
+                className="mt-4 inline-flex text-sm font-medium text-accent no-underline hover:underline"
+              >
+                {t('home.createCta')}
+              </Link>
+            </div>
           ) : (
             <>
-              <ul className="grid gap-3 sm:gap-4">
+              <ul className="grid gap-3 sm:grid-cols-2 sm:gap-4">
                 {products.map((product) => (
                   <li key={product.productId}>
                     <CatalogCard
