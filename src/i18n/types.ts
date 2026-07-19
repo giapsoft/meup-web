@@ -399,6 +399,7 @@ export type TranslationKey =
   | 'createAi.setup.descriptionLabel'
   | 'createAi.setup.descriptionPlaceholder'
   | 'createAi.validation.insufficientCredits'
+  | 'createAi.validation.getCredits'
   | 'createManual.setup.title'
   | 'createManual.setup.hint'
   | 'createManual.setup.titleLabel'

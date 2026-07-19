@@ -7,6 +7,10 @@ const AI_VOCAB_ERROR_KEYS: Partial<Record<string, TranslationKey>> = {
   owner_not_found: 'createAiTitle.error.owner_not_found',
 }
 
+export function isInsufficientCreditsError(code: string | null | undefined): boolean {
+  return code === 'insufficient_credits'
+}
+
 export function aiVocabErrorMessage(code: string, t: (key: TranslationKey) => string): string {
   const key = AI_VOCAB_ERROR_KEYS[code]
   return key ? t(key) : code

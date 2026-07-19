@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import type { MessageParams, TranslationKey } from '../../i18n/types'
 import {
   WIZARD_ACTION_PRIMARY,
@@ -57,5 +58,40 @@ export function AiCreateRefundNote({ t }: { t: (key: TranslationKey) => string }
     <p className="mt-4 rounded-xl border border-border bg-surface-card px-3 py-2 text-xs text-text-muted">
       {t('createAi.refundNote')}
     </p>
+  )
+}
+
+function formatCreditsAmount(amount: number, uiLocale: string): string {
+  const locale = uiLocale === 'vi' ? 'vi-VN' : uiLocale === 'ja' ? 'ja-JP' : 'en-US'
+  return new Intl.NumberFormat(locale).format(amount)
+}
+
+/** Lỗi thiếu credit — đặt ngay dưới `AiCreateRefundNote`, kèm nút tới `/credits`. */
+export function AiCreateInsufficientCreditsAlert({
+  missingCredits,
+  uiLocale,
+  t,
+}: {
+  missingCredits: number
+  uiLocale: string
+  t: (key: TranslationKey, params?: MessageParams) => string
+}) {
+  return (
+    <div
+      role="alert"
+      className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-warning/40 bg-warning-muted px-4 py-3"
+    >
+      <p className="min-w-0 flex-1 text-sm text-warning">
+        {t('createAi.validation.insufficientCredits', {
+          credits: formatCreditsAmount(missingCredits, uiLocale),
+        })}
+      </p>
+      <Link
+        to="/credits"
+        className="inline-flex shrink-0 items-center justify-center rounded-lg border border-amber-500/60 bg-amber-500 px-3.5 py-1.5 text-sm font-semibold text-zinc-950 no-underline shadow-sm transition hover:bg-amber-400 hover:shadow"
+      >
+        {t('createAi.validation.getCredits')}
+      </Link>
+    </div>
   )
 }

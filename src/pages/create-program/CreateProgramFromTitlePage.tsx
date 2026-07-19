@@ -2,7 +2,11 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ApiError } from '../../api/client'
 import { createProductRequest } from '../../api/productCreate'
-import { AiCreateFooter, AiCreateRefundNote } from '../../components/create/AiCreateFooter'
+import {
+  AiCreateFooter,
+  AiCreateInsufficientCreditsAlert,
+  AiCreateRefundNote,
+} from '../../components/create/AiCreateFooter'
 import { AiCreatePageShell } from '../../components/create/AiCreatePageShell'
 import { CustomConfigDialog } from '../../components/create/CustomConfigDialog'
 import { useAccount } from '../../context/AccountProvider'
@@ -12,11 +16,11 @@ import { useAiCreateConfig } from '../../hooks/useAiCreateConfig'
 import { App } from '../../app/App'
 import { parseWordCountInput, validateWordCountInput } from '../../utils/aiVocabWordCount'
 import { estimateAIVocabCredits } from '../../utils/pricing'
-import { aiVocabErrorMessage } from './aiVocabError'
+import { aiVocabErrorMessage, isInsufficientCreditsError } from './aiVocabError'
 
 export function CreateProgramFromTitlePage() {
   const navigate = useNavigate()
-  const { nativeLang, studyLang, t } = useLanguagePair()
+  const { nativeLang, studyLang, t, uiLocale } = useLanguagePair()
   const studyLabel = findLanguage(studyLang)?.name ?? studyLang
   const { creditBalance, refreshAccount } = useAccount()
   const {
@@ -36,6 +40,8 @@ export function CreateProgramFromTitlePage() {
   const [submitting, setSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [errorCode, setErrorCode] = useState<string | null>(null)
+  const [missingCredits, setMissingCredits] = useState(0)
 
   const estimatedCredits = useMemo(() => {
     const parsed = parseWordCountInput(wordCountText)
@@ -44,6 +50,8 @@ export function CreateProgramFromTitlePage() {
     }
     return estimateAIVocabCredits(parsed)
   }, [wordCountText])
+
+  const creditsError = isInsufficientCreditsError(errorCode)
 
   function validateForm(): number | null {
     let valid = true
@@ -65,9 +73,13 @@ export function CreateProgramFromTitlePage() {
       return null
     }
     if (estimatedCredits !== null && estimatedCredits > creditBalance) {
-      setErrorMessage(t('createAi.validation.insufficientCredits'))
+      setErrorCode('insufficient_credits')
+      setMissingCredits(estimatedCredits - creditBalance)
+      setErrorMessage(null)
       return null
     }
+    setErrorCode(null)
+    setMissingCredits(0)
     setErrorMessage(null)
     return wordCountResult.ok ? wordCountResult.value : null
   }
@@ -80,6 +92,8 @@ export function CreateProgramFromTitlePage() {
 
     setSubmitting(true)
     setSuccessMessage(null)
+    setErrorCode(null)
+    setMissingCredits(0)
     setErrorMessage(null)
 
     try {
@@ -98,7 +112,14 @@ export function CreateProgramFromTitlePage() {
       )
     } catch (err) {
       const code = err instanceof ApiError ? err.code : 'request_failed'
-      setErrorMessage(aiVocabErrorMessage(code, t))
+      setErrorCode(code)
+      if (code === 'insufficient_credits' && estimatedCredits !== null) {
+        setMissingCredits(Math.max(1, estimatedCredits - creditBalance))
+        setErrorMessage(null)
+      } else {
+        setMissingCredits(0)
+        setErrorMessage(aiVocabErrorMessage(code, t))
+      }
     } finally {
       setSubmitting(false)
     }
@@ -110,7 +131,7 @@ export function CreateProgramFromTitlePage() {
       hint={t('createAiTitle.setup.hint')}
       langPair={studyLabel}
       successMessage={successMessage}
-      errorMessage={errorMessage}
+      errorMessage={creditsError ? null : errorMessage}
       t={t}
     >
       <label className="mt-6 block text-sm font-medium text-text" htmlFor="ai-title">
@@ -167,11 +188,22 @@ export function CreateProgramFromTitlePage() {
       </p>
       {estimatedCredits != null && (
         <p className="mt-2 text-xs text-text-muted">
-          {t('createAiTitle.setup.creditsEstimate', { credits: estimatedCredits })}
+          {t('createAiTitle.setup.creditsEstimate', {
+            credits: new Intl.NumberFormat(uiLocale === 'vi' ? 'vi-VN' : 'en-US').format(
+              estimatedCredits,
+            ),
+          })}
         </p>
       )}
 
       <AiCreateRefundNote t={t} />
+      {creditsError ? (
+        <AiCreateInsufficientCreditsAlert
+          missingCredits={missingCredits}
+          uiLocale={uiLocale}
+          t={t}
+        />
+      ) : null}
 
       <AiCreateFooter
         onConfig={() => setConfigDialogOpen(true)}
