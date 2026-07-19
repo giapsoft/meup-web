@@ -155,18 +155,18 @@ export function SellerPage() {
   )
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
+    <main className="mx-auto max-w-5xl px-4 py-4 sm:px-6 sm:py-10">
       <h1 className="text-2xl font-semibold tracking-tight text-text sm:text-3xl">
         {t('nav.seller')}
       </h1>
-      <p className="mt-2 max-w-2xl text-sm text-text-muted">{t('seller.description')}</p>
+      <p className="mt-1.5 max-w-2xl text-sm text-text-muted sm:mt-2">{t('seller.description')}</p>
 
-      <div className="mt-5 grid grid-cols-2 gap-2 sm:gap-3">
-        <div className="rounded-xl border border-border bg-surface-raised px-3 py-3 text-center">
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-3">
+        <div className="rounded-xl border border-border bg-surface-raised px-3 py-2.5 text-center sm:py-3">
           <p className="text-lg font-semibold tabular-nums text-credit sm:text-xl">{creditBalance}</p>
           <p className="mt-0.5 text-[11px] text-text-muted sm:text-xs">{t('seller.summaryWallet')}</p>
         </div>
-        <div className="rounded-xl border border-border bg-surface-raised px-3 py-3 text-center">
+        <div className="rounded-xl border border-border bg-surface-raised px-3 py-2.5 text-center sm:py-3">
           <p className="text-lg font-semibold tabular-nums text-text sm:text-xl">
             {tab === 'sales' && loadState.phase === 'ready' ? pageSalesCredits : '—'}
           </p>
@@ -175,7 +175,7 @@ export function SellerPage() {
       </div>
 
       <div
-        className="mt-6 flex gap-1 rounded-xl border border-border bg-surface-raised p-1"
+        className="mt-4 flex gap-1 rounded-xl border border-border bg-surface-raised p-0.5 sm:mt-6 sm:p-1"
         role="tablist"
         aria-label={t('seller.tabsLabel')}
       >
@@ -187,7 +187,7 @@ export function SellerPage() {
             aria-selected={tab === key}
             onClick={() => setTab(key)}
             className={[
-              'flex min-h-11 flex-1 items-center justify-center rounded-lg px-1.5 py-2 text-xs font-medium transition sm:px-2 sm:text-sm',
+              'flex min-h-9 flex-1 items-center justify-center rounded-lg px-1.5 py-1.5 text-xs font-medium transition sm:min-h-11 sm:px-2 sm:py-2 sm:text-sm',
               tab === key
                 ? 'bg-surface-card text-text shadow-sm'
                 : 'text-text-muted hover:text-text',

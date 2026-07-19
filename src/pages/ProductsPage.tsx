@@ -650,24 +650,24 @@ export function ProductsPage() {
     (collectedFilter === 'shared' && shared.length === 0)
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+    <main className="mx-auto max-w-5xl px-4 py-4 sm:px-6 sm:py-10">
+      <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-text sm:text-3xl">
             {t('products.pageTitle', { name: studyLabel })}
           </h1>
-          <p className="mt-2 max-w-2xl text-sm text-text-muted">{t('products.my.description')}</p>
+          <p className="mt-1.5 max-w-2xl text-sm text-text-muted sm:mt-2">{t('products.my.description')}</p>
         </div>
         <Link
           to="/products/new"
-          className="inline-flex min-h-11 shrink-0 items-center rounded-xl border border-accent/40 bg-accent-soft px-4 py-2.5 text-sm font-medium text-accent no-underline transition hover:border-accent hover:bg-accent/20"
+          className="inline-flex min-h-9 shrink-0 items-center rounded-xl border border-accent/40 bg-accent-soft px-3 py-1.5 text-sm font-medium text-accent no-underline transition hover:border-accent hover:bg-accent/20 sm:min-h-11 sm:px-4 sm:py-2.5"
         >
           {t('products.createCta')}
         </Link>
       </div>
 
       <div
-        className="mt-6 flex gap-1 overflow-x-auto rounded-xl border border-border bg-surface-raised p-1"
+        className="mt-4 flex gap-1 overflow-x-auto rounded-xl border border-border bg-surface-raised p-0.5 sm:mt-6 sm:p-1"
         role="tablist"
         aria-label={t('products.tabsLabel')}
       >
@@ -679,7 +679,7 @@ export function ProductsPage() {
             aria-selected={tab === key}
             onClick={() => setPrimaryTab(key)}
             className={[
-              'relative flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium transition sm:text-sm',
+              'relative flex min-h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium transition sm:min-h-11 sm:gap-1.5 sm:py-2 sm:text-sm',
               tab === key
                 ? 'bg-surface-card text-text shadow-sm'
                 : 'text-text-muted hover:text-text',

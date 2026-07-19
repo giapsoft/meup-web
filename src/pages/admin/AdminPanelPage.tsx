@@ -231,7 +231,7 @@ export function AdminPanelPage() {
   return (
     <div className="flex min-h-svh flex-col bg-surface">
       <header className="sticky top-0 z-50 border-b border-border bg-surface/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-3 py-2 sm:px-6 sm:py-3">
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-warning">Admin</p>
             <h1 className="text-lg font-semibold text-text">{t('admin.panel.title')}</h1>
@@ -254,9 +254,9 @@ export function AdminPanelPage() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-4 sm:px-6 sm:py-8">
         <div
-          className="flex gap-1 rounded-xl border border-border bg-surface-raised p-1"
+          className="flex gap-1 rounded-xl border border-border bg-surface-raised p-0.5 sm:p-1"
           role="tablist"
           aria-label={t('admin.tabsLabel')}
         >
@@ -268,7 +268,7 @@ export function AdminPanelPage() {
               aria-selected={tab === key}
               onClick={() => setTab(key)}
               className={[
-                'flex-1 rounded-lg px-1.5 py-2 text-xs font-medium transition sm:px-2 sm:text-sm',
+                'flex-1 rounded-lg px-1.5 py-1.5 text-xs font-medium transition sm:px-2 sm:py-2 sm:text-sm',
                 tab === key
                   ? 'bg-surface-card text-text shadow-sm'
                   : 'text-text-muted hover:text-text',

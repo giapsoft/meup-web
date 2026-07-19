@@ -88,7 +88,7 @@ export function NavDrawer({
         aria-labelledby={titleId}
         className="absolute inset-y-0 left-0 flex w-[min(86vw,20rem)] flex-col border-r border-border bg-surface-raised pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] shadow-xl"
       >
-        <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
+        <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2 sm:px-4 sm:py-3">
           <p id={titleId} className="text-base font-semibold text-text">
             MeUp
           </p>
@@ -96,7 +96,7 @@ export function NavDrawer({
             ref={closeRef}
             type="button"
             onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-text-muted transition hover:bg-surface-hover hover:text-text"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition hover:bg-surface-hover hover:text-text sm:h-10 sm:w-10"
             aria-label={t('nav.closeMenu')}
           >
             <span aria-hidden className="text-xl leading-none">
@@ -117,7 +117,7 @@ export function NavDrawer({
                     onClick={onClose}
                     aria-current={active ? 'page' : undefined}
                     className={[
-                      'flex items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-medium no-underline transition',
+                      'flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm font-medium no-underline transition sm:py-3',
                       active
                         ? 'bg-accent-soft text-accent'
                         : 'text-text-muted hover:bg-surface-hover hover:text-text',

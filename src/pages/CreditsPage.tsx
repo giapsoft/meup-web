@@ -45,7 +45,7 @@ export function CreditsPage() {
   }, [load])
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
       <header className="mb-6 space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight text-text sm:text-3xl">
           {t('credits.page.title')}

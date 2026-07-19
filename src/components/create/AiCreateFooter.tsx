@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import type { MessageParams, TranslationKey } from '../../i18n/types'
 
 const FOOTER_BTN =
-  'min-h-12 w-full shrink-0 rounded-xl px-4 py-3 text-sm transition sm:w-auto'
+  'min-h-10 w-full shrink-0 rounded-xl px-3 py-2 text-sm transition sm:min-h-12 sm:w-auto sm:px-4 sm:py-3'
 const FOOTER_PRIMARY = `${FOOTER_BTN} bg-accent font-semibold text-surface hover:opacity-90`
 const FOOTER_SECONDARY = `${FOOTER_BTN} border border-border bg-surface-card font-medium text-text-muted hover:bg-surface-hover`
 
@@ -28,7 +28,7 @@ export function AiCreateFooter({
   t,
 }: AiCreateFooterProps) {
   return (
-    <div className="mt-6 flex flex-col-reverse gap-3 sm:mt-8 sm:flex-row sm:flex-nowrap sm:justify-end">
+    <div className="mt-4 flex flex-col-reverse gap-2 sm:mt-8 sm:flex-row sm:flex-nowrap sm:justify-end sm:gap-3">
       <button
         type="button"
         onClick={onConfig}

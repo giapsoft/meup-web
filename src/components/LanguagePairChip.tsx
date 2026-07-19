@@ -162,7 +162,7 @@ export function LanguagePairChip({ open, onOpenChange, variant }: LanguagePairCh
         aria-haspopup="listbox"
         aria-controls={open ? listId : undefined}
         onClick={() => onOpenChange(!open)}
-        className="flex max-w-[12rem] items-center gap-1 rounded-full border border-border bg-surface-raised px-2.5 py-1.5 text-xs font-medium text-text transition hover:border-accent/40 hover:bg-surface-hover sm:max-w-none sm:px-3 sm:text-sm"
+        className="flex max-w-[12rem] items-center gap-1 rounded-full border border-border bg-surface-raised px-2 py-1 text-xs font-medium text-text transition hover:border-accent/40 hover:bg-surface-hover sm:max-w-none sm:px-3 sm:py-1.5 sm:text-sm"
         title={t('nav.changeLanguagePair')}
       >
         <span className="truncate">{label}</span>

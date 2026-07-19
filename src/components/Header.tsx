@@ -89,15 +89,15 @@ export function Header({ onLogout }: HeaderProps) {
   }
 
   const creditsChipClass =
-    'flex items-center gap-1.5 rounded-full border border-border bg-surface-raised px-2.5 py-1.5 no-underline transition hover:border-amber-400/40 hover:bg-surface-hover sm:px-3 sm:py-2'
+    'flex items-center gap-1.5 rounded-full border border-border bg-surface-raised px-2 py-1 no-underline transition hover:border-amber-400/40 hover:bg-surface-hover sm:px-3 sm:py-2'
 
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-border bg-surface/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-3 sm:gap-3 sm:px-6 sm:py-4 lg:px-8">
+        <div className="mx-auto flex max-w-6xl items-center gap-2 px-3 py-2 sm:gap-3 sm:px-6 sm:py-4 lg:px-8">
           <button
             type="button"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-raised text-text transition hover:border-accent/40 md:hidden"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-raised text-text transition hover:border-accent/40 sm:h-10 sm:w-10 md:hidden"
             aria-expanded={drawerOpen}
             aria-label={t('nav.openMenu')}
             onClick={openDrawer}

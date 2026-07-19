@@ -107,11 +107,13 @@ export function WordCountSlider({
 
   return (
     <div className="mt-5">
-      <div className="flex items-baseline justify-between gap-3">
+      <div className="flex items-center justify-between gap-3">
         <label className="text-sm font-medium text-text" htmlFor={id}>
           {label}
         </label>
-        <span className="shrink-0 text-sm font-semibold tabular-nums text-text">{safe}</span>
+        <span className="inline-flex min-w-[3.25rem] items-center justify-center rounded-xl border border-accent/45 bg-accent-soft px-3 py-1 text-2xl font-bold tabular-nums leading-none text-accent">
+          {safe}
+        </span>
       </div>
 
       <div className="mt-2 flex items-center gap-2">
@@ -119,7 +121,7 @@ export function WordCountSlider({
           type="button"
           disabled={safe <= min}
           aria-label={decreaseLabel}
-          className="flex h-11 w-11 shrink-0 touch-none items-center justify-center rounded-xl border border-border bg-surface-card text-lg font-semibold text-text transition hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-40 select-none"
+          className="flex h-10 w-10 shrink-0 touch-none items-center justify-center rounded-xl border border-border bg-surface-card text-lg font-semibold text-text transition hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-40 select-none sm:h-11 sm:w-11"
           {...decreaseHold}
         >
           −
@@ -142,7 +144,7 @@ export function WordCountSlider({
           type="button"
           disabled={safe >= max}
           aria-label={increaseLabel}
-          className="flex h-11 w-11 shrink-0 touch-none items-center justify-center rounded-xl border border-border bg-surface-card text-lg font-semibold text-text transition hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-40 select-none"
+          className="flex h-10 w-10 shrink-0 touch-none items-center justify-center rounded-xl border border-border bg-surface-card text-lg font-semibold text-text transition hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-40 select-none sm:h-11 sm:w-11"
           {...increaseHold}
         >
           +

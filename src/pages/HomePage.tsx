@@ -87,7 +87,7 @@ export function HomePage() {
   }, [load])
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
+    <main className="mx-auto max-w-5xl px-4 py-4 sm:px-6 sm:py-10">
       <section className="mb-6 sm:mb-8">
         <p className="text-sm font-medium text-accent">{t('home.welcome')}</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight text-text sm:text-3xl">
