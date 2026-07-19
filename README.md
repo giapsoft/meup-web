@@ -61,6 +61,7 @@ https://<web>/[study?][native?][deviceOrder][tempHash6]
 **Thứ tự lang trên path = Study → Native** (ngoại lệ; chỗ khác trong codebase là Native → Study).
 
 - `native == vi` trên máy → **không** ghi vào URL; web fallback `vi`.
+- Web **không** cho user chọn native — chỉ chọn **ngôn ngữ học (study)** trên UI.
 - Mỗi lần mở path QR hợp lệ → **ép** lang theo QR (kể cả đã đăng nhập).
 - Web gọi `POST /api/device/link/redeem` với `"<deviceOrder>-<tempHash>"`.
 
@@ -72,23 +73,23 @@ Dev URL mẫu (path):
 http://localhost:8086/en101kehj
 ```
 
-## Trang chủ (mockup)
+## Trang chủ
 
-- Chọn **ngôn ngữ nguồn** và **ngôn ngữ học** — ban đầu từ URL QR; giao diện web đổi theo ngôn ngữ nguồn
-- **Chương trình của tôi** → `/programs`
-- **Tạo chương trình mới** → `/programs/new`
+- Chọn **ngôn ngữ học** trên chip header (tên ngôn ngữ); native lấy từ QR / account / session / mặc định `vi`
+- **Chương trình của tôi** → `/products`
+- **Tạo chương trình mới** → `/products/new`
 - **Khám phá chương trình** → `/explore`
-- Header: **credit** thiết bị (mock) + **Đăng xuất**
+- Header: **credit** + chip ngôn ngữ học + **Đăng xuất**
 
 ## i18n
 
 ```
 src/locales/     vi, en, ja, ko, zh, fr, de
 src/i18n/        types, messages (fallback en)
-src/context/     LanguagePairProvider — nativeLang = uiLocale
+src/context/     LanguagePairProvider — nativeLang (read-only) → uiLocale; user chỉ đổi studyLang
 ```
 
-Trong component: `const { t, nativeLang, setNativeLang } = useLanguagePair()` rồi `t('home.title')`.
+Trong component: `const { t, studyLang, setStudyLang } = useLanguagePair()` rồi `t('home.title')`.
 
 ## Stack
 

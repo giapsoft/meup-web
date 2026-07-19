@@ -7,6 +7,7 @@ import { AiCreatePageShell } from '../../components/create/AiCreatePageShell'
 import { CustomConfigDialog } from '../../components/create/CustomConfigDialog'
 import { useAccount } from '../../context/AccountProvider'
 import { useLanguagePair } from '../../context/LanguagePairProvider'
+import { findLanguage } from '../../data/mock'
 import { useAiCreateConfig } from '../../hooks/useAiCreateConfig'
 import { App } from '../../app/App'
 import { parseWordCountInput, validateWordCountInput } from '../../utils/aiVocabWordCount'
@@ -17,7 +18,8 @@ const PARAGRAPH_MIN_LENGTH = 20
 
 export function CreateProgramFromParagraphPage() {
   const navigate = useNavigate()
-  const { nativeLang, studyLang, langPair, t } = useLanguagePair()
+  const { nativeLang, studyLang, t } = useLanguagePair()
+  const studyLabel = findLanguage(studyLang)?.nativeName ?? studyLang
   const { creditBalance, refreshAccount } = useAccount()
   const {
     programConfig,
@@ -113,7 +115,7 @@ export function CreateProgramFromParagraphPage() {
     <AiCreatePageShell
       title={t('createAiParagraph.setup.title')}
       hint={t('createAiParagraph.setup.hint')}
-      langPair={langPair}
+      langPair={studyLabel}
       successMessage={successMessage}
       errorMessage={errorMessage}
       t={t}

@@ -7,6 +7,7 @@ import { AiCreatePageShell } from '../../components/create/AiCreatePageShell'
 import { CustomConfigDialog } from '../../components/create/CustomConfigDialog'
 import { useAccount } from '../../context/AccountProvider'
 import { useLanguagePair } from '../../context/LanguagePairProvider'
+import { findLanguage } from '../../data/mock'
 import { useAiCreateConfig } from '../../hooks/useAiCreateConfig'
 import { App } from '../../app/App'
 import { parseWordCountInput, validateWordCountInput } from '../../utils/aiVocabWordCount'
@@ -15,7 +16,8 @@ import { aiVocabErrorMessage } from './aiVocabError'
 
 export function CreateProgramFromTitlePage() {
   const navigate = useNavigate()
-  const { nativeLang, studyLang, langPair, t } = useLanguagePair()
+  const { nativeLang, studyLang, t } = useLanguagePair()
+  const studyLabel = findLanguage(studyLang)?.nativeName ?? studyLang
   const { creditBalance, refreshAccount } = useAccount()
   const {
     programConfig,
@@ -106,7 +108,7 @@ export function CreateProgramFromTitlePage() {
     <AiCreatePageShell
       title={t('createAiTitle.setup.title')}
       hint={t('createAiTitle.setup.hint')}
-      langPair={langPair}
+      langPair={studyLabel}
       successMessage={successMessage}
       errorMessage={errorMessage}
       t={t}

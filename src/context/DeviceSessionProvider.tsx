@@ -50,7 +50,8 @@ const AuthActionsContext = createContext<{ reauthorize: () => void } | null>(nul
  *  2. Có mã link từ QR URL (path mới hoặc `?authCode=`) → redeem 1 lần lấy token.
  *  3. Không có gì → unauthorized.
  *
- * Path QR mới: `/[study?][native?][order][mac6]` — luôn ép lang theo path (kể cả đã login).
+ * Path QR mới: `/[study?][native?][order][mac6]` — ép lang theo path (kể cả đã login).
+ * Web chỉ cho user đổi study; native từ path/account/session/default, không có picker.
  */
 export function DeviceSessionProvider({ children }: { children: ReactNode }) {
   const [searchParams] = useSearchParams()

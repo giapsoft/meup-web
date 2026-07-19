@@ -14,11 +14,11 @@ import type { MessageParams, TranslationKey, UiLocale } from '../i18n/types'
 import { patchDeviceSession } from '../utils/deviceSessionStorage'
 
 type LanguagePairContextValue = {
+  /** Read-only — không còn picker; nguồn: QR / account / session / default. */
   nativeLang: string
   studyLang: string
   uiLocale: UiLocale
   langPair: string
-  setNativeLang: (code: string) => void
   setStudyLang: (code: string) => void
   t: (key: TranslationKey, params?: MessageParams) => string
 }
@@ -41,9 +41,7 @@ export function LanguagePairProvider({
 
   // Dùng ref để luôn đọc giá trị mới nhất trong callback mà không tạo closure stale.
   const nativeLangRef = useRef(nativeLang)
-  const studyLangRef = useRef(studyLang)
   nativeLangRef.current = nativeLang
-  studyLangRef.current = studyLang
 
   useEffect(() => {
     setNativeLangState(initialNativeLang)
@@ -55,14 +53,6 @@ export function LanguagePairProvider({
   useEffect(() => {
     document.documentElement.lang = uiLocale
   }, [uiLocale])
-
-  const setNativeLang = useCallback((code: string) => {
-    setNativeLangState(code)
-    patchDeviceSession({ nativeLangCode: code })
-    void updateLangPrefs(code, studyLangRef.current).catch(() => {
-      // best-effort: lỗi mạng không chặn UI
-    })
-  }, [])
 
   const setStudyLang = useCallback((code: string) => {
     setStudyLangState(code)
@@ -83,11 +73,10 @@ export function LanguagePairProvider({
       studyLang,
       uiLocale,
       langPair: langPairId(nativeLang, studyLang),
-      setNativeLang,
       setStudyLang,
       t,
     }),
-    [nativeLang, studyLang, uiLocale, setNativeLang, setStudyLang, t],
+    [nativeLang, studyLang, uiLocale, setStudyLang, t],
   )
 
   return (

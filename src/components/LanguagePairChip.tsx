@@ -1,44 +1,7 @@
-import { useEffect, useId, useRef } from 'react'
+import { useEffect, useId, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { LANGUAGES } from '../data/mock'
+import { findLanguage, formatLanguageOption, LANGUAGES } from '../data/mock'
 import { useLanguagePair } from '../context/LanguagePairProvider'
-import { LanguagePicker } from './LanguagePicker'
-
-type LanguagePairPanelProps = {
-  className?: string
-}
-
-export function LanguagePairPanel({ className = '' }: LanguagePairPanelProps) {
-  const { nativeLang, studyLang, setNativeLang, setStudyLang, t } = useLanguagePair()
-  const sameLanguage = nativeLang === studyLang
-
-  return (
-    <div className={className}>
-      <div className="grid gap-5 sm:grid-cols-2 sm:gap-4">
-        <LanguagePicker
-          id="pair-panel-native"
-          label={t('languagePair.nativeLabel')}
-          hint={t('languagePair.nativeHint')}
-          value={nativeLang}
-          languages={LANGUAGES}
-          onChange={setNativeLang}
-        />
-        <LanguagePicker
-          id="pair-panel-study"
-          label={t('languagePair.studyLabel')}
-          hint={t('languagePair.studyHint')}
-          value={studyLang}
-          languages={LANGUAGES}
-          onChange={setStudyLang}
-        />
-      </div>
-
-      {sameLanguage ? (
-        <p className="mt-3 text-sm text-warning">{t('languagePair.sameWarning')}</p>
-      ) : null}
-    </div>
-  )
-}
 
 type LanguagePairChipProps = {
   open: boolean
@@ -48,16 +11,24 @@ type LanguagePairChipProps = {
 }
 
 export function LanguagePairChip({ open, onOpenChange, variant }: LanguagePairChipProps) {
-  const { nativeLang, studyLang, t } = useLanguagePair()
+  const { studyLang, setStudyLang, t } = useLanguagePair()
   const titleId = useId()
+  const listId = useId()
   const panelRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
-  const label = `${nativeLang} → ${studyLang}`
+  const label = useMemo(() => {
+    const lang = findLanguage(studyLang)
+    return lang?.nativeName ?? studyLang
+  }, [studyLang])
 
   function close() {
     onOpenChange(false)
-    // Restore focus after overlay unmounts.
     window.setTimeout(() => triggerRef.current?.focus(), 0)
+  }
+
+  function selectStudy(code: string) {
+    setStudyLang(code)
+    close()
   }
 
   useEffect(() => {
@@ -78,10 +49,6 @@ export function LanguagePairChip({ open, onOpenChange, variant }: LanguagePairCh
       }
       const target = event.target
       if (!(target instanceof Node)) {
-        return
-      }
-      // Native <select> menus render outside the panel — don't treat as "outside click".
-      if (target instanceof Element && target.closest('select, option')) {
         return
       }
       if (!panelRef.current.contains(target) && !triggerRef.current.contains(target)) {
@@ -108,19 +75,38 @@ export function LanguagePairChip({ open, onOpenChange, variant }: LanguagePairCh
     }
   }, [open])
 
+  const langList = (
+    <ul id={listId} className="mt-3 flex flex-col gap-1.5" role="listbox" aria-labelledby={titleId}>
+      {LANGUAGES.map((lang) => {
+        const selected = lang.code === studyLang
+        return (
+          <li key={lang.code}>
+            <button
+              type="button"
+              role="option"
+              aria-selected={selected}
+              onClick={() => selectStudy(lang.code)}
+              className={[
+                'flex min-h-11 w-full items-center rounded-xl border px-3 text-left text-sm font-medium transition sm:min-h-12 sm:px-4 sm:text-base',
+                selected
+                  ? 'border-accent/50 bg-accent-soft text-accent'
+                  : 'border-border bg-surface-raised text-text hover:border-accent/40 hover:bg-surface-hover',
+              ].join(' ')}
+            >
+              {formatLanguageOption(lang)}
+            </button>
+          </li>
+        )
+      })}
+    </ul>
+  )
+
   const panel = (
     <>
       <h2 id={titleId} className="text-sm font-semibold text-text sm:text-base">
         {t('nav.changeLanguagePair')}
       </h2>
-      <LanguagePairPanel className="mt-3" />
-      <button
-        type="button"
-        onClick={close}
-        className="mt-4 flex min-h-11 w-full items-center justify-center rounded-xl border border-accent/40 bg-accent-soft text-sm font-semibold text-accent transition hover:border-accent hover:bg-accent/20"
-      >
-        {t('nav.pairDone')}
-      </button>
+      {langList}
     </>
   )
 
@@ -133,7 +119,7 @@ export function LanguagePairChip({ open, onOpenChange, variant }: LanguagePairCh
               role="dialog"
               aria-modal="true"
               aria-labelledby={titleId}
-              className="absolute inset-x-0 bottom-0 max-h-[min(90vh,32rem)] overflow-y-auto rounded-t-2xl border border-border bg-surface-raised p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-xl"
+              className="absolute inset-x-0 bottom-0 max-h-[min(90vh,36rem)] overflow-y-auto rounded-t-2xl border border-border bg-surface-raised p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-xl"
             >
               <div className="mb-1 flex items-center justify-end">
                 <button
@@ -159,7 +145,7 @@ export function LanguagePairChip({ open, onOpenChange, variant }: LanguagePairCh
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="absolute right-0 top-full z-[60] mt-2 w-[min(100vw-2rem,22rem)] rounded-xl border border-border bg-surface-raised p-4 shadow-xl"
+        className="absolute right-0 top-full z-[60] mt-2 max-h-[min(70vh,28rem)] w-[min(100vw-2rem,22rem)] overflow-y-auto rounded-xl border border-border bg-surface-raised p-4 shadow-xl"
       >
         {panel}
       </div>
@@ -171,12 +157,13 @@ export function LanguagePairChip({ open, onOpenChange, variant }: LanguagePairCh
         ref={triggerRef}
         type="button"
         aria-expanded={open}
-        aria-haspopup="dialog"
+        aria-haspopup="listbox"
+        aria-controls={open ? listId : undefined}
         onClick={() => onOpenChange(!open)}
         className="flex max-w-[9.5rem] items-center gap-1 rounded-full border border-border bg-surface-raised px-2.5 py-1.5 text-xs font-medium text-text transition hover:border-accent/40 hover:bg-surface-hover sm:max-w-none sm:px-3 sm:text-sm"
         title={t('nav.changeLanguagePair')}
       >
-        <span className="truncate tabular-nums">{label}</span>
+        <span className="truncate">{label}</span>
         <span className="text-text-muted" aria-hidden>
           ▾
         </span>

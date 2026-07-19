@@ -327,9 +327,7 @@ function CreateRequestCard({
       <dl className="mt-3 grid gap-1 text-xs text-text-muted sm:grid-cols-2">
         <div>
           <dt className="inline">{t('products.langPair')}: </dt>
-          <dd className="inline font-mono">
-            {request.nativeLangId} → {request.studyLangId}
-          </dd>
+          <dd className="inline font-mono">{request.studyLangId}</dd>
         </div>
         <div>
           <dt className="inline">{t('products.totalCredits')}: </dt>

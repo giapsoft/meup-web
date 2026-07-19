@@ -25,6 +25,7 @@ export type LangPair = {
  *
  * Thứ tự trên path (NGOẠI LỆ vs codebase): Study → Native → deviceOrder → tempHash(6).
  * Lang code 2 hoặc 3 ký tự — tách theo độ dài vùng chữ cái (xem `splitLangRegion`).
+ * Web không cho user chọn native; giá trị native chỉ đến từ path/query/account/session/default.
  */
 export type ParsedDeviceLink = {
   studyLangCode: string | null

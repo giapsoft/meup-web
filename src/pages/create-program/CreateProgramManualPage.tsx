@@ -7,13 +7,15 @@ import { CustomConfigDialog } from '../../components/create/CustomConfigDialog'
 import { VocabEntryDialog } from '../../components/create/VocabEntryDialog'
 import { useAccount } from '../../context/AccountProvider'
 import { useLanguagePair } from '../../context/LanguagePairProvider'
+import { findLanguage } from '../../data/mock'
 import { useAiCreateConfig } from '../../hooks/useAiCreateConfig'
 import { randomUUID } from '../../utils/id'
 import { itemSchemaFromWebConfig } from '../../utils/programConfigWeb'
 
 export function CreateProgramManualPage() {
   const navigate = useNavigate()
-  const { nativeLang, studyLang, langPair, t } = useLanguagePair()
+  const { nativeLang, studyLang, t } = useLanguagePair()
+  const studyLabel = findLanguage(studyLang)?.nativeName ?? studyLang
   const { refreshAccount } = useAccount()
   const {
     programConfig,
@@ -76,7 +78,7 @@ export function CreateProgramManualPage() {
     <AiCreatePageShell
       title={t('createManual.setup.title')}
       hint={t('createManual.setup.hint')}
-      langPair={langPair}
+      langPair={studyLabel}
       successMessage={successMessage}
       errorMessage={errorMessage}
       t={t}

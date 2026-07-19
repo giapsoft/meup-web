@@ -7,6 +7,7 @@ import { AiCreatePageShell } from '../../components/create/AiCreatePageShell'
 import { CustomConfigDialog } from '../../components/create/CustomConfigDialog'
 import { useAccount } from '../../context/AccountProvider'
 import { useLanguagePair } from '../../context/LanguagePairProvider'
+import { findLanguage } from '../../data/mock'
 import { useAiCreateConfig } from '../../hooks/useAiCreateConfig'
 import { App } from '../../app/App'
 import {
@@ -25,7 +26,8 @@ const MAX_UPLOAD_BYTES = 20 * 1024 * 1024
 export function CreateProgramFromImagePage() {
   const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { nativeLang, studyLang, langPair, t } = useLanguagePair()
+  const { nativeLang, studyLang, t } = useLanguagePair()
+  const studyLabel = findLanguage(studyLang)?.nativeName ?? studyLang
   const { creditBalance, refreshAccount } = useAccount()
   const {
     programConfig,
@@ -155,7 +157,7 @@ export function CreateProgramFromImagePage() {
     <AiCreatePageShell
       title={t('createAiImage.setup.title')}
       hint={t('createAiImage.setup.hint')}
-      langPair={langPair}
+      langPair={studyLabel}
       successMessage={successMessage}
       errorMessage={errorMessage}
       t={t}

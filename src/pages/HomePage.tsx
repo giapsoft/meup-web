@@ -29,20 +29,15 @@ function requestTitle(request: ProductCreateRequestSummaryDto): string {
 }
 
 export function HomePage() {
-  const { nativeLang, studyLang, langPair, t } = useLanguagePair()
+  const { nativeLang, studyLang, t } = useLanguagePair()
   const [loadState, setLoadState] = useState<LoadState>({ phase: 'loading' })
   const [ownedCount, setOwnedCount] = useState(0)
   const [activeJobs, setActiveJobs] = useState(0)
   const [continueTarget, setContinueTarget] = useState<ContinueTarget | null>(null)
 
-  const pairLabel = useMemo(() => {
-    const native = findLanguage(nativeLang)
-    const study = findLanguage(studyLang)
-    if (!native || !study) return `${nativeLang} → ${studyLang}`
-    return `${native.nativeName} → ${study.nativeName}`
-  }, [nativeLang, studyLang])
-
-  const sameLanguage = nativeLang === studyLang
+  const studyLabel = useMemo(() => {
+    return findLanguage(studyLang)?.nativeName ?? studyLang
+  }, [studyLang])
 
   const load = useCallback(async () => {
     setLoadState({ phase: 'loading' })
@@ -101,15 +96,8 @@ export function HomePage() {
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-text-muted sm:text-base">
           {t('home.subtitle')}
         </p>
-        <p
-          className={[
-            'mt-3 text-sm',
-            sameLanguage ? 'text-warning' : 'text-text-muted',
-          ].join(' ')}
-        >
-          {sameLanguage
-            ? t('languagePair.sameWarning')
-            : t('home.pairSummary', { pair: pairLabel, code: langPair })}
+        <p className="mt-3 text-sm text-text-muted">
+          {t('home.pairSummary', { study: studyLabel })}
         </p>
       </section>
 

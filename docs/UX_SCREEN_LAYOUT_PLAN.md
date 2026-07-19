@@ -32,7 +32,7 @@ Tài liệu này đề xuất **bố cục lại thông tin (IA) và layout các
 | Control | Hành vi |
 |---------|---------|
 | **☰ Menu** | Mở **Nav Drawer**; `aria-expanded`; focus trap; Esc / tap scrim để đóng |
-| **Pair chip** | Luôn visible; tap → **bottom sheet** chọn ngôn ngữ (không mở full page Home) |
+| **Pair chip** | Luôn visible; hiện **tên ngôn ngữ study**; tap → **bottom sheet** chỉ chọn study |
 | **Credits** | Tap → menu nhỏ (balance · Get credits · theme · logout) **hoặc** mục tương ứng trong drawer |
 
 Brand text phụ (“MeUp Web”) **ẩn trên mobile** để giữ 1 hàng.
@@ -704,7 +704,7 @@ Gate: loading | unauthorized → /login|/register
 | Logout | Account menu | `App.handleLogout` | Action | Clear session → `/login` |
 | Verify email banner | Email chưa verify | `VerifyEmailBanner.tsx` | Banner | Message; Resend; Sending / Sent / Error |
 
-**Sau redesign (§0):** ☰ → `NavDrawer` (nav + pair shortcut + account); Pair chip trên header.
+| Pair chip trên header | Study-only; hiện tên ngôn ngữ học |
 
 ---
 
@@ -715,7 +715,7 @@ Gate: loading | unauthorized → /login|/register
 | Công năng | Chi tiết |
 |-----------|----------|
 | Welcome | Title + subtitle |
-| Language pair | Native + study pickers; cảnh báo cùng ngôn ngữ; hiện `langPair` |
+| Language pair | **Study-only** picker (chip header hiện tên ngôn ngữ study); native không chọn trên UI |
 | Shortcuts | Cards → Products, Create, Explore |
 
 **Plan:** pair lên header/drawer; Home → dashboard Continue + CTA Create.

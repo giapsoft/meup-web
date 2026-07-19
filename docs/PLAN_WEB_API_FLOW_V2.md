@@ -275,7 +275,7 @@ class App {
 
   private _config: WebConfig | null = null
   studyLangCode: string
-  nativeLangCode: string   // fallback browser locale
+  nativeLangCode: string   // read-only trên web (QR/account/session/default `vi`); không picker
   studyLangName: string
   nativeLangName: string
 
@@ -285,7 +285,7 @@ class App {
 ```
 
 **Tích hợp:**
-- Khởi tạo lang từ `LanguagePairProvider` / browser locale.
+- Khởi tạo lang từ `LanguagePairProvider` (user chỉ đổi `studyLang` trên UI).
 - `AccountProvider.creditBalance` ↔ `User.currentCredit` trong spec (có thể alias, không cần class `User` riêng).
 - Gọi `App.onUserLogout()` từ `useClearDeviceSession`.
 
