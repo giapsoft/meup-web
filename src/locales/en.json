@@ -671,6 +671,7 @@
   "createProgram.stepDisplay.left": "Left",
   "createProgram.stepDisplay.width": "Width",
   "createProgram.stepDisplay.height": "Height",
+  "createProgram.stepDisplay.imageSize": "Size (1:1)",
   "createProgram.stepDisplay.borderRadius": "Corner radius",
   "createProgram.stepDisplay.borderRadiusText": "Background radius",
   "createProgram.stepDisplay.maxLines": "Max lines",

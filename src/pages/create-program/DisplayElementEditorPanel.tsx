@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import type { MessageParams, TranslationKey } from '../../i18n/types'
 import type { DisplayElement, ItemSchema, SideDraft } from '../../types/program'
 import {
@@ -6,6 +7,8 @@ import {
   displayLayoutBounds,
   displayStackPosition,
   displayableAttributeIndexes,
+  enforceImageSquareLayout,
+  getDisplayLayoutPx,
   isImageAttribute,
   isTextAttribute,
   opacityToPercent,
@@ -68,12 +71,25 @@ export function DisplayElementEditorPanel({
   }
 
   const isText = isTextAttribute(schema, el.attributeIndex)
+  const isImage = isImageAttribute(schema, el.attributeIndex)
   const displayIndexes = displayableAttributeIndexes(schema)
-  const bounds = displayLayoutBounds(el)
+  const bounds = displayLayoutBounds(el, isImage ? { lockSquare: true } : undefined)
   const title = attributeLabel(schema, el.attributeIndex)
   const stack = displayStackPosition(side, displayIndex)
   const canSendBack = stack.count > 1 && stack.position > 0
   const canBringFront = stack.count > 1 && stack.position < stack.count - 1
+
+  useEffect(() => {
+    if (!isImage) {
+      return
+    }
+    const layout = getDisplayLayoutPx(el)
+    if (layout.width !== layout.height) {
+      onChange(updateDisplayElement(side, displayIndex, enforceImageSquareLayout(el)))
+    }
+    // Snap once when opening / selecting a non-square image box.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when displayIndex or image role changes
+  }, [displayIndex, isImage])
 
   function patch(next: DisplayElement) {
     onChange(updateDisplayElement(side, displayIndex, next))
@@ -84,6 +100,14 @@ export function DisplayElementEditorPanel({
       onChange(removeDisplayElement(side, displayIndex))
       onBack()
     }
+  }
+
+  function setAttributeIndex(attributeIndex: number) {
+    let next: DisplayElement = { ...el, attributeIndex }
+    if (isImageAttribute(schema, attributeIndex)) {
+      next = enforceImageSquareLayout(next)
+    }
+    patch(next)
   }
 
   return (
@@ -99,7 +123,7 @@ export function DisplayElementEditorPanel({
         <span className="text-sm font-medium text-text">{t('createProgram.stepDisplay.attributeType')}</span>
         <select
           value={el.attributeIndex}
-          onChange={(e) => patch({ ...el, attributeIndex: Number(e.target.value) })}
+          onChange={(e) => setAttributeIndex(Number(e.target.value))}
           className="mt-2 w-full min-h-11 rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-text"
         >
           {displayIndexes.map((idx) => (
@@ -149,7 +173,9 @@ export function DisplayElementEditorPanel({
           min={0}
           max={bounds.maxTop}
           unit=" px"
-          onChange={(top) => patch(setDisplayLayoutPx(el, { top }))}
+          onChange={(top) =>
+            patch(setDisplayLayoutPx(el, { top }, isImage ? { lockSquare: true } : undefined))
+          }
         />
         <SliderField
           label={t('createProgram.stepDisplay.left')}
@@ -157,24 +183,40 @@ export function DisplayElementEditorPanel({
           min={0}
           max={bounds.maxLeft}
           unit=" px"
-          onChange={(left) => patch(setDisplayLayoutPx(el, { left }))}
+          onChange={(left) =>
+            patch(setDisplayLayoutPx(el, { left }, isImage ? { lockSquare: true } : undefined))
+          }
         />
         <SliderField
-          label={t('createProgram.stepDisplay.width')}
+          label={
+            isImage
+              ? t('createProgram.stepDisplay.imageSize')
+              : t('createProgram.stepDisplay.width')
+          }
           value={bounds.width}
           min={bounds.minW}
           max={bounds.maxWidth}
           unit=" px"
-          onChange={(width) => patch(setDisplayLayoutPx(el, { width }))}
+          onChange={(width) =>
+            patch(
+              setDisplayLayoutPx(
+                el,
+                isImage ? { width, height: width } : { width },
+                isImage ? { lockSquare: true } : undefined,
+              ),
+            )
+          }
         />
-        <SliderField
-          label={t('createProgram.stepDisplay.height')}
-          value={bounds.height}
-          min={bounds.minH}
-          max={bounds.maxHeight}
-          unit=" px"
-          onChange={(height) => patch(setDisplayLayoutPx(el, { height }))}
-        />
+        {!isImage && (
+          <SliderField
+            label={t('createProgram.stepDisplay.height')}
+            value={bounds.height}
+            min={bounds.minH}
+            max={bounds.maxHeight}
+            unit=" px"
+            onChange={(height) => patch(setDisplayLayoutPx(el, { height }))}
+          />
+        )}
         <SliderField
           label={
             isText

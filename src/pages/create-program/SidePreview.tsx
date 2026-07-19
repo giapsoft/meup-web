@@ -140,14 +140,15 @@ export function SidePreview({
     }
     const dx = e.movementX / rect.width
     const dy = e.movementY / rect.height
+    const lockSquare = isImageAttribute(schema, el.attributeIndex)
     if (active.mode === 'resize' && active.corner) {
       onElementChange(
         active.index,
-        resizeDisplayByPreviewDelta(el, active.corner, dx, dy),
+        resizeDisplayByPreviewDelta(el, active.corner, dx, dy, { lockSquare }),
       )
       return
     }
-    onElementChange(active.index, moveDisplayByPreviewDelta(el, dx, dy))
+    onElementChange(active.index, moveDisplayByPreviewDelta(el, dx, dy, { lockSquare }))
   }
 
   function endPointer(index: number, e: React.PointerEvent) {

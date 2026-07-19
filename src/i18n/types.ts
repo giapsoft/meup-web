@@ -637,6 +637,7 @@ export type TranslationKey =
   | 'createProgram.stepDisplay.left'
   | 'createProgram.stepDisplay.width'
   | 'createProgram.stepDisplay.height'
+  | 'createProgram.stepDisplay.imageSize'
   | 'createProgram.stepDisplay.borderRadius'
   | 'createProgram.stepDisplay.borderRadiusText'
   | 'createProgram.stepDisplay.maxLines'

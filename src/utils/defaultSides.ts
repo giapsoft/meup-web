@@ -10,6 +10,7 @@ import {
   createPlayStep,
   firstTextAudioPlayIndex,
 } from './programConfig'
+import { imageSquareDisplayRatios } from './sideConfig'
 
 type DisplayTemplate = Omit<DisplayElement, 'attributeIndex'> & { layoutKey: string; slot?: 'text' | 'audio' | 'image' }
 
@@ -28,7 +29,7 @@ const PRESET_SIDE_TEMPLATES: SideTemplateSpec[] = [
   {
     backgroundColor: '#1a1a2e',
     display: [
-      { layoutKey: 'image', slot: 'image', x: 0, y: 0, w: 1, h: 1, order: 0 },
+      { layoutKey: 'image', slot: 'image', x: 0, y: 0, ...imageSquareDisplayRatios(), order: 0 },
       {
         layoutKey: 'studyText',
         slot: 'text',

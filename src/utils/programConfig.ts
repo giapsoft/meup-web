@@ -64,12 +64,13 @@ export function autoLayoutFromIndices(schema: ItemSchema, indices: number[]): Di
   let order = 0
 
   if (imageIndices.length > 0) {
+    // 1:1 in screen pixels on 240×320 card → w=1, h=240/320
     out.push({
       attributeIndex: imageIndices[0],
       x: 0,
       y: 0,
       w: 1,
-      h: 1,
+      h: 240 / 320,
       order: order++,
     })
   }

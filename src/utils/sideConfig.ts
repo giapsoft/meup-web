@@ -245,24 +245,44 @@ export function getDisplayLayoutPx(el: DisplayElement) {
   }
 }
 
-export function displayLayoutBounds(el: DisplayElement) {
+export function displayLayoutBounds(el: DisplayElement, options?: { lockSquare?: boolean }) {
   const layout = getDisplayLayoutPx(el)
   const minW = minWidthPx()
   const minH = minHeightPx()
+  const maxWidth = Math.max(minW, SCREEN_WIDTH - layout.left)
+  const maxHeight = Math.max(minH, SCREEN_HEIGHT - layout.top)
+  if (options?.lockSquare) {
+    const minS = Math.max(minW, minH)
+    const size = Math.max(minS, Math.min(layout.width, layout.height))
+    const maxS = Math.min(SCREEN_WIDTH - layout.left, SCREEN_HEIGHT - layout.top)
+    return {
+      top: layout.top,
+      left: layout.left,
+      width: size,
+      height: size,
+      minW: minS,
+      minH: minS,
+      maxTop: Math.max(0, SCREEN_HEIGHT - size),
+      maxLeft: Math.max(0, SCREEN_WIDTH - size),
+      maxWidth: Math.max(minS, maxS),
+      maxHeight: Math.max(minS, maxS),
+    }
+  }
   return {
     ...layout,
     minW,
     minH,
     maxTop: Math.max(0, SCREEN_HEIGHT - layout.height),
     maxLeft: Math.max(0, SCREEN_WIDTH - layout.width),
-    maxWidth: Math.max(minW, SCREEN_WIDTH - layout.left),
-    maxHeight: Math.max(minH, SCREEN_HEIGHT - layout.top),
+    maxWidth,
+    maxHeight,
   }
 }
 
 export function setDisplayLayoutPx(
   el: DisplayElement,
   patch: Partial<{ top: number; left: number; width: number; height: number }>,
+  options?: { lockSquare?: boolean },
 ): DisplayElement {
   let top = patch.top ?? floorPxFromRatioY(el.y)
   let left = patch.left ?? floorPxFromRatioX(el.x)
@@ -270,6 +290,29 @@ export function setDisplayLayoutPx(
   let height = patch.height ?? floorPxFromRatioY(el.h)
   const minW = minWidthPx()
   const minH = minHeightPx()
+
+  if (options?.lockSquare) {
+    const minS = Math.max(minW, minH)
+    let size: number
+    if (patch.width !== undefined && patch.height === undefined) {
+      size = patch.width
+    } else if (patch.height !== undefined && patch.width === undefined) {
+      size = patch.height
+    } else if (patch.width !== undefined && patch.height !== undefined) {
+      size = Math.round((patch.width + patch.height) / 2)
+    } else {
+      size = Math.min(width, height)
+    }
+    size = Math.max(minS, size)
+    left = Math.max(0, Math.min(left, SCREEN_WIDTH - minS))
+    top = Math.max(0, Math.min(top, SCREEN_HEIGHT - minS))
+    size = Math.min(size, SCREEN_WIDTH - left, SCREEN_HEIGHT - top)
+    size = Math.max(minS, size)
+    left = Math.max(0, Math.min(left, SCREEN_WIDTH - size))
+    top = Math.max(0, Math.min(top, SCREEN_HEIGHT - size))
+    return syncLayoutFromPx(el, top, left, size, size)
+  }
+
   width = Math.max(minW, width)
   height = Math.max(minH, height)
   left = Math.max(0, Math.min(left, SCREEN_WIDTH - width))
@@ -283,12 +326,17 @@ export function moveDisplayByPreviewDelta(
   el: DisplayElement,
   deltaXRatio: number,
   deltaYRatio: number,
+  options?: { lockSquare?: boolean },
 ): DisplayElement {
   const layout = getDisplayLayoutPx(el)
-  return setDisplayLayoutPx(el, {
-    left: layout.left + Math.round(deltaXRatio * SCREEN_WIDTH),
-    top: layout.top + Math.round(deltaYRatio * SCREEN_HEIGHT),
-  })
+  return setDisplayLayoutPx(
+    el,
+    {
+      left: layout.left + Math.round(deltaXRatio * SCREEN_WIDTH),
+      top: layout.top + Math.round(deltaYRatio * SCREEN_HEIGHT),
+    },
+    options,
+  )
 }
 
 export type ResizeCorner = 'nw' | 'ne' | 'sw' | 'se'
@@ -298,36 +346,78 @@ export function resizeDisplayByPreviewDelta(
   corner: ResizeCorner,
   deltaXRatio: number,
   deltaYRatio: number,
+  options?: { lockSquare?: boolean },
 ): DisplayElement {
   const layout = getDisplayLayoutPx(el)
   const dx = Math.round(deltaXRatio * SCREEN_WIDTH)
   const dy = Math.round(deltaYRatio * SCREEN_HEIGHT)
 
+  let next: DisplayElement
   switch (corner) {
     case 'se':
-      return setDisplayLayoutPx(el, {
+      next = setDisplayLayoutPx(el, {
         width: layout.width + dx,
         height: layout.height + dy,
       })
+      break
     case 'sw':
-      return setDisplayLayoutPx(el, {
+      next = setDisplayLayoutPx(el, {
         left: layout.left + dx,
         width: layout.width - dx,
         height: layout.height + dy,
       })
+      break
     case 'ne':
-      return setDisplayLayoutPx(el, {
+      next = setDisplayLayoutPx(el, {
         top: layout.top + dy,
         width: layout.width + dx,
         height: layout.height - dy,
       })
+      break
     case 'nw':
-      return setDisplayLayoutPx(el, {
+      next = setDisplayLayoutPx(el, {
         top: layout.top + dy,
         left: layout.left + dx,
         width: layout.width - dx,
         height: layout.height - dy,
       })
+      break
+  }
+
+  if (!options?.lockSquare) {
+    return next
+  }
+
+  const free = getDisplayLayoutPx(next)
+  const size = Math.round((free.width + free.height) / 2)
+  const right = layout.left + layout.width
+  const bottom = layout.top + layout.height
+
+  switch (corner) {
+    case 'se':
+      return setDisplayLayoutPx(
+        el,
+        { left: layout.left, top: layout.top, width: size, height: size },
+        { lockSquare: true },
+      )
+    case 'sw':
+      return setDisplayLayoutPx(
+        el,
+        { left: right - size, top: layout.top, width: size, height: size },
+        { lockSquare: true },
+      )
+    case 'ne':
+      return setDisplayLayoutPx(
+        el,
+        { left: layout.left, top: bottom - size, width: size, height: size },
+        { lockSquare: true },
+      )
+    case 'nw':
+      return setDisplayLayoutPx(
+        el,
+        { left: right - size, top: bottom - size, width: size, height: size },
+        { lockSquare: true },
+      )
   }
 }
 
@@ -456,6 +546,25 @@ export function isImageAttribute(schema: ItemSchema, attributeIndex: number): bo
   return propTypeAt(schema, attributeIndex) === 'image'
 }
 
+/** Default 1:1 image box in screen pixels (fits card width). */
+export function defaultImageSquareSizePx(): number {
+  return Math.min(SCREEN_WIDTH, SCREEN_HEIGHT)
+}
+
+export function imageSquareDisplayRatios(
+  sizePx: number = defaultImageSquareSizePx(),
+): Pick<DisplayElement, 'w' | 'h'> {
+  return {
+    w: ratioFromPxX(sizePx),
+    h: ratioFromPxY(sizePx),
+  }
+}
+
+/** Snap an image display element to a 1:1 pixel box (keeps top-left when possible). */
+export function enforceImageSquareLayout(el: DisplayElement): DisplayElement {
+  return setDisplayLayoutPx(el, {}, { lockSquare: true })
+}
+
 export function createDefaultDisplayElement(
   schema: ItemSchema,
   existingDisplay: DisplayElement[],
@@ -469,7 +578,7 @@ export function createDefaultDisplayElement(
   const order = existingDisplay.length
 
   if (propTypeAt(schema, attributeIndex) === 'image') {
-    return { attributeIndex, x: 0, y: 0, w: 1, h: 1, order }
+    return { attributeIndex, x: 0, y: 0, ...imageSquareDisplayRatios(), order }
   }
 
   return {

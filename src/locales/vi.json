@@ -661,6 +661,7 @@
   "createProgram.stepDisplay.left": "Trái",
   "createProgram.stepDisplay.width": "Rộng",
   "createProgram.stepDisplay.height": "Cao",
+  "createProgram.stepDisplay.imageSize": "Kích thước (1:1)",
   "createProgram.stepDisplay.borderRadius": "Bo góc",
   "createProgram.stepDisplay.borderRadiusText": "Bo góc nền",
   "createProgram.stepDisplay.maxLines": "Số dòng tối đa",
