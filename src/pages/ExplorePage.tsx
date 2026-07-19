@@ -104,7 +104,7 @@ function CatalogCard({
 }
 
 export function ExplorePage() {
-  const { t, nativeLang, studyLang, langPair } = useLanguagePair()
+  const { t, nativeLang, studyLang } = useLanguagePair()
   const { refreshAccount } = useAccount()
   const [loadState, setLoadState] = useState<LoadState>({ phase: 'loading' })
   const [products, setProducts] = useState<CatalogProductDto[]>([])
@@ -186,9 +186,6 @@ export function ExplorePage() {
         {t('nav.explore')}
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-text-muted">{t('products.explore.description')}</p>
-      <p className="mt-3 text-sm text-text-muted">
-        {t('explore.filterPair', { pair: langPair })}
-      </p>
 
       <section className="mt-6" aria-live="polite">
         {loadState.phase === 'loading' && (

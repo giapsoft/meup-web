@@ -121,7 +121,7 @@
   "products.new.title": "Tạo từ vựng mới",
   "products.new.description": "Thiết kế bộ từ vựng mới với mẫu thẻ và trình tự phát.",
   "products.explore.title": "Khám phá từ vựng",
-  "products.explore.description": "Duyệt thư viện từ vựng cộng đồng và gói hệ thống.",
+  "products.explore.description": "Duyệt thư viện từ vựng cộng đồng.",
   "products.tabOwned": "Từ vựng của tôi",
   "products.tabPurchased": "Đã mua",
   "products.tabShared": "Được chia sẻ",
@@ -678,7 +678,7 @@
   "products.emptyCollected": "Chưa có từ vựng đã mua hoặc được chia sẻ cho cặp ngôn ngữ này.",
   "products.actionsMenu": "Thao tác từ vựng",
   "createHub.viewJobs": "Xem jobs đang tạo →",
-  "explore.emptyHint": "Thử đổi cặp ngôn ngữ trên thanh trên, hoặc tự tạo từ vựng.",
+  "explore.emptyHint": "Tìm trong ngôn ngữ khác, hoặc tạo bộ từ vựng mới.",
   "seller.summaryWallet": "Credit ví",
   "seller.summaryPageSales": "Doanh thu trang này"
 }

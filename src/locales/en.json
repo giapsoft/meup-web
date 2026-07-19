@@ -131,7 +131,7 @@
   "products.new.title": "Create new product",
   "products.new.description": "Design a new vocabulary set with card templates and playback sequence.",
   "products.explore.title": "Explore products",
-  "products.explore.description": "Browse community products and system packages.",
+  "products.explore.description": "Browse community vocabulary library.",
   "products.tabOwned": "My products",
   "products.tabPurchased": "Purchased",
   "products.tabShared": "Shared with me",
@@ -678,7 +678,7 @@
   "products.emptyCollected": "No purchased or shared products for this language pair yet.",
   "products.actionsMenu": "Product actions",
   "createHub.viewJobs": "View create jobs →",
-  "explore.emptyHint": "Try another language pair in the header, or create your own product.",
+  "explore.emptyHint": "Search in another language, or create a new vocabulary set.",
   "seller.summaryWallet": "Wallet credits",
   "seller.summaryPageSales": "Sales on this page"
 }

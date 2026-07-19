@@ -34,12 +34,6 @@ const PRIMARY_TAB_KEYS: Record<PrimaryTab, TranslationKey> = {
   requests: 'products.tabJobs',
 }
 
-const FILTER_PAIR_KEYS: Record<PrimaryTab, TranslationKey> = {
-  owned: 'products.filterPair',
-  collected: 'products.filterPairCollected',
-  requests: 'products.filterPairRequests',
-}
-
 const REQUEST_STATUS_KEYS: Record<string, TranslationKey> = {
   pending: 'products.status.pending',
   working: 'products.status.working',
@@ -661,7 +655,6 @@ export function ProductsPage() {
             {t('nav.products')}
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-text-muted">{t('products.my.description')}</p>
-          <p className="mt-1 text-xs text-text-muted">{t(FILTER_PAIR_KEYS[tab], { pair: langPair })}</p>
         </div>
         <Link
           to="/products/new"
