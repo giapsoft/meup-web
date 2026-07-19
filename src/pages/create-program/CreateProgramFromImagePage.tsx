@@ -27,7 +27,7 @@ export function CreateProgramFromImagePage() {
   const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { nativeLang, studyLang, t } = useLanguagePair()
-  const studyLabel = findLanguage(studyLang)?.nativeName ?? studyLang
+  const studyLabel = findLanguage(studyLang)?.name ?? studyLang
   const { creditBalance, refreshAccount } = useAccount()
   const {
     programConfig,

@@ -19,7 +19,7 @@ const PARAGRAPH_MIN_LENGTH = 20
 export function CreateProgramFromParagraphPage() {
   const navigate = useNavigate()
   const { nativeLang, studyLang, t } = useLanguagePair()
-  const studyLabel = findLanguage(studyLang)?.nativeName ?? studyLang
+  const studyLabel = findLanguage(studyLang)?.name ?? studyLang
   const { creditBalance, refreshAccount } = useAccount()
   const {
     programConfig,

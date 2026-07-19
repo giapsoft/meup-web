@@ -36,7 +36,7 @@ export function HomePage() {
   const [continueTarget, setContinueTarget] = useState<ContinueTarget | null>(null)
 
   const studyLabel = useMemo(() => {
-    return findLanguage(studyLang)?.nativeName ?? studyLang
+    return findLanguage(studyLang)?.name ?? studyLang
   }, [studyLang])
 
   const load = useCallback(async () => {

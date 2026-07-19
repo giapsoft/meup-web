@@ -15,7 +15,7 @@ import { itemSchemaFromWebConfig } from '../../utils/programConfigWeb'
 export function CreateProgramManualPage() {
   const navigate = useNavigate()
   const { nativeLang, studyLang, t } = useLanguagePair()
-  const studyLabel = findLanguage(studyLang)?.nativeName ?? studyLang
+  const studyLabel = findLanguage(studyLang)?.name ?? studyLang
   const { refreshAccount } = useAccount()
   const {
     programConfig,

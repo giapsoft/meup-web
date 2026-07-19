@@ -17,7 +17,7 @@ import { aiVocabErrorMessage } from './aiVocabError'
 export function CreateProgramFromTitlePage() {
   const navigate = useNavigate()
   const { nativeLang, studyLang, t } = useLanguagePair()
-  const studyLabel = findLanguage(studyLang)?.nativeName ?? studyLang
+  const studyLabel = findLanguage(studyLang)?.name ?? studyLang
   const { creditBalance, refreshAccount } = useAccount()
   const {
     programConfig,

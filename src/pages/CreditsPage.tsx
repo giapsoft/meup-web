@@ -93,16 +93,17 @@ export function CreditsPage() {
                   <span className="mt-2 text-lg font-semibold text-text">{pkg.name}</span>
                   <span className="mt-3 text-2xl font-semibold tabular-nums text-text">
                     {formatVnd(pkg.priceVnd, uiLocale)}{' '}
-                    <span className="text-base font-medium text-text-muted">VND</span>
+                    <span className="text-base font-medium text-text-muted">
+                      {pkg.term === 'YEARLY'
+                        ? t('credits.package.priceSuffixYearly', { count: pkg.monthCount })
+                        : t('credits.package.priceSuffixMonthly')}
+                    </span>
                   </span>
                   <span className="mt-2 text-sm tabular-nums text-amber-400">
                     {t('credits.package.creditsPerMonth', { amount: pkg.amount })}
                   </span>
-                  <span className="mt-1 text-sm text-text-muted">
-                    {t('credits.package.months', { count: pkg.monthCount })}
-                  </span>
                   {explainKey ? (
-                    <span className="mt-3 flex-1 text-sm leading-relaxed text-text-muted">
+                    <span className="mt-3 flex-1 whitespace-pre-line text-sm leading-relaxed text-text-muted">
                       {t(explainKey, { amount: pkg.amount, months: pkg.monthCount })}
                     </span>
                   ) : null}
