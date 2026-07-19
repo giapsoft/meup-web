@@ -8,6 +8,7 @@ import {
 } from '../api/product'
 import { useLanguagePair } from '../context/LanguagePairProvider'
 import { useAccount } from '../context/AccountProvider'
+import { findLanguage } from '../data/mock'
 import type { TranslationKey } from '../i18n/types'
 import { userCanUseCatalogProduct } from '../utils/catalogProductAccess'
 
@@ -105,6 +106,7 @@ function CatalogCard({
 
 export function ExplorePage() {
   const { t, nativeLang, studyLang } = useLanguagePair()
+  const studyLabel = findLanguage(studyLang)?.name ?? studyLang
   const { refreshAccount } = useAccount()
   const [loadState, setLoadState] = useState<LoadState>({ phase: 'loading' })
   const [products, setProducts] = useState<CatalogProductDto[]>([])
@@ -183,7 +185,7 @@ export function ExplorePage() {
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
       <h1 className="text-2xl font-semibold tracking-tight text-text sm:text-3xl">
-        {t('nav.explore')}
+        {t('explore.pageTitle', { name: studyLabel })}
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-text-muted">{t('products.explore.description')}</p>
 

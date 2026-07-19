@@ -17,6 +17,7 @@ import { ActionSheet } from '../components/ActionSheet'
 import { ProductSettingsModal } from '../components/ProductSettingsModal'
 import { ProductShareModal } from '../components/ProductShareModal'
 import { useLanguagePair } from '../context/LanguagePairProvider'
+import { findLanguage } from '../data/mock'
 import type { TranslationKey } from '../i18n/types'
 import {
   sharedProductsForLangPair,
@@ -432,6 +433,7 @@ function CreateRequestsTab({
 
 export function ProductsPage() {
   const { t, uiLocale, nativeLang, studyLang, langPair } = useLanguagePair()
+  const studyLabel = findLanguage(studyLang)?.name ?? studyLang
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -652,7 +654,7 @@ export function ProductsPage() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-text sm:text-3xl">
-            {t('nav.products')}
+            {t('products.pageTitle', { name: studyLabel })}
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-text-muted">{t('products.my.description')}</p>
         </div>

@@ -1,7 +1,8 @@
 import { useEffect, useId, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { findLanguage, formatLanguageOption, LANGUAGES } from '../data/mock'
+import { findLanguage, LANGUAGES } from '../data/mock'
 import { useLanguagePair } from '../context/LanguagePairProvider'
+import { LanguageOptionLabel } from './LanguageOptionLabel'
 
 type LanguagePairChipProps = {
   open: boolean
@@ -78,7 +79,7 @@ export function LanguagePairChip({ open, onOpenChange, variant }: LanguagePairCh
 
   const langList = (
     <ul id={listId} className="mt-3 flex flex-col gap-1.5" role="listbox" aria-labelledby={titleId}>
-      {LANGUAGES.map((lang) => {
+      {LANGUAGES.map((lang, index) => {
         const selected = lang.code === studyLang
         return (
           <li key={lang.code}>
@@ -94,7 +95,7 @@ export function LanguagePairChip({ open, onOpenChange, variant }: LanguagePairCh
                   : 'border-border bg-surface-raised text-text hover:border-accent/40 hover:bg-surface-hover',
               ].join(' ')}
             >
-              {formatLanguageOption(lang)}
+              <LanguageOptionLabel lang={lang} index={index + 1} selected={selected} />
             </button>
           </li>
         )

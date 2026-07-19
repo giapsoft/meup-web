@@ -9,7 +9,8 @@ export type Language = {
 }
 
 function lang(code: string, name: string): Language {
-  return { code, name, nativeName: name }
+  const display = name.startsWith('Tiếng ') ? name : `Tiếng ${name}`
+  return { code, name: display, nativeName: display }
 }
 
 /** SoT — khớp meup `LanguagesCatalog.h` (mã 2 hoặc 3; gồm cmn/yue/fil, không zh). */
@@ -80,6 +81,7 @@ export function findLanguage(code: string): Language | undefined {
   return LANGUAGES.find((l) => l.code === normalized)
 }
 
-export function formatLanguageOption(lang: Language): string {
-  return `${lang.code} — ${lang.name}`
+export function formatLanguageOption(lang: Language, index?: number): string {
+  const label = `${lang.code} — ${lang.name}`
+  return index != null ? `${index}. ${label}` : label
 }
