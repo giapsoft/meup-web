@@ -184,7 +184,7 @@ export function CreateProgramHubPage() {
 
       <div className="mt-7 flex flex-col gap-2.5 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
         <Link
-          to="/products?tab=requests"
+          to="/products?tab=owned"
           className="inline-flex text-sm font-medium text-accent no-underline transition hover:underline"
         >
           {t('createHub.viewJobs')}

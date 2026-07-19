@@ -688,6 +688,7 @@ export type TranslationKey =
   | 'products.tabCollected'
   | 'products.tabJobs'
   | 'products.tabMine'
+  | 'products.inProgressSection'
   | 'seller.summaryPageSales'
   | 'seller.summaryWallet'
 export type MessageParams = Record<string, string | number>

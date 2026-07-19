@@ -24,7 +24,7 @@ import {
   type DeviceProgramProductDto,
 } from '../utils/deviceProgramsCompact'
 
-type PrimaryTab = 'owned' | 'collected' | 'requests'
+type PrimaryTab = 'owned' | 'collected'
 type CollectedFilter = 'all' | 'purchased' | 'shared'
 
 const REFRESH_COOLDOWN_MS = 5000
@@ -32,7 +32,6 @@ const REFRESH_COOLDOWN_MS = 5000
 const PRIMARY_TAB_KEYS: Record<PrimaryTab, TranslationKey> = {
   owned: 'products.tabMine',
   collected: 'products.tabCollected',
-  requests: 'products.tabJobs',
 }
 
 const REQUEST_STATUS_KEYS: Record<string, TranslationKey> = {
@@ -86,6 +85,11 @@ function statusBadgeClass(status: string): string {
 
 function isActiveCreateRequest(status: string): boolean {
   return status === 'pending' || status === 'working'
+}
+
+/** Still in flight or failed — hide success (already became a product). */
+function isIncompleteCreateRequest(status: string): boolean {
+  return status !== 'success'
 }
 
 function requestTitle(request: ProductCreateRequestSummaryDto): string {
@@ -339,32 +343,37 @@ function CreateRequestCard({
   )
 }
 
-function CreateRequestsTab({
+function IncompleteCreateJobsSection({
   requests,
-  requestPage,
-  requestTotalPages,
   progressById,
   refreshing,
   toastMessage,
   onRefresh,
-  onPageChange,
 }: {
   requests: ProductCreateRequestSummaryDto[]
-  requestPage: number
-  requestTotalPages: number
   progressById: Record<string, ProductCreateProgressDto>
   refreshing: boolean
   toastMessage: string | null
   onRefresh: () => void
-  onPageChange: (page: number) => void
 }) {
   const { t, uiLocale } = useLanguagePair()
   const locale = uiLocale === 'vi' ? 'vi-VN' : uiLocale === 'ja' ? 'ja-JP' : 'en-US'
 
+  if (requests.length === 0) {
+    return null
+  }
+
+  const sorted = [...requests].sort((a, b) => {
+    const rank = (s: string) => (s === 'working' || s === 'pending' ? 0 : s === 'failed' ? 1 : 2)
+    const d = rank(a.status) - rank(b.status)
+    if (d !== 0) return d
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  })
+
   return (
-    <>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-text-muted">{t('createRequests.hint')}</p>
+    <div className="mb-6">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold text-text">{t('products.inProgressSection')}</h2>
         <button
           type="button"
           onClick={onRefresh}
@@ -373,61 +382,26 @@ function CreateRequestsTab({
           {refreshing ? t('createRequests.refreshing') : t('createRequests.refresh')}
         </button>
       </div>
+      <p className="mb-3 text-xs text-text-muted">{t('createRequests.hint')}</p>
 
       {toastMessage && (
-        <div className="mb-4 rounded-xl border border-border bg-surface-raised px-3 py-2 text-sm text-text-muted">
+        <div className="mb-3 rounded-xl border border-border bg-surface-raised px-3 py-2 text-sm text-text-muted">
           {toastMessage}
         </div>
       )}
 
-      {requests.length === 0 ? (
-        <p className="text-sm text-text-muted">{t('products.emptyRequests')}</p>
-      ) : (
-        <ul className="grid gap-3 sm:gap-4">
-          {[...requests]
-            .sort((a, b) => {
-              const rank = (s: string) =>
-                s === 'working' || s === 'pending' ? 0 : s === 'failed' ? 1 : 2
-              const d = rank(a.status) - rank(b.status)
-              if (d !== 0) return d
-              return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-            })
-            .map((request) => (
-            <li key={request.id}>
-              <CreateRequestCard
-                request={request}
-                locale={locale}
-                progress={progressById[request.id]}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {requestTotalPages > 1 && (
-        <div className="mt-6 flex items-center justify-between gap-3 text-sm">
-          <button
-            type="button"
-            disabled={requestPage <= 1}
-            onClick={() => onPageChange(Math.max(1, requestPage - 1))}
-            className="rounded-lg border border-border bg-surface-card px-3 py-1.5 font-medium text-text disabled:opacity-40"
-          >
-            {t('products.pagePrev')}
-          </button>
-          <span className="text-text-muted">
-            {t('products.pageInfo', { page: requestPage, totalPages: requestTotalPages })}
-          </span>
-          <button
-            type="button"
-            disabled={requestPage >= requestTotalPages}
-            onClick={() => onPageChange(requestPage + 1)}
-            className="rounded-lg border border-border bg-surface-card px-3 py-1.5 font-medium text-text disabled:opacity-40"
-          >
-            {t('products.pageNext')}
-          </button>
-        </div>
-      )}
-    </>
+      <ul className="grid gap-3 sm:gap-4">
+        {sorted.map((request) => (
+          <li key={request.id}>
+            <CreateRequestCard
+              request={request}
+              locale={locale}
+              progress={progressById[request.id]}
+            />
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }
 
@@ -439,7 +413,6 @@ export function ProductsPage() {
 
   const tab = useMemo((): PrimaryTab => {
     const raw = searchParams.get('tab')
-    if (raw === 'requests' || raw === 'jobs') return 'requests'
     if (raw === 'collected' || raw === 'purchased' || raw === 'shared') return 'collected'
     return 'owned'
   }, [searchParams])
@@ -457,9 +430,7 @@ export function ProductsPage() {
   const [owned, setOwned] = useState<OwnedProductDto[]>([])
   const [purchased, setPurchased] = useState<PurchasedProductDto[]>([])
   const [shared, setShared] = useState<DeviceProgramProductDto[]>([])
-  const [requests, setRequests] = useState<ProductCreateRequestSummaryDto[]>([])
-  const [requestPage, setRequestPage] = useState(1)
-  const [requestTotalPages, setRequestTotalPages] = useState(1)
+  const [incompleteRequests, setIncompleteRequests] = useState<ProductCreateRequestSummaryDto[]>([])
   const [progressById, setProgressById] = useState<Record<string, ProductCreateProgressDto>>({})
   const [requestsRefreshing, setRequestsRefreshing] = useState(false)
   const [requestsToast, setRequestsToast] = useState<string | null>(null)
@@ -468,18 +439,14 @@ export function ProductsPage() {
   const [actionsProduct, setActionsProduct] = useState<OwnedProductDto | null>(null)
   const [activeJobsCount, setActiveJobsCount] = useState(0)
   const langPairKey = `${nativeLang}_${studyLang}`
-  const prevLangPairRef = useRef(langPairKey)
   const lastRequestsRefreshAtRef = useRef(0)
 
   function setPrimaryTab(next: PrimaryTab) {
     const params = new URLSearchParams()
-    if (next === 'owned') {
-      params.set('tab', 'owned')
-    } else if (next === 'collected') {
+    if (next === 'collected') {
       params.set('tab', 'collected')
     } else {
-      params.set('tab', 'requests')
-      setRequestPage(1)
+      params.set('tab', 'owned')
     }
     setSearchParams(params, { replace: true })
   }
@@ -510,29 +477,30 @@ export function ProductsPage() {
     )
   }, [])
 
-  const loadRequestsList = useCallback(async () => {
+  const loadIncompleteRequests = useCallback(async () => {
     const res = await listProductCreateRequests({
       nativeLang,
       studyLang,
-      page: requestPage,
-      limit: 20,
+      page: 1,
+      limit: 50,
     })
-    setRequests(res.requests)
-    setRequestTotalPages(Math.max(1, res.pagination.totalPages))
-    setActiveJobsCount(res.requests.filter((r) => isActiveCreateRequest(r.status)).length)
-    return res.requests
-  }, [nativeLang, studyLang, requestPage])
+    const incomplete = res.requests.filter((r) => isIncompleteCreateRequest(r.status))
+    setIncompleteRequests(incomplete)
+    setActiveJobsCount(incomplete.filter((r) => isActiveCreateRequest(r.status)).length)
+    return incomplete
+  }, [nativeLang, studyLang])
 
   const fetchProgressForActive = useCallback(async (list: ProductCreateRequestSummaryDto[]) => {
     const active = list.filter((r) => isActiveCreateRequest(r.status))
     if (active.length === 0) {
+      setProgressById({})
       return
     }
     const results = await Promise.allSettled(
       active.map((r) => getProductCreateProgress(r.id)),
     )
-    setProgressById((prev) => {
-      const next = { ...prev }
+    setProgressById(() => {
+      const next: Record<string, ProductCreateProgressDto> = {}
       active.forEach((r, index) => {
         const result = results[index]
         if (result.status === 'fulfilled') {
@@ -557,7 +525,7 @@ export function ProductsPage() {
     setRequestsRefreshing(true)
     setRequestsToast(null)
     try {
-      const list = await loadRequestsList()
+      const list = await loadIncompleteRequests()
       await fetchProgressForActive(list)
     } catch (err) {
       const message =
@@ -568,26 +536,28 @@ export function ProductsPage() {
     } finally {
       setRequestsRefreshing(false)
     }
-  }, [fetchProgressForActive, loadRequestsList, t])
+  }, [fetchProgressForActive, loadIncompleteRequests, t])
 
   const load = useCallback(async () => {
     setLoadState({ phase: 'loading' })
     try {
       const account = await getAccount()
       if (tab === 'owned') {
-        const res = await listOwnedProducts(account.userId, { nativeLang, studyLang })
-        setOwned(res.products)
-      } else if (tab === 'collected') {
+        const [ownedRes, incomplete] = await Promise.all([
+          listOwnedProducts(account.userId, { nativeLang, studyLang }),
+          loadIncompleteRequests(),
+        ])
+        setOwned(ownedRes.products)
+        setProgressById({})
+        lastRequestsRefreshAtRef.current = 0
+        await fetchProgressForActive(incomplete)
+      } else {
         const [purchasedRes, programs] = await Promise.all([
           listPurchasedProducts(account.userId, { nativeLang, studyLang }),
           getDevicePrograms(),
         ])
         setPurchased(purchasedRes.products)
         setShared(sharedProductsForLangPair(programs, langPair))
-      } else {
-        await loadRequestsList()
-        setProgressById({})
-        lastRequestsRefreshAtRef.current = 0
       }
       setLoadState({ phase: 'ready' })
     } catch (err) {
@@ -597,18 +567,11 @@ export function ProductsPage() {
           : t('products.errorGeneric')
       setLoadState({ phase: 'error', message })
     }
-  }, [tab, nativeLang, studyLang, langPair, t, loadRequestsList])
+  }, [tab, nativeLang, studyLang, langPair, t, loadIncompleteRequests, fetchProgressForActive])
 
   useEffect(() => {
-    if (prevLangPairRef.current !== langPairKey) {
-      prevLangPairRef.current = langPairKey
-      if (requestPage !== 1) {
-        setRequestPage(1)
-        return
-      }
-    }
     void load()
-  }, [load, langPairKey, requestPage])
+  }, [load, langPairKey])
 
   useEffect(() => {
     if (!requestsToast) {
@@ -618,13 +581,15 @@ export function ProductsPage() {
     return () => window.clearTimeout(timer)
   }, [requestsToast])
 
-  // Keep Jobs badge fresh even when not on the requests tab.
+  // Keep active-job badge fresh even when not on owned tab.
   useEffect(() => {
     let cancelled = false
-    void listProductCreateRequests({ nativeLang, studyLang, page: 1, limit: 20 })
+    void listProductCreateRequests({ nativeLang, studyLang, page: 1, limit: 50 })
       .then((res) => {
         if (!cancelled) {
-          setActiveJobsCount(res.requests.filter((r) => isActiveCreateRequest(r.status)).length)
+          setActiveJobsCount(
+            res.requests.filter((r) => isActiveCreateRequest(r.status)).length,
+          )
         }
       })
       .catch(() => {
@@ -671,7 +636,7 @@ export function ProductsPage() {
         role="tablist"
         aria-label={t('products.tabsLabel')}
       >
-        {(['owned', 'collected', 'requests'] as const).map((key) => (
+        {(['owned', 'collected'] as const).map((key) => (
           <button
             key={key}
             type="button"
@@ -686,7 +651,7 @@ export function ProductsPage() {
             ].join(' ')}
           >
             <span className="truncate">{t(PRIMARY_TAB_KEYS[key])}</span>
-            {key === 'requests' && activeJobsCount > 0 && (
+            {key === 'owned' && activeJobsCount > 0 && (
               <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-white">
                 {activeJobsCount > 99 ? '99+' : activeJobsCount}
               </span>
@@ -738,31 +703,42 @@ export function ProductsPage() {
           </div>
         )}
         {loadState.phase === 'ready' && tab === 'owned' && (
-          owned.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border px-4 py-8 text-center">
-              <p className="text-sm text-text-muted">{t('products.emptyOwned')}</p>
-              <Link
-                to="/products/new"
-                className="mt-3 inline-flex text-sm font-medium text-accent no-underline hover:underline"
-              >
-                {t('products.createCta')}
-              </Link>
-            </div>
-          ) : (
-            <ul className="grid gap-3 sm:gap-4">
-              {owned.map((product) => (
-                <li key={product.productId}>
-                  <OwnedProductCard
-                    product={product}
-                    locale={locale}
-                    onOpenSettings={() => setSettingsProduct(product)}
-                    onOpenShare={() => setShareProductState(product)}
-                    onOpenActions={() => setActionsProduct(product)}
-                  />
-                </li>
-              ))}
-            </ul>
-          )
+          <>
+            <IncompleteCreateJobsSection
+              requests={incompleteRequests}
+              progressById={progressById}
+              refreshing={requestsRefreshing}
+              toastMessage={requestsToast}
+              onRefresh={() => void refreshCreateRequests()}
+            />
+            {owned.length === 0 ? (
+              incompleteRequests.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-border px-4 py-8 text-center">
+                  <p className="text-sm text-text-muted">{t('products.emptyOwned')}</p>
+                  <Link
+                    to="/products/new"
+                    className="mt-3 inline-flex text-sm font-medium text-accent no-underline hover:underline"
+                  >
+                    {t('products.createCta')}
+                  </Link>
+                </div>
+              ) : null
+            ) : (
+              <ul className="grid gap-3 sm:gap-4">
+                {owned.map((product) => (
+                  <li key={product.productId}>
+                    <OwnedProductCard
+                      product={product}
+                      locale={locale}
+                      onOpenSettings={() => setSettingsProduct(product)}
+                      onOpenShare={() => setShareProductState(product)}
+                      onOpenActions={() => setActionsProduct(product)}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
         )}
         {loadState.phase === 'ready' && tab === 'collected' && (
           collectedEmpty ? (
@@ -797,18 +773,6 @@ export function ProductsPage() {
                 ))}
             </ul>
           )
-        )}
-        {loadState.phase === 'ready' && tab === 'requests' && (
-          <CreateRequestsTab
-            requests={requests}
-            requestPage={requestPage}
-            requestTotalPages={requestTotalPages}
-            progressById={progressById}
-            refreshing={requestsRefreshing}
-            toastMessage={requestsToast}
-            onRefresh={() => void refreshCreateRequests()}
-            onPageChange={setRequestPage}
-          />
         )}
       </section>
 

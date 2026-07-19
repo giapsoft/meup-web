@@ -118,7 +118,7 @@ export function HomePage() {
         <section className="mb-4">
           {continueTarget.kind === 'job' ? (
             <Link
-              to="/products?tab=requests"
+              to="/products?tab=owned"
               className="block rounded-2xl border border-accent/40 bg-accent-soft p-4 no-underline transition hover:border-accent hover:bg-accent/20 sm:p-5"
             >
               <p className="text-xs font-medium uppercase tracking-wide text-accent">
@@ -168,7 +168,7 @@ export function HomePage() {
           <p className="mt-0.5 text-[11px] text-text-muted sm:text-xs">{t('home.statLibrary')}</p>
         </Link>
         <Link
-          to="/products?tab=requests"
+          to="/products?tab=owned"
           className="rounded-xl border border-border bg-surface-raised px-2 py-3 text-center no-underline transition hover:border-accent/40 sm:px-3"
         >
           <p className="text-lg font-semibold tabular-nums text-text sm:text-xl">{activeJobs}</p>
