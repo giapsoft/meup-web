@@ -12,6 +12,7 @@ import { CreditsPage } from './pages/CreditsPage'
 import { ExplorePage } from './pages/ExplorePage'
 import { EditProgramPage } from './pages/edit-program/EditProgramPage'
 import { ProductsPage } from './pages/ProductsPage'
+import { InvitationsPage } from './pages/InvitationsPage'
 import { PostLoginHomeRedirect } from './pages/PostLoginHomeRedirect'
 import { LegacyProgramsRedirect } from './pages/LegacyProgramsRedirect'
 
@@ -33,6 +34,7 @@ function AppShell() {
       <Routes>
         <Route path="/" element={<PostLoginHomeRedirect />} />
         <Route path="/products" element={<ProductsPage />} />
+        <Route path="/invitations" element={<InvitationsPage />} />
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/credits" element={<CreditsPage />} />
         <Route path="/seller" element={<Navigate to="/" replace />} />

@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useId, useState, type FormEvent } from 'react'
 import { ApiError } from '../api/client'
 import {
+  cancelInvitation,
   listProductShares,
   shareProduct,
   unshareProduct,
   type OwnedProductDto,
+  type ProductInviteEntryDto,
   type ProductShareEntryDto,
 } from '../api/product'
 import { useLanguagePair } from '../context/LanguagePairProvider'
@@ -20,7 +22,13 @@ const ERROR_KEYS: Record<string, TranslationKey> = {
   share_target_not_found: 'products.share.error.share_target_not_found',
   product_not_found: 'products.share.error.product_not_found',
   forbidden: 'products.share.error.forbidden',
+  already_has_access: 'products.share.error.already_has_access',
+  note_too_long: 'products.share.error.note_too_long',
+  invite_not_found: 'products.share.error.invite_not_found',
+  invite_not_pending: 'products.share.error.invite_not_pending',
 }
+
+const NOTE_MAX = 500
 
 function formatWhen(iso: string, locale: string): string {
   try {
@@ -33,11 +41,11 @@ function formatWhen(iso: string, locale: string): string {
   }
 }
 
-function shareLabel(entry: ProductShareEntryDto): string {
-  if (entry.email.trim()) {
-    return entry.email
+function deviceLabel(order: number, t: (key: TranslationKey, params?: Record<string, string | number>) => string) {
+  if (order > 0) {
+    return t('products.share.deviceOrderValue', { order })
   }
-  return entry.userId
+  return t('products.share.deviceOrderUnknown')
 }
 
 export function ProductShareModal({ product, onClose }: ProductShareModalProps) {
@@ -46,21 +54,24 @@ export function ProductShareModal({ product, onClose }: ProductShareModalProps) 
   const locale = uiLocale === 'vi' ? 'vi-VN' : uiLocale === 'ja' ? 'ja-JP' : 'en-US'
 
   const [shares, setShares] = useState<ProductShareEntryDto[]>([])
+  const [invites, setInvites] = useState<ProductInviteEntryDto[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
-  const [email, setEmail] = useState('')
   const [deviceOrderInput, setDeviceOrderInput] = useState('')
+  const [note, setNote] = useState('')
   const [formError, setFormError] = useState('')
   const [submitError, setSubmitError] = useState('')
   const [sharing, setSharing] = useState(false)
-  const [revokingUserId, setRevokingUserId] = useState<string | null>(null)
+  const [revokingOrder, setRevokingOrder] = useState<number | null>(null)
+  const [cancellingId, setCancellingId] = useState<string | null>(null)
 
-  const busy = sharing || revokingUserId !== null
+  const busy = sharing || revokingOrder !== null || cancellingId !== null
 
   const refreshShares = useCallback(async () => {
     setLoadError('')
     const res = await listProductShares(product.productId)
     setShares(res.shares)
+    setInvites(res.invites ?? [])
   }, [product.productId])
 
   useEffect(() => {
@@ -71,6 +82,7 @@ export function ProductShareModal({ product, onClose }: ProductShareModalProps) 
         const res = await listProductShares(product.productId)
         if (!cancelled) {
           setShares(res.shares)
+          setInvites(res.invites ?? [])
         }
       } catch (err) {
         if (!cancelled) {
@@ -111,20 +123,20 @@ export function ProductShareModal({ product, onClose }: ProductShareModalProps) 
     setFormError('')
     setSubmitError('')
 
-    const trimmedEmail = email.trim()
     const orderRaw = deviceOrderInput.trim()
-    const deviceOrders: number[] = []
-    if (orderRaw) {
-      const order = Number.parseInt(orderRaw, 10)
-      if (!Number.isFinite(order) || order <= 0) {
-        setFormError(t('products.share.validation.deviceOrderInvalid'))
-        return
-      }
-      deviceOrders.push(order)
+    if (!orderRaw) {
+      setFormError(t('products.share.validation.targetRequired'))
+      return
+    }
+    const order = Number.parseInt(orderRaw, 10)
+    if (!Number.isFinite(order) || order <= 0) {
+      setFormError(t('products.share.validation.deviceOrderInvalid'))
+      return
     }
 
-    if (!trimmedEmail && deviceOrders.length === 0) {
-      setFormError(t('products.share.validation.targetRequired'))
+    const trimmedNote = note.trim()
+    if ([...trimmedNote].length > NOTE_MAX) {
+      setFormError(t('products.share.validation.noteTooLong', { max: NOTE_MAX }))
       return
     }
 
@@ -132,11 +144,11 @@ export function ProductShareModal({ product, onClose }: ProductShareModalProps) 
     try {
       await shareProduct({
         productId: product.productId,
-        emails: trimmedEmail ? [trimmedEmail] : undefined,
-        deviceOrders: deviceOrders.length > 0 ? deviceOrders : undefined,
+        deviceOrders: [order],
+        note: trimmedNote || undefined,
       })
-      setEmail('')
       setDeviceOrderInput('')
+      setNote('')
       await refreshShares()
     } catch (err) {
       setSubmitError(mapError(err))
@@ -146,20 +158,39 @@ export function ProductShareModal({ product, onClose }: ProductShareModalProps) 
   }
 
   async function handleRevoke(entry: ProductShareEntryDto) {
+    if (entry.deviceOrder <= 0) {
+      setSubmitError(t('products.share.error.revokeNeedsDeviceOrder'))
+      return
+    }
     setSubmitError('')
-    setRevokingUserId(entry.userId)
+    setRevokingOrder(entry.deviceOrder)
     try {
       await unshareProduct({
         productId: product.productId,
-        userIds: [entry.userId],
+        deviceOrders: [entry.deviceOrder],
       })
       await refreshShares()
     } catch (err) {
       setSubmitError(mapError(err))
     } finally {
-      setRevokingUserId(null)
+      setRevokingOrder(null)
     }
   }
+
+  async function handleCancelInvite(entry: ProductInviteEntryDto) {
+    setSubmitError('')
+    setCancellingId(entry.id)
+    try {
+      await cancelInvitation(entry.id)
+      await refreshShares()
+    } catch (err) {
+      setSubmitError(mapError(err))
+    } finally {
+      setCancellingId(null)
+    }
+  }
+
+  const listEmpty = shares.length === 0 && invites.length === 0
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
@@ -192,17 +223,53 @@ export function ProductShareModal({ product, onClose }: ProductShareModalProps) 
             <p className="mt-2 text-sm text-text-muted">{t('products.share.loading')}</p>
           ) : loadError ? (
             <p className="mt-2 text-sm text-warning">{loadError}</p>
-          ) : shares.length === 0 ? (
+          ) : listEmpty ? (
             <p className="mt-2 text-sm text-text-muted">{t('products.share.empty')}</p>
           ) : (
             <ul className="mt-2 space-y-2">
-              {shares.map((entry) => (
+              {invites.map((entry) => (
                 <li
-                  key={entry.userId}
+                  key={`invite-${entry.id}`}
                   className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-surface-card px-3 py-2"
                 >
                   <div className="min-w-0 text-sm">
-                    <p className="truncate font-medium text-text">{shareLabel(entry)}</p>
+                    <p className="truncate font-medium text-text">
+                      {deviceLabel(entry.deviceOrder, t)}
+                      <span className="ml-2 text-xs font-normal text-text-muted">
+                        {t('products.share.pendingBadge')}
+                      </span>
+                    </p>
+                    {entry.note?.trim() ? (
+                      <p className="mt-0.5 truncate text-xs text-text-muted">{entry.note.trim()}</p>
+                    ) : null}
+                    <p className="text-xs text-text-muted">
+                      {t('products.share.invitedAt', { when: formatWhen(entry.createdAt, locale) })}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void handleCancelInvite(entry)}
+                    disabled={busy}
+                    className="shrink-0 rounded-lg border border-border bg-surface-raised px-3 py-1 text-xs font-medium text-warning transition hover:border-warning/40 hover:bg-warning-muted disabled:opacity-60"
+                  >
+                    {cancellingId === entry.id
+                      ? t('products.share.cancelling')
+                      : t('products.share.cancelInvite')}
+                  </button>
+                </li>
+              ))}
+              {shares.map((entry) => (
+                <li
+                  key={`share-${entry.deviceOrder}-${entry.sharedAt}`}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-surface-card px-3 py-2"
+                >
+                  <div className="min-w-0 text-sm">
+                    <p className="truncate font-medium text-text">
+                      {deviceLabel(entry.deviceOrder, t)}
+                      <span className="ml-2 text-xs font-normal text-text-muted">
+                        {t('products.share.acceptedBadge')}
+                      </span>
+                    </p>
                     <p className="text-xs text-text-muted">
                       {t('products.share.sharedAt', { when: formatWhen(entry.sharedAt, locale) })}
                     </p>
@@ -210,10 +277,10 @@ export function ProductShareModal({ product, onClose }: ProductShareModalProps) 
                   <button
                     type="button"
                     onClick={() => void handleRevoke(entry)}
-                    disabled={busy}
+                    disabled={busy || entry.deviceOrder <= 0}
                     className="shrink-0 rounded-lg border border-border bg-surface-raised px-3 py-1 text-xs font-medium text-warning transition hover:border-warning/40 hover:bg-warning-muted disabled:opacity-60"
                   >
-                    {revokingUserId === entry.userId
+                    {revokingOrder === entry.deviceOrder
                       ? t('products.share.revoking')
                       : t('products.share.revoke')}
                   </button>
@@ -226,18 +293,6 @@ export function ProductShareModal({ product, onClose }: ProductShareModalProps) 
         <form onSubmit={(e) => void handleShare(e)} className="mt-6 space-y-4 border-t border-border pt-5">
           <h3 className="text-sm font-medium text-text">{t('products.share.addTitle')}</h3>
           <p className="text-xs text-text-muted">{t('products.share.addHint')}</p>
-
-          <label className="block">
-            <span className="text-sm font-medium text-text">{t('products.share.emailLabel')}</span>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={busy}
-              placeholder={t('products.share.emailPlaceholder')}
-              className="mt-1 w-full rounded-lg border border-border bg-surface-card px-3 py-2 text-sm text-text disabled:opacity-60"
-            />
-          </label>
 
           <label className="block">
             <span className="text-sm font-medium text-text">{t('products.share.deviceOrderLabel')}</span>
@@ -253,6 +308,19 @@ export function ProductShareModal({ product, onClose }: ProductShareModalProps) 
               className="mt-1 w-full rounded-lg border border-border bg-surface-card px-3 py-2 text-sm tabular-nums text-text disabled:opacity-60"
             />
             <p className="mt-1 text-xs text-text-muted">{t('products.share.deviceOrderHint')}</p>
+          </label>
+
+          <label className="block">
+            <span className="text-sm font-medium text-text">{t('products.share.noteLabel')}</span>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              disabled={busy}
+              rows={3}
+              maxLength={NOTE_MAX}
+              placeholder={t('products.share.notePlaceholder')}
+              className="mt-1 w-full resize-y rounded-lg border border-border bg-surface-card px-3 py-2 text-sm text-text disabled:opacity-60"
+            />
           </label>
 
           {formError ? <p className="text-xs text-warning">{formError}</p> : null}

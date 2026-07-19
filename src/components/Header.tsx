@@ -10,6 +10,7 @@ import { useAccount } from '../context/AccountProvider'
 import { useLanguagePair } from '../context/LanguagePairProvider'
 import { useTheme } from '../context/ThemeProvider'
 import { useActiveCreateRequestCount } from '../hooks/useActiveCreateRequestCount'
+import { usePendingInvitationCount } from '../hooks/usePendingInvitationCount'
 import { useMediaQuery } from '../hooks/useMediaQuery'
 
 type HeaderProps = {
@@ -23,6 +24,7 @@ export function Header({ onLogout }: HeaderProps) {
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const { count: activeCreateRequestCount, refresh: refreshActiveJobs } =
     useActiveCreateRequestCount()
+  const { count: pendingInvitationCount } = usePendingInvitationCount()
 
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [pairOpen, setPairOpen] = useState(false)
@@ -113,7 +115,10 @@ export function Header({ onLogout }: HeaderProps) {
           </button>
 
           <div className="hidden min-w-0 flex-1 md:flex">
-            <MainNav activeCreateRequestCount={activeCreateRequestCount} />
+            <MainNav
+              activeCreateRequestCount={activeCreateRequestCount}
+              pendingInvitationCount={pendingInvitationCount}
+            />
           </div>
 
           <div className="ml-auto flex shrink-0 items-center gap-2">
@@ -207,6 +212,7 @@ export function Header({ onLogout }: HeaderProps) {
         onClose={closeDrawer}
         onLogout={handleLogout}
         activeCreateRequestCount={activeCreateRequestCount}
+        pendingInvitationCount={pendingInvitationCount}
       />
     </>
   )

@@ -13,6 +13,7 @@ type NavDrawerProps = {
   onClose: () => void
   onLogout: () => void
   activeCreateRequestCount: number
+  pendingInvitationCount: number
 }
 
 export function NavDrawer({
@@ -20,6 +21,7 @@ export function NavDrawer({
   onClose,
   onLogout,
   activeCreateRequestCount,
+  pendingInvitationCount,
 }: NavDrawerProps) {
   const { pathname } = useLocation()
   const { t } = useLanguagePair()
@@ -110,6 +112,10 @@ export function NavDrawer({
             {MAIN_NAV_ITEMS.map((item) => {
               const active = isNavItemActive(pathname, item)
               const showJobsBadge = item.path === '/products' && activeCreateRequestCount > 0
+              const label =
+                item.path === '/invitations'
+                  ? t('nav.invitationsWithCount', { count: pendingInvitationCount })
+                  : t(item.labelKey)
               return (
                 <li key={item.path}>
                   <Link
@@ -123,7 +129,7 @@ export function NavDrawer({
                         : 'text-text-muted hover:bg-surface-hover hover:text-text',
                     ].join(' ')}
                   >
-                    <span>{t(item.labelKey)}</span>
+                    <span>{label}</span>
                     {showJobsBadge && (
                       <span
                         className="min-w-5 rounded-full bg-accent px-1.5 py-0.5 text-center text-xs font-semibold tabular-nums text-white"

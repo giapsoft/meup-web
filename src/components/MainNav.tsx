@@ -10,6 +10,8 @@ type MainNavProps = {
   activeLinkClassName?: string
   /** Active create-request count shown on Library (`/products`). */
   activeCreateRequestCount?: number
+  /** Pending invitation count for `Lời mời (N)`. */
+  pendingInvitationCount?: number
 }
 
 export function MainNav({
@@ -18,6 +20,7 @@ export function MainNav({
   linkClassName = '',
   activeLinkClassName = '',
   activeCreateRequestCount = 0,
+  pendingInvitationCount = 0,
 }: MainNavProps) {
   const { pathname } = useLocation()
   const { t } = useLanguagePair()
@@ -28,6 +31,10 @@ export function MainNav({
         {MAIN_NAV_ITEMS.map((item) => {
           const active = isNavItemActive(pathname, item)
           const showJobsBadge = item.path === '/products' && activeCreateRequestCount > 0
+          const label =
+            item.path === '/invitations'
+              ? t('nav.invitationsWithCount', { count: pendingInvitationCount })
+              : t(item.labelKey)
           return (
             <li key={item.path}>
               <Link
@@ -41,7 +48,7 @@ export function MainNav({
                     : linkClassName || 'text-text-muted hover:bg-surface-hover hover:text-text',
                 ].join(' ')}
               >
-                <span>{t(item.labelKey)}</span>
+                <span>{label}</span>
                 {showJobsBadge && (
                   <span
                     className="min-w-5 rounded-full bg-accent px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none tabular-nums text-white"

@@ -304,30 +304,37 @@ export async function exportProductVersion(
   })
 }
 
-/** Matches `GET /api/product/shares` list item. */
+/** Matches `GET /api/product/shares` accepted share item. */
 export type ProductShareEntryDto = {
-  userId: string
-  email: string
+  deviceOrder: number
   sharedAt: string
+}
+
+/** Matches `GET /api/product/shares` pending invite item. */
+export type ProductInviteEntryDto = {
+  id: string
+  deviceOrder: number
+  note?: string
+  createdAt: string
 }
 
 /** Matches `GET /api/product/shares` response `data`. */
 export type ProductSharesResponse = {
   productId: string
   shares: ProductShareEntryDto[]
+  invites: ProductInviteEntryDto[]
 }
 
-/** Body for `POST /api/product/share` and `/unshare`. */
+/** Body for `POST /api/product/share` (invite) and `/unshare`. */
 export type ProductShareTargetsBody = {
   productId: string
-  userIds?: string[]
-  emails?: string[]
-  deviceOrders?: number[]
+  deviceOrders: number[]
+  note?: string
 }
 
 /** Matches `POST /api/product/share` response `data`. */
 export type ShareProductResponse = {
-  sharedUserIds: string[]
+  invitedUserIds: string[]
   added: number
 }
 
@@ -335,6 +342,31 @@ export type ShareProductResponse = {
 export type UnshareProductResponse = {
   revokedUserIds: string[]
   removed: number
+}
+
+export type InvitationProductDto = {
+  id: string
+  name: string
+  vocabCount: number
+  nativeLang: string
+  studyLang: string
+}
+
+export type InvitationDto = {
+  id: string
+  status: string
+  note?: string
+  deviceOrder: number
+  createdAt: string
+  product: InvitationProductDto
+}
+
+export type ListInvitationsResponse = {
+  invitations: InvitationDto[]
+}
+
+export type InvitationCountResponse = {
+  pendingCount: number
 }
 
 export async function listProductShares(productId: string): Promise<ProductSharesResponse> {
@@ -353,6 +385,33 @@ export async function unshareProduct(body: ProductShareTargetsBody): Promise<Uns
   return apiRequest<UnshareProductResponse>('/api/product/unshare', {
     method: 'POST',
     body,
+  })
+}
+
+export async function listInvitations(status = 'pending'): Promise<ListInvitationsResponse> {
+  const q = new URLSearchParams({ status })
+  return apiRequest<ListInvitationsResponse>(`/api/product/invitations?${q.toString()}`)
+}
+
+export async function getInvitationCount(): Promise<InvitationCountResponse> {
+  return apiRequest<InvitationCountResponse>('/api/product/invitations/count')
+}
+
+export async function acceptInvitation(id: string): Promise<void> {
+  await apiRequest<{ ok: boolean }>(`/api/product/invitations/${encodeURIComponent(id)}/accept`, {
+    method: 'POST',
+  })
+}
+
+export async function declineInvitation(id: string): Promise<void> {
+  await apiRequest<{ ok: boolean }>(`/api/product/invitations/${encodeURIComponent(id)}/decline`, {
+    method: 'POST',
+  })
+}
+
+export async function cancelInvitation(id: string): Promise<void> {
+  await apiRequest<{ ok: boolean }>(`/api/product/invitations/${encodeURIComponent(id)}/cancel`, {
+    method: 'POST',
   })
 }
 

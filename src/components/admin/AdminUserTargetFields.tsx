@@ -32,13 +32,13 @@ export function parseAdminUserTargets(
   if (orderRaw) {
     const order = Number.parseInt(orderRaw, 10)
     if (!Number.isFinite(order) || order <= 0) {
-      return { ok: false, message: t('products.share.validation.deviceOrderInvalid') }
+      return { ok: false, message: t('admin.credits.validation.deviceOrderInvalid') }
     }
     deviceOrders.push(order)
   }
 
   if (!userId && !trimmedEmail && deviceOrders.length === 0) {
-    return { ok: false, message: t('products.share.validation.targetRequired') }
+    return { ok: false, message: t('admin.credits.validation.targetRequired') }
   }
 
   return {
@@ -73,19 +73,19 @@ export function AdminUserTargetFields({
         />
       </label>
       <label className="block text-sm" htmlFor={`${idPrefix}-email`}>
-        <span className="mb-1 block font-medium text-text">{t('products.share.emailLabel')}</span>
+        <span className="mb-1 block font-medium text-text">{t('admin.credits.email')}</span>
         <input
           id={`${idPrefix}-email`}
           type="email"
           value={draft.email}
           onChange={(e) => onChange({ ...draft, email: e.target.value })}
           disabled={disabled}
-          placeholder={t('products.share.emailPlaceholder')}
+          placeholder={t('admin.credits.emailPlaceholder')}
           className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text disabled:opacity-60"
         />
       </label>
       <label className="block text-sm" htmlFor={`${idPrefix}-device-order`}>
-        <span className="mb-1 block font-medium text-text">{t('products.share.deviceOrderLabel')}</span>
+        <span className="mb-1 block font-medium text-text">{t('admin.credits.deviceOrder')}</span>
         <input
           id={`${idPrefix}-device-order`}
           type="number"
@@ -95,10 +95,10 @@ export function AdminUserTargetFields({
           value={draft.deviceOrderInput}
           onChange={(e) => onChange({ ...draft, deviceOrderInput: e.target.value })}
           disabled={disabled}
-          placeholder={t('products.share.deviceOrderPlaceholder')}
+          placeholder={t('admin.credits.deviceOrderPlaceholder')}
           className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm tabular-nums text-text disabled:opacity-60"
         />
-        <p className="mt-1 text-xs text-text-muted">{t('products.share.deviceOrderHint')}</p>
+        <p className="mt-1 text-xs text-text-muted">{t('admin.credits.deviceOrderHint')}</p>
       </label>
     </div>
   )

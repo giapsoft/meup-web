@@ -17,6 +17,7 @@ export const MAIN_NAV_ITEMS: MainNavItem[] = [
     excludePrefix: '/products/new',
   },
   { path: '/explore', labelKey: 'nav.explore', activePrefix: '/explore' },
+  { path: '/invitations', labelKey: 'nav.invitationsWithCount', activePrefix: '/invitations' },
   // Earn /seller — ẩn tạm thời (bật lại khi sẵn sàng)
 ]
 
