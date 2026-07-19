@@ -11,11 +11,12 @@ import {
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { clearAuthTokens, loadAuthTokens } from '../api/authTokens'
 import { ensureAccessToken } from '../api/client'
-import { getAccount } from '../api/emailAuth'
+import { getAccount, updateLangPrefs } from '../api/emailAuth'
 import { redeemLink } from '../api/deviceLink'
-import { LanguagePairProvider } from './LanguagePairProvider'
+import { LanguagePairProvider, useLanguagePair } from './LanguagePairProvider'
 import { AccountProvider } from './AccountProvider'
 import { AuthLoadingPage } from '../pages/AuthGatePages'
+import { SelectStudyLangPage } from '../pages/SelectStudyLangPage'
 import { AdminRoutes } from '../pages/admin/AdminRoutes'
 import { AuthPages } from '../pages/auth/AuthPages'
 import { VerifyEmailPage } from '../pages/auth/VerifyEmailPage'
@@ -26,7 +27,12 @@ import {
   type DeviceSession,
 } from '../utils/deviceSessionStorage'
 import { App } from '../app/App'
-import { getAuthCode, getPathAuthCode, resolveLangPair } from '../utils/linkParams'
+import {
+  getAuthCode,
+  langPairFromDeviceLink,
+  parseDeviceLinkPath,
+  resolveLangPair,
+} from '../utils/linkParams'
 import { langPairFromAccount } from '../utils/accountLangPrefs'
 
 type SessionStatus = 'loading' | 'authorized' | 'unauthorized'
@@ -41,8 +47,10 @@ const AuthActionsContext = createContext<{ reauthorize: () => void } | null>(nul
 /**
  * Cổng xác thực phiên web. Thứ tự ưu tiên (tránh tạo nhiều request):
  *  1. Đã có access token còn hạn (hoặc refresh được) → authorized, không gọi mạng thừa.
- *  2. Có mã link từ QR URL (path `/<order>-<mac>` hoặc `?authCode=`) → redeem 1 lần lấy token.
+ *  2. Có mã link từ QR URL (path mới hoặc `?authCode=`) → redeem 1 lần lấy token.
  *  3. Không có gì → unauthorized.
+ *
+ * Path QR mới: `/[study?][native?][order][mac6]` — luôn ép lang theo path (kể cả đã login).
  */
 export function DeviceSessionProvider({ children }: { children: ReactNode }) {
   const [searchParams] = useSearchParams()
@@ -54,16 +62,22 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
   const statusRef = useRef(status)
   statusRef.current = status
 
-  const pathAuthCode = getPathAuthCode(location.pathname)
+  const parsedLink = useMemo(
+    () => parseDeviceLinkPath(location.pathname),
+    [location.pathname],
+  )
+  const pathRedeemCode = parsedLink?.redeemCode ?? null
   const queryAuthCode = getAuthCode(searchParams)
-  const pendingAuthCode = pathAuthCode ?? queryAuthCode
+  const pendingAuthCode = pathRedeemCode ?? queryAuthCode
 
   const reauthorize = useCallback(() => setReloadToken((n) => n + 1), [])
 
-  const langPreview = useMemo(
-    () => resolveLangPair(searchParams, loadDeviceSession()),
-    [searchParams],
-  )
+  const langPreview = useMemo(() => {
+    if (parsedLink) {
+      return langPairFromDeviceLink(parsedLink)
+    }
+    return resolveLangPair(searchParams, loadDeviceSession())
+  }, [parsedLink, searchParams])
 
   useEffect(() => {
     let cancelled = false
@@ -76,33 +90,50 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
       }
 
       setStatus('loading')
-      const langPair = resolveLangPair(searchParams, loadDeviceSession())
+      const fromQr = parsedLink ? langPairFromDeviceLink(parsedLink) : null
+      const langPair = fromQr ?? resolveLangPair(searchParams, loadDeviceSession())
       const authorized = await authorizeSession(pendingAuthCode)
       if (cancelled) {
         return
       }
       if (authorized) {
         let finalPair = langPair
-        const hasUrlNative = searchParams.has('nativeLangCode')
-        const hasUrlStudy = searchParams.has('studyLangCode')
-        const stored = loadDeviceSession()
-        const hasStoredLangs = Boolean(stored?.nativeLangCode && stored?.studyLangCode)
-        if ((!hasUrlNative || !hasUrlStudy) && !hasStoredLangs) {
-          try {
-            const account = await getAccount()
-            const fromAccount = langPairFromAccount(account)
-            if (fromAccount) {
-              finalPair = {
-                nativeLangCode: hasUrlNative ? finalPair.nativeLangCode : fromAccount.nativeLangCode,
-                studyLangCode: hasUrlStudy ? finalPair.studyLangCode : fromAccount.studyLangCode,
+        if (fromQr) {
+          // QR path: ép lang theo path — không lấy account để ghi đè.
+          finalPair = fromQr
+          if (finalPair.studyLangCode) {
+            void updateLangPrefs(finalPair.nativeLangCode, finalPair.studyLangCode).catch(
+              () => {
+                // best-effort
+              },
+            )
+          }
+        } else {
+          const hasUrlNative = searchParams.has('nativeLangCode')
+          const hasUrlStudy = searchParams.has('studyLangCode')
+          const stored = loadDeviceSession()
+          const hasStoredLangs = Boolean(stored?.nativeLangCode && stored?.studyLangCode)
+          if ((!hasUrlNative || !hasUrlStudy) && !hasStoredLangs) {
+            try {
+              const account = await getAccount()
+              const fromAccount = langPairFromAccount(account)
+              if (fromAccount) {
+                finalPair = {
+                  nativeLangCode: hasUrlNative
+                    ? finalPair.nativeLangCode
+                    : fromAccount.nativeLangCode,
+                  studyLangCode: hasUrlStudy
+                    ? finalPair.studyLangCode
+                    : fromAccount.studyLangCode,
+                }
               }
+            } catch {
+              // Giữ cặp ngôn ngữ từ URL / sessionStorage nếu không đọc được tài khoản.
             }
-          } catch {
-            // Giữ cặp ngôn ngữ từ URL / sessionStorage nếu không đọc được tài khoản.
           }
         }
         saveDeviceSession(finalPair)
-        if (pathAuthCode || location.pathname === '/login' || location.pathname === '/register') {
+        if (parsedLink || location.pathname === '/login' || location.pathname === '/register') {
           navigate('/', { replace: true })
         }
         setLangs(finalPair)
@@ -120,40 +151,45 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [reloadToken, pendingAuthCode, pathAuthCode, navigate, searchParams, location.pathname])
+  }, [
+    reloadToken,
+    pendingAuthCode,
+    parsedLink,
+    navigate,
+    searchParams,
+    location.pathname,
+  ])
 
   const actions = useMemo(() => ({ reauthorize }), [reauthorize])
 
   let content: ReactNode
   if (location.pathname.startsWith('/admin')) {
-    // Admin panel dùng X-Admin-Secret riêng — không cần phiên user.
     content = (
       <LanguagePairProvider
         initialNativeLang={langPreview.nativeLangCode}
-        initialStudyLang={langPreview.studyLangCode}
+        initialStudyLang={langPreview.studyLangCode || 'en'}
       >
         <AdminRoutes />
       </LanguagePairProvider>
     )
   } else if (location.pathname === '/verify-email') {
-    // Trang xác thực email chỉ cần token trong URL (không phụ thuộc phiên) → bỏ qua cổng auth.
     content = (
       <LanguagePairProvider
         initialNativeLang={langPreview.nativeLangCode}
-        initialStudyLang={langPreview.studyLangCode}
+        initialStudyLang={langPreview.studyLangCode || 'en'}
       >
         <VerifyEmailPage />
       </LanguagePairProvider>
     )
   } else if (status === 'loading') {
-    content = <AuthLoadingPage locale={langPreview.nativeLangCode} />
+    content = (
+      <AuthLoadingPage locale={langPreview.nativeLangCode || 'vi'} />
+    )
   } else if (status === 'unauthorized' || !langs) {
-    // Chưa có phiên → cho đăng nhập/đăng ký bằng email (vẫn bọc LanguagePairProvider để dịch
-    // UI theo ngôn ngữ suy ra từ URL/lưu trữ).
     content = (
       <LanguagePairProvider
         initialNativeLang={langPreview.nativeLangCode}
-        initialStudyLang={langPreview.studyLangCode}
+        initialStudyLang={langPreview.studyLangCode || 'en'}
       >
         <AuthPages />
       </LanguagePairProvider>
@@ -165,13 +201,43 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
           initialNativeLang={langs.nativeLangCode}
           initialStudyLang={langs.studyLangCode}
         >
-          <AccountProvider>{children}</AccountProvider>
+          <RequireStudyLang
+            onStudySelected={(code) =>
+              setLangs((prev) => (prev ? { ...prev, studyLangCode: code } : prev))
+            }
+          >
+            <AccountProvider>{children}</AccountProvider>
+          </RequireStudyLang>
         </LanguagePairProvider>
       </DeviceSessionContext.Provider>
     )
   }
 
   return <AuthActionsContext.Provider value={actions}>{content}</AuthActionsContext.Provider>
+}
+
+/** Khi study trống (QR không mang study) → bắt chọn StudyLang trước khi vào app. */
+function RequireStudyLang({
+  children,
+  onStudySelected,
+}: {
+  children: ReactNode
+  onStudySelected: (code: string) => void
+}) {
+  const { studyLang, setStudyLang, t } = useLanguagePair()
+  if (!studyLang.trim()) {
+    return (
+      <SelectStudyLangPage
+        title={t('selectStudy.title')}
+        hint={t('selectStudy.hint')}
+        onSelect={(code) => {
+          setStudyLang(code)
+          onStudySelected(code)
+        }}
+      />
+    )
+  }
+  return children
 }
 
 async function authorizeSession(authCode: string | null): Promise<boolean> {

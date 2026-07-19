@@ -123,6 +123,8 @@
   "languagePicker.selected": "Selected: {name} ({englishName})",
   "languagePair.currentPair": "Current pair: {pair}",
   "languagePair.sameWarning": "Both languages are the same — pick different languages to study effectively.",
+  "selectStudy.title": "Choose a study language",
+  "selectStudy.hint": "The device did not send a study language. Pick the language you want to learn.",
   "products.sectionTitle": "Products",
   "products.my.title": "My products",
   "products.my.description": "View and manage vocabulary sets you created or are studying.",

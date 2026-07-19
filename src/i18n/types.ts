@@ -115,6 +115,8 @@ export type TranslationKey =
   | 'languagePicker.selected'
   | 'languagePair.currentPair'
   | 'languagePair.sameWarning'
+  | 'selectStudy.title'
+  | 'selectStudy.hint'
   | 'products.sectionTitle'
   | 'products.my.title'
   | 'products.my.description'

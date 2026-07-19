@@ -46,29 +46,30 @@ npm run preview
 
 ## Device link (QR)
 
-User opens the site from an ESP32 QR code with query parameters:
+Firmware mở web bằng path (không còn `order-mac` cũ):
 
 ```
-/?nativeLangCode=vi&studyLangCode=en&authCode=meup
+https://<web>/[study?][native?][deviceOrder][tempHash6]
 ```
 
-| Param | Mặc định / fallback |
-|-------|---------------------|
-| `nativeLangCode` | `vi` — ISO 639-1 (vi, en, ja, zh, …); không dùng mã quốc gia (vn, jp, cn) |
-| `studyLangCode` | `en` |
-| `authCode` | bắt buộc — mock hợp lệ: `meup` |
+| Ví dụ path | study | native (web) | redeem API |
+|---|---|---|---|
+| `/101kehj` | *(thiếu → màn chọn Study)* | `vi` | `1-01kehj` |
+| `/en101kehj` | `en` | `vi` (omit trên path) | `1-01kehj` |
+| `/enth1002-nkl` | `en` | `th` | `10-02-nkl` |
 
-Flow:
+**Thứ tự lang trên path = Study → Native** (ngoại lệ; chỗ khác trong codebase là Native → Study).
 
-1. POST mock ` /api/device/verify-link` body `{ authCode }` (console log)
-2. Hợp lệ → vào app; không hợp lệ / thiếu `authCode` → trang 404
-3. User có thể đổi ngôn ngữ trên UI (session); giá trị ban đầu từ URL
-4. **Điều hướng nội bộ:** URL sạch (`/programs`); auth + ngôn ngữ lấy từ `sessionStorage` (F5 cùng tab vẫn ổn)
+- `native == vi` trên máy → **không** ghi vào URL; web fallback `vi`.
+- Mỗi lần mở path QR hợp lệ → **ép** lang theo QR (kể cả đã đăng nhập).
+- Web gọi `POST /api/device/link/redeem` với `"<deviceOrder>-<tempHash>"`.
 
-Dev URL mẫu:
+Query cũ `?nativeLangCode=&studyLangCode=&authCode=` vẫn dùng được cho login/dev thủ công (không phải path QR).
+
+Dev URL mẫu (path):
 
 ```
-http://localhost:5173/?nativeLangCode=vi&studyLangCode=en&authCode=meup
+http://localhost:8086/en101kehj
 ```
 
 ## Trang chủ (mockup)

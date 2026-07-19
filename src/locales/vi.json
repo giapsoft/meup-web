@@ -113,6 +113,8 @@
   "languagePicker.selected": "Đang chọn: {name} ({englishName})",
   "languagePair.currentPair": "Cặp đang chọn: {pair}",
   "languagePair.sameWarning": "Hai ngôn ngữ đang trùng nhau — hãy chọn cặp khác nhau để học hiệu quả.",
+  "selectStudy.title": "Chọn ngôn ngữ học",
+  "selectStudy.hint": "Thiết bị chưa gửi ngôn ngữ học. Hãy chọn ngôn ngữ bạn muốn luyện.",
   "products.sectionTitle": "Sản phẩm học",
   "products.my.title": "Sản phẩm của tôi",
   "products.my.description": "Xem và quản lý các bộ từ vựng bạn đã tạo hoặc đang học.",

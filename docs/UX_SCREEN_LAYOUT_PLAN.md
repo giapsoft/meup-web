@@ -685,7 +685,7 @@ Gate: loading | unauthorized → /login|/register
 | Register | `/register` | `AuthPages.tsx` → `RegisterPage` | Page | Google Sign-Up; email/password/confirm; lỗi; link Login |
 | Google button | Trong Login/Register | `GoogleSignInButton.tsx` | Widget | GSI; divider “or”; lỗi load/token |
 | Verify email | `/verify-email?token=` | `VerifyEmailPage.tsx` | Page | Verifying / success / fail; về Home |
-| QR redeem | Path `/<order>-<mac>` hoặc `?authCode=` | `DeviceSessionProvider` | Gate flow | Success → `/`; fail → Login |
+| QR redeem | Path `/[study?][native?][order][mac6]` hoặc `?authCode=` | `DeviceSessionProvider` | Gate flow | Success → `/` (+ gate Study nếu thiếu); fail → Login |
 | NotFound (QR xấu) | **i18n có, chưa mount** | `AuthGatePages.tsx` → `NotFoundPage` | Dead | “Link invalid/expired” — **chưa gắn UI** |
 
 **Mobile UX (Auth):** form 1 cột, không Nav Drawer; safe area; Google button full width.
