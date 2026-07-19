@@ -10,17 +10,11 @@ export type MainNavItem = {
 }
 
 export const MAIN_NAV_ITEMS: MainNavItem[] = [
-  { path: '/', labelKey: 'nav.home' },
   {
     path: '/products',
     labelKey: 'nav.products',
     activePrefix: '/products',
     excludePrefix: '/products/new',
-  },
-  {
-    path: '/products/new',
-    labelKey: 'nav.create',
-    activePrefix: '/products/new',
   },
   { path: '/explore', labelKey: 'nav.explore', activePrefix: '/explore' },
   // Earn /seller — ẩn tạm thời (bật lại khi sẵn sàng)

@@ -3,7 +3,6 @@ import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { Header } from './components/Header'
 import { useClearDeviceSession, useReauthorize } from './context/DeviceSessionProvider'
 import { useLanguagePair } from './context/LanguagePairProvider'
-import { HomePage } from './pages/HomePage'
 import { CreateProgramFromImagePage } from './pages/create-program/CreateProgramFromImagePage'
 import { CreateProgramFromParagraphPage } from './pages/create-program/CreateProgramFromParagraphPage'
 import { CreateProgramFromTitlePage } from './pages/create-program/CreateProgramFromTitlePage'
@@ -13,6 +12,7 @@ import { CreditsPage } from './pages/CreditsPage'
 import { ExplorePage } from './pages/ExplorePage'
 import { EditProgramPage } from './pages/edit-program/EditProgramPage'
 import { ProductsPage } from './pages/ProductsPage'
+import { PostLoginHomeRedirect } from './pages/PostLoginHomeRedirect'
 import { LegacyProgramsRedirect } from './pages/LegacyProgramsRedirect'
 
 function AppShell() {
@@ -31,7 +31,7 @@ function AppShell() {
     <div className="flex min-h-svh flex-col">
       <Header onLogout={handleLogout} />
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<PostLoginHomeRedirect />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/credits" element={<CreditsPage />} />
