@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { ApiError } from '../../api/client'
 import {
+  WEB_DEFAULT_PROGRAM_CONFIG_KEY,
   listAdminSystemConfig,
   updateAdminSystemConfig,
   type AdminSystemConfigEntry,
@@ -15,7 +16,7 @@ type LoadState =
   | { phase: 'error'; message: string }
 
 function isMultilineKind(kind: AdminSystemConfigEntry['kind']): boolean {
-  return kind === 'json' || kind === 'compact'
+  return kind === 'json' || kind === 'compact' || kind === 'programConfig'
 }
 
 function textareaRows(value: string, kind: AdminSystemConfigEntry['kind']): number {
@@ -65,7 +66,11 @@ export function AdminConfigPage() {
   }, [load])
 
   const visibleEntries = useMemo(
-    () => entries.filter((entry) => !entry.key.startsWith('APP_VERSION')),
+    () =>
+      entries.filter(
+        (entry) =>
+          !entry.key.startsWith('APP_VERSION') && entry.key !== WEB_DEFAULT_PROGRAM_CONFIG_KEY,
+      ),
     [entries],
   )
 

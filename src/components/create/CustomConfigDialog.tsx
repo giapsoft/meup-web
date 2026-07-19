@@ -1,30 +1,7 @@
-import { useEffect, useId, useMemo, useState } from 'react'
+import { useEffect, useId } from 'react'
 import type { MessageParams, TranslationKey } from '../../i18n/types'
-import { useWizardWideLayout } from '../../hooks/useMediaQuery'
-import { CardSetupStep } from '../../pages/create-program/CardSetupStep'
-import { DisplayElementEditorStep } from '../../pages/create-program/DisplayElementEditorStep'
-import { ItemSchemaEditor } from '../../pages/create-program/ItemSchemaEditor'
-import { SideEditorStep } from '../../pages/create-program/SideEditorStep'
-import {
-  WIZARD_ACTION_PRIMARY,
-  WIZARD_ACTION_SECONDARY,
-  WIZARD_ACTIONS,
-} from '../../pages/create-program/wizardLayout'
-import type {
-  ItemSchemaEditorState,
-  LevelRangeDraft,
-  SideDraft,
-} from '../../types/program'
 import type { ProgramConfigWeb } from '../../types/webConfig'
-import { editorStateFromWebConfig } from '../../utils/customConfigState'
-import {
-  validateCustomConfigLevels,
-  validateCustomConfigSchema,
-} from '../../utils/customConfigValidation'
-import { programConfigWebFromEditor } from '../../utils/programConfigWeb'
-import { itemSchemaFromEditor } from '../../utils/schemaField'
-
-type DialogStep = 'schema' | 'levels' | 'sideEdit' | 'displayEdit'
+import { ProgramConfigWizard } from './ProgramConfigWizard'
 
 type CustomConfigDialogProps = {
   open: boolean
@@ -33,16 +10,6 @@ type CustomConfigDialogProps = {
   onClose: () => void
   onApply: (config: ProgramConfigWeb) => void
   t: (key: TranslationKey, params?: MessageParams) => string
-}
-
-function findSide(levels: LevelRangeDraft[], sideId: string): SideDraft | undefined {
-  for (const level of levels) {
-    const side = level.sides.find((s) => s.id === sideId)
-    if (side) {
-      return side
-    }
-  }
-  return undefined
 }
 
 export function CustomConfigDialog({
@@ -54,30 +21,6 @@ export function CustomConfigDialog({
   t,
 }: CustomConfigDialogProps) {
   const titleId = useId()
-  const isWideLayout = useWizardWideLayout()
-  const [step, setStep] = useState<DialogStep>('schema')
-  const [itemSchemaEditor, setItemSchemaEditor] = useState<ItemSchemaEditorState>(() =>
-    editorStateFromWebConfig(initialConfig).itemSchemaEditor,
-  )
-  const [levels, setLevels] = useState<LevelRangeDraft[]>(() =>
-    editorStateFromWebConfig(initialConfig).levels,
-  )
-  const [activeLevelId, setActiveLevelId] = useState('')
-  const [editingSideId, setEditingSideId] = useState<string | null>(null)
-  const [editingDisplayIndex, setEditingDisplayIndex] = useState<number | null>(null)
-
-  useEffect(() => {
-    if (!open) {
-      return
-    }
-    const { itemSchemaEditor: editor, levels: nextLevels } = editorStateFromWebConfig(initialConfig)
-    setItemSchemaEditor(editor)
-    setLevels(nextLevels)
-    setActiveLevelId(nextLevels[0]?.id ?? '')
-    setStep('schema')
-    setEditingSideId(null)
-    setEditingDisplayIndex(null)
-  }, [open, initialConfig])
 
   useEffect(() => {
     if (!open) {
@@ -91,39 +34,6 @@ export function CustomConfigDialog({
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [open, onClose])
-
-  const itemSchema = useMemo(() => itemSchemaFromEditor(itemSchemaEditor), [itemSchemaEditor])
-  const editingSide = editingSideId ? findSide(levels, editingSideId) : undefined
-
-  function updateSide(sideId: string, nextSide: SideDraft) {
-    setLevels((prev) =>
-      prev.map((level) => ({
-        ...level,
-        sides: level.sides.map((side) => (side.id === sideId ? nextSide : side)),
-      })),
-    )
-  }
-
-  function handleContinueSchema() {
-    if (!validateCustomConfigSchema(itemSchemaEditor)) {
-      if (!itemSchemaEditor.fields.every((f) => f.label.trim())) {
-        window.alert(t('createProgram.validation.fieldsRequired'))
-        return
-      }
-      window.alert(t('createProgram.validation.schemaLangRequired'))
-      return
-    }
-    setStep('levels')
-  }
-
-  function handleApplyLevels() {
-    if (!validateCustomConfigLevels(levels)) {
-      window.alert(t('createProgram.customConfig.validation.levels'))
-      return
-    }
-    onApply(programConfigWebFromEditor(itemSchemaEditor, levels))
-    onClose()
-  }
 
   if (!open) {
     return null
@@ -143,102 +53,24 @@ export function CustomConfigDialog({
         aria-labelledby={titleId}
         className="relative z-10 flex h-dvh max-h-dvh w-full max-w-6xl flex-col overflow-hidden border-border bg-surface-raised shadow-xl sm:h-auto sm:max-h-[min(92vh,56rem)] sm:rounded-2xl sm:border"
       >
-        <header className="shrink-0 border-b border-border px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 sm:pt-4">
-          <h2 id={titleId} className="text-lg font-semibold text-text sm:text-xl">
-            {step === 'schema'
-              ? t('createProgram.customConfig.stepSchemaTitle')
-              : step === 'levels'
-                ? t('createProgram.customConfig.stepLevelsTitle')
-                : t('createProgram.customConfig.stepSideTitle')}
-          </h2>
-          {step === 'schema' || step === 'levels' ? (
-            <p className="mt-1 text-sm text-text-muted">{programName}</p>
-          ) : null}
-        </header>
-
         <div
-          className={[
-            'min-h-0 flex-1 overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 sm:pb-4',
-            step === 'sideEdit' || step === 'displayEdit' ? 'pt-0' : 'py-4',
-          ].join(' ')}
+          id={titleId}
+          className="min-h-0 flex-1 overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 sm:pb-4 sm:pt-4"
         >
-          {step === 'schema' && (
-            <>
-              <p className="text-sm text-text-muted">{t('createProgram.stepSchema.hint')}</p>
-              <div className="mt-4">
-                <ItemSchemaEditor
-                  value={itemSchemaEditor}
-                  onChange={setItemSchemaEditor}
-                  t={t}
-                  showGenerateDescriptions
-                />
-              </div>
-              <div className={`${WIZARD_ACTIONS} sm:justify-between`}>
-                <button type="button" onClick={onClose} className={WIZARD_ACTION_SECONDARY}>
-                  {t('createProgram.customConfig.close')}
-                </button>
-                <button type="button" onClick={handleContinueSchema} className={WIZARD_ACTION_PRIMARY}>
-                  {t('createProgram.stepSchema.continue')}
-                </button>
-              </div>
-            </>
-          )}
-
-          {step === 'levels' && (
-            <CardSetupStep
-              programName={programName}
-              schema={itemSchema}
-              levels={levels}
-              activeLevelId={activeLevelId}
-              onLevelsChange={setLevels}
-              onActiveLevelChange={setActiveLevelId}
-              onEditSide={(sideId) => {
-                setEditingSideId(sideId)
-                setStep('sideEdit')
-              }}
-              onBack={() => setStep('schema')}
-              onContinue={handleApplyLevels}
-              t={t}
-            />
-          )}
-
-          {step === 'sideEdit' && editingSide && (
-            <SideEditorStep
-              side={editingSide}
-              schema={itemSchema}
-              editingDisplayIndex={isWideLayout ? editingDisplayIndex : null}
-              onChange={(next) => updateSide(editingSide.id, next)}
-              onEditDisplay={(index) => {
-                setEditingDisplayIndex(index)
-                if (!isWideLayout) {
-                  setStep('displayEdit')
-                }
-              }}
-              onCloseDisplayEdit={() => setEditingDisplayIndex(null)}
-              onBack={() => {
-                setEditingSideId(null)
-                setEditingDisplayIndex(null)
-                setStep('levels')
-              }}
-              t={t}
-            />
-          )}
-
-          {step === 'displayEdit' &&
-            !isWideLayout &&
-            editingSide &&
-            editingDisplayIndex !== null &&
-            editingSide.display[editingDisplayIndex] && (
-              <DisplayElementEditorStep
-                side={editingSide}
-                displayIndex={editingDisplayIndex}
-                schema={itemSchema}
-                onChange={(next) => updateSide(editingSide.id, next)}
-                onSelectDisplayIndex={(index) => setEditingDisplayIndex(index)}
-                onBack={() => setStep('sideEdit')}
-                t={t}
-              />
-            )}
+          <ProgramConfigWizard
+            resetKey={open ? 'open' : 'closed'}
+            initialConfig={initialConfig}
+            programName={programName}
+            t={t}
+            showGenerateDescriptions
+            finishLabel={t('createProgram.stepSchema.continue')}
+            cancelLabel={t('createProgram.customConfig.close')}
+            onCancel={onClose}
+            onFinish={(config) => {
+              onApply(config)
+              onClose()
+            }}
+          />
         </div>
       </div>
     </div>

@@ -46,6 +46,9 @@ type CardSetupStepProps = {
   onEditSide: (sideId: string) => void
   onBack: () => void
   onContinue: () => void
+  /** Override primary button label (default: continue). */
+  continueLabel?: string
+  continueDisabled?: boolean
   t: (key: TranslationKey, params?: MessageParams) => string
 }
 
@@ -147,6 +150,8 @@ export function CardSetupStep({
   onEditSide,
   onBack,
   onContinue,
+  continueLabel,
+  continueDisabled = false,
   t,
 }: CardSetupStepProps) {
   const isWideLayout = useWizardWideLayout()
@@ -376,9 +381,10 @@ export function CardSetupStep({
         <button
           type="button"
           onClick={onContinue}
+          disabled={continueDisabled}
           className={WIZARD_ACTION_PRIMARY}
         >
-          {t('createProgram.stepSchema.continue')}
+          {continueLabel ?? t('createProgram.stepSchema.continue')}
         </button>
       </div>
     </section>

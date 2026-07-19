@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { ApiError } from '../../api/client'
 import { generateProductCreateDescription } from '../../api/productCreateMedia'
-import { useAccount } from '../../context/AccountProvider'
+import { useOptionalAccount } from '../../context/AccountProvider'
 import { useLanguagePair } from '../../context/LanguagePairProvider'
 import { findLanguage } from '../../data/mock'
 import type { MessageParams, TranslationKey } from '../../i18n/types'
 import type { ItemSchemaEditorState, SchemaFieldRow } from '../../types/program'
+import type { SchemaAttrWeb } from '../../types/webConfig'
 import { newEmptySchemaRow } from '../../utils/schemaField'
 import { SchemaFieldList } from './SchemaFieldList'
 
@@ -15,6 +16,14 @@ type ItemSchemaEditorProps = {
   t: (key: TranslationKey, params?: MessageParams) => string
   /** Show generate-description action (CustomConfig / create flows). */
   showGenerateDescriptions?: boolean
+  /**
+   * Override default product-create generate (charges credits).
+   * Admin passes free endpoint; when set, account balance is not refreshed.
+   */
+  generateDescriptions?: (attrs: SchemaAttrWeb[]) => Promise<SchemaAttrWeb[]>
+  /** Override language-pair labels (admin picker). Defaults to LanguagePairProvider. */
+  studyLangLabel?: string
+  nativeLangLabel?: string
 }
 
 export function ItemSchemaEditor({
@@ -22,11 +31,16 @@ export function ItemSchemaEditor({
   onChange,
   t,
   showGenerateDescriptions = false,
+  generateDescriptions,
+  studyLangLabel: studyLangLabelProp,
+  nativeLangLabel: nativeLangLabelProp,
 }: ItemSchemaEditorProps) {
-  const { refreshAccount } = useAccount()
+  const account = useOptionalAccount()
   const { nativeLang, studyLang } = useLanguagePair()
-  const studyLangLabel = findLanguage(studyLang)?.name ?? studyLang
-  const nativeLangLabel = findLanguage(nativeLang)?.name ?? nativeLang
+  const studyLangLabel =
+    studyLangLabelProp ?? findLanguage(studyLang)?.name ?? studyLang
+  const nativeLangLabel =
+    nativeLangLabelProp ?? findLanguage(nativeLang)?.name ?? nativeLang
   const [generating, setGenerating] = useState(false)
   const [generateError, setGenerateError] = useState('')
 
@@ -51,17 +65,18 @@ export function ItemSchemaEditor({
     }
     setGenerating(true)
     setGenerateError('')
+    const attrs: SchemaAttrWeb[] = value.fields.map((row) => ({
+      key: row.key,
+      label: row.label.trim() || row.key,
+      description: row.description ?? '',
+      type: row.uiType,
+      ...(row.langType ? { langType: row.langType } : {}),
+    }))
     try {
-      const result = await generateProductCreateDescription({
-        attrs: value.fields.map((row) => ({
-          key: row.key,
-          label: row.label.trim() || row.key,
-          description: row.description ?? '',
-          type: row.uiType,
-          ...(row.langType ? { langType: row.langType } : {}),
-        })),
-      })
-      const byKey = new Map(result.attrs.map((attr) => [attr.key, attr]))
+      const resultAttrs = generateDescriptions
+        ? await generateDescriptions(attrs)
+        : (await generateProductCreateDescription({ attrs })).attrs
+      const byKey = new Map(resultAttrs.map((attr) => [attr.key, attr]))
       onChange({
         ...value,
         fields: value.fields.map((row) => {
@@ -72,7 +87,9 @@ export function ItemSchemaEditor({
           return { ...row, description: updated.description }
         }),
       })
-      await refreshAccount()
+      if (!generateDescriptions) {
+        await account?.refreshAccount()
+      }
     } catch (err) {
       const code = err instanceof ApiError ? err.code : 'request_failed'
       setGenerateError(code)

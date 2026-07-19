@@ -238,6 +238,12 @@ export function AdminPanelPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Link
+              to="/admin/default-program-config"
+              className="rounded-lg border border-border bg-surface-raised px-3 py-1.5 text-sm text-text-muted no-underline transition hover:border-accent/40 hover:text-text"
+            >
+              {t('admin.defaultProgramConfig.open')}
+            </Link>
+            <Link
               to="/admin/config"
               className="rounded-lg border border-border bg-surface-raised px-3 py-1.5 text-sm text-text-muted no-underline transition hover:border-accent/40 hover:text-text"
             >

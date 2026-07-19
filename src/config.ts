@@ -73,6 +73,9 @@ export const API_ADMIN_CREDITS_ADJUST = '/api/admin/credits/adjust'
 /** Admin: đọc/ghi system_config. */
 export const API_ADMIN_SYSTEM_CONFIG = '/api/admin/system-config'
 
+/** Admin: generate attribute descriptions (no credit charge). */
+export const API_ADMIN_GENERATE_DESCRIPTION = '/api/admin/generate-description'
+
 /** Admin: publish firmware OTA (multipart). */
 export const API_ADMIN_APP_VERSION_PUBLISH = '/api/admin/app-version/publish'
 

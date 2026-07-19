@@ -2,10 +2,12 @@ import {
   API_ADMIN_APP_VERSION_CLEAR,
   API_ADMIN_APP_VERSION_PUBLISH,
   API_ADMIN_CREDITS_ADJUST,
+  API_ADMIN_GENERATE_DESCRIPTION,
   API_ADMIN_SELLER_BALANCES,
   API_ADMIN_SELLER_RECORD,
   API_ADMIN_SYSTEM_CONFIG,
 } from '../config'
+import type { SchemaAttrWeb } from '../types/webConfig'
 import { adminRequest, adminRequestForm } from './adminClient'
 
 /** Matches `GET /api/admin/seller-payout/balances` list item. */
@@ -85,7 +87,7 @@ export async function adjustAdminUserCredits(
   return data.adjustments ?? []
 }
 
-export type AdminSystemConfigKind = 'bool' | 'int' | 'text' | 'json' | 'compact'
+export type AdminSystemConfigKind = 'bool' | 'int' | 'text' | 'json' | 'compact' | 'programConfig'
 
 export type AdminSystemConfigEntry = {
   key: string
@@ -95,6 +97,9 @@ export type AdminSystemConfigEntry = {
   inDatabase: boolean
   description: string
 }
+
+/** system_config key for web create-product default ProgramConfigWeb. */
+export const WEB_DEFAULT_PROGRAM_CONFIG_KEY = 'WEB_DEFAULT_PROGRAM_CONFIG'
 
 export async function listAdminSystemConfig(secret: string): Promise<AdminSystemConfigEntry[]> {
   const data = await adminRequest<{ entries: AdminSystemConfigEntry[] }>(
@@ -114,6 +119,21 @@ export async function updateAdminSystemConfig(
     { method: 'PUT', body: { entries } },
   )
   return data.entries ?? []
+}
+
+export type AdminGenerateDescriptionResult = {
+  attrs: SchemaAttrWeb[]
+}
+
+/** Fill missing attr descriptions — admin secret, no credit charge. */
+export async function adminGenerateDescription(
+  secret: string,
+  attrs: SchemaAttrWeb[],
+): Promise<AdminGenerateDescriptionResult> {
+  return adminRequest<AdminGenerateDescriptionResult>(secret, API_ADMIN_GENERATE_DESCRIPTION, {
+    method: 'POST',
+    body: { attrs },
+  })
 }
 
 export type AdminAppVersionPublishResult = {

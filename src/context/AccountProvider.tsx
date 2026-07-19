@@ -65,3 +65,8 @@ export function useAccount(): AccountContextValue {
   }
   return ctx
 }
+
+/** Null outside AccountProvider (e.g. admin routes). */
+export function useOptionalAccount(): AccountContextValue | null {
+  return useContext(AccountContext)
+}
