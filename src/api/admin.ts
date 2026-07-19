@@ -101,6 +101,17 @@ export type AdminSystemConfigEntry = {
 /** system_config key for web create-product default ProgramConfigWeb. */
 export const WEB_DEFAULT_PROGRAM_CONFIG_KEY = 'WEB_DEFAULT_PROGRAM_CONFIG'
 
+/** Credit package keys — edited on Admin panel Packages tab, not generic config page. */
+export const CREDIT_PACKAGE_MONTHLY_KEY = 'CREDIT_PACKAGE_MONTHLY'
+export const CREDIT_PACKAGE_YEARLY_KEY = 'CREDIT_PACKAGE_YEARLY'
+
+/** Keys with dedicated admin UIs — hide from generic `/admin/config` list. */
+export const ADMIN_CONFIG_HIDDEN_KEYS = new Set([
+  WEB_DEFAULT_PROGRAM_CONFIG_KEY,
+  CREDIT_PACKAGE_MONTHLY_KEY,
+  CREDIT_PACKAGE_YEARLY_KEY,
+])
+
 export async function listAdminSystemConfig(secret: string): Promise<AdminSystemConfigEntry[]> {
   const data = await adminRequest<{ entries: AdminSystemConfigEntry[] }>(
     secret,

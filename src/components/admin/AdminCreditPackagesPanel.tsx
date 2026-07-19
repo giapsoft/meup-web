@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
+  CREDIT_PACKAGE_MONTHLY_KEY,
+  CREDIT_PACKAGE_YEARLY_KEY,
   listAdminSystemConfig,
   updateAdminSystemConfig,
   type AdminSystemConfigEntry,
@@ -9,8 +11,8 @@ import { ApiError } from '../../api/client'
 import { useLanguagePair } from '../../context/LanguagePairProvider'
 import { clearAdminSecret } from '../../utils/adminSecretStorage'
 
-const KEY_MONTHLY = 'CREDIT_PACKAGE_MONTHLY'
-const KEY_YEARLY = 'CREDIT_PACKAGE_YEARLY'
+const KEY_MONTHLY = CREDIT_PACKAGE_MONTHLY_KEY
+const KEY_YEARLY = CREDIT_PACKAGE_YEARLY_KEY
 
 export type CreditPackageFormDraft = {
   id: 'monthly' | 'yearly'

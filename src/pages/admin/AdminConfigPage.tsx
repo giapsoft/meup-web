@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { ApiError } from '../../api/client'
 import {
-  WEB_DEFAULT_PROGRAM_CONFIG_KEY,
+  ADMIN_CONFIG_HIDDEN_KEYS,
   listAdminSystemConfig,
   updateAdminSystemConfig,
   type AdminSystemConfigEntry,
@@ -69,7 +69,7 @@ export function AdminConfigPage() {
     () =>
       entries.filter(
         (entry) =>
-          !entry.key.startsWith('APP_VERSION') && entry.key !== WEB_DEFAULT_PROGRAM_CONFIG_KEY,
+          !entry.key.startsWith('APP_VERSION') && !ADMIN_CONFIG_HIDDEN_KEYS.has(entry.key),
       ),
     [entries],
   )
