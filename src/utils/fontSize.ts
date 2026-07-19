@@ -6,6 +6,9 @@ export const FONT_SIZES_ALL_DECREASE = [48, 32, 24, 18, 14, 12] as const
 
 export const FONT_SIZE_NORMAL = 14
 
+/** Floor for continuous autosize when dense steps still overflow (preview only). */
+const CONTINUOUS_MIN_PX = 4
+
 const PREVIEW_FONT = 'Segoe UI, system-ui, -apple-system, sans-serif'
 
 function lineHeightPx(fontPx: number): number {
@@ -44,18 +47,18 @@ function measureWrappedText(
   text: string,
   fontPx: number,
   maxWidthPx: number,
-): { width: number; height: number } {
+): { width: number; height: number; lines: number } {
   const ctx = getMeasureCtx()
   const lh = lineHeightPx(fontPx)
   if (!ctx || maxWidthPx <= 0) {
-    return { width: 0, height: lh }
+    return { width: 0, height: lh, lines: 1 }
   }
 
   ctx.font = `${fontPx}px ${PREVIEW_FONT}`
   const content = text.trim() || ' '
   const words = content.split(/\s+/).filter(Boolean)
   if (words.length === 0) {
-    return { width: 0, height: lh }
+    return { width: 0, height: lh, lines: 1 }
   }
 
   let line = ''
@@ -75,12 +78,31 @@ function measureWrappedText(
     }
   }
 
-  return { width: maxLineW, height: lines * lh }
+  return { width: maxLineW, height: lines * lh, lines }
+}
+
+function textFitsBox(
+  text: string,
+  fontPx: number,
+  widthPx: number,
+  heightPx: number,
+  maxLines: number | undefined,
+): boolean {
+  const maxH = boundedHeightPx(heightPx, maxLines, fontPx)
+  if (maxH <= 0) {
+    return false
+  }
+  const size = measureWrappedText(text, fontPx, widthPx)
+  if (maxLines !== undefined && maxLines > 0 && size.lines > maxLines) {
+    return false
+  }
+  return size.width <= widthPx && size.height <= maxH
 }
 
 /**
  * Pick the largest dense font size that fits the box — mirrors meup
- * `LabelView::resolveFontSizePx_`.
+ * `LabelView::resolveFontSizePx_`. If even `tiny` overflows (e.g. maxLines=1
+ * in a narrow box), keep shrinking continuously so preview shows full text.
  */
 export function resolvePreviewFontSizePx(
   text: string,
@@ -95,17 +117,29 @@ export function resolvePreviewFontSizePx(
   const measuredText = text.trim() || ' '
 
   for (const px of FONT_SIZES_ALL_DECREASE) {
-    const maxH = boundedHeightPx(heightPx, maxLines, px)
-    if (maxH <= 0) {
-      continue
-    }
-    const size = measureWrappedText(measuredText, px, widthPx)
-    if (size.width <= widthPx && size.height <= maxH) {
+    if (textFitsBox(measuredText, px, widthPx, heightPx, maxLines)) {
       return px
     }
   }
 
-  return FONT_SIZES_PX[0]
+  const tiny = FONT_SIZES_PX[0]
+  if (textFitsBox(measuredText, tiny, widthPx, heightPx, maxLines)) {
+    return tiny
+  }
+
+  let lo = CONTINUOUS_MIN_PX
+  let hi = tiny
+  let best = CONTINUOUS_MIN_PX
+  for (let i = 0; i < 16; i++) {
+    const mid = (lo + hi) / 2
+    if (textFitsBox(measuredText, mid, widthPx, heightPx, maxLines)) {
+      best = mid
+      lo = mid
+    } else {
+      hi = mid
+    }
+  }
+  return best
 }
 
 /** Scale device px font to rendered preview container width. */

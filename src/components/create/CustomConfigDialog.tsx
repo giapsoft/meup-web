@@ -136,7 +136,7 @@ export function CustomConfigDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-stretch justify-center sm:items-center sm:p-4">
       <button
         type="button"
         className="absolute inset-0 bg-black/50"
@@ -147,9 +147,9 @@ export function CustomConfigDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative z-10 flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-t-2xl border border-border bg-surface-raised shadow-xl sm:rounded-2xl"
+        className="relative z-10 flex h-dvh max-h-dvh w-full max-w-6xl flex-col overflow-hidden border-border bg-surface-raised shadow-xl sm:h-auto sm:max-h-[min(92vh,56rem)] sm:rounded-2xl sm:border"
       >
-        <header className="shrink-0 border-b border-border px-4 py-4 sm:px-6">
+        <header className="shrink-0 border-b border-border px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 sm:pt-4">
           <h2 id={titleId} className="text-lg font-semibold text-text sm:text-xl">
             {step === 'schema'
               ? t('createProgram.customConfig.stepSchemaTitle')
@@ -157,10 +157,17 @@ export function CustomConfigDialog({
                 ? t('createProgram.customConfig.stepLevelsTitle')
                 : t('createProgram.customConfig.stepSideTitle')}
           </h2>
-          <p className="mt-1 text-sm text-text-muted">{programName}</p>
+          {step === 'schema' || step === 'levels' ? (
+            <p className="mt-1 text-sm text-text-muted">{programName}</p>
+          ) : null}
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
+        <div
+          className={[
+            'min-h-0 flex-1 overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 sm:pb-4',
+            step === 'sideEdit' || step === 'displayEdit' ? 'pt-0' : 'py-4',
+          ].join(' ')}
+        >
           {step === 'schema' && (
             <>
               <p className="text-sm text-text-muted">{t('createProgram.stepSchema.hint')}</p>
@@ -204,7 +211,6 @@ export function CustomConfigDialog({
 
           {step === 'sideEdit' && editingSide && (
             <SideEditorStep
-              programName={programName}
               side={editingSide}
               schema={itemSchema}
               editingDisplayIndex={isWideLayout ? editingDisplayIndex : null}

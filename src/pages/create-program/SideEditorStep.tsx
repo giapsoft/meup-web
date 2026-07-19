@@ -11,23 +11,17 @@ import {
 } from '../../utils/sideConfig'
 import { defaultPaletteColor, displayColorOr } from '../../utils/colorPalette'
 import { useWizardWideLayout } from '../../hooks/useMediaQuery'
-import { sideNumberLabel } from '../../utils/programConfig'
 import { ColorPickerField } from './ColorPickerField'
 import { DisplayElementEditorPanel } from './DisplayElementEditorPanel'
 import { PlayStepEditor } from './PlayStepEditor'
 import { SidePreview } from './SidePreview'
-import { previewDragHintKey, previewTapHintKey } from './previewHints'
 import {
   WIZARD_ACTION_PRIMARY,
   WIZARD_ACTIONS,
-  WIZARD_EDITOR_GRID,
   WIZARD_FORM_COLUMN,
-  WIZARD_PREVIEW_COLUMN,
-  WIZARD_STEP_SECTION,
 } from './wizardLayout'
 
 type SideEditorStepProps = {
-  programName: string
   side: SideDraft
   schema: ItemSchema
   editingDisplayIndex?: number | null
@@ -39,7 +33,6 @@ type SideEditorStepProps = {
 }
 
 export function SideEditorStep({
-  programName,
   side,
   schema,
   editingDisplayIndex = null,
@@ -59,19 +52,10 @@ export function SideEditorStep({
     editingDisplayIndex !== undefined &&
     side.display[editingDisplayIndex] !== undefined
 
-  const previewHint = isEditingDisplay
-    ? t(previewDragHintKey(isWideLayout))
-    : t(previewTapHintKey(isWideLayout))
-
   return (
-    <section className={WIZARD_STEP_SECTION}>
-      <h1 className="text-xl font-semibold text-text sm:text-2xl lg:text-3xl">
-        {sideNumberLabel(side.playOrder, t)}
-      </h1>
-      <p className="mt-1 text-xs text-text-muted lg:text-sm">{programName}</p>
-
-      <div className={WIZARD_EDITOR_GRID}>
-        <div className={WIZARD_PREVIEW_COLUMN}>
+    <section className="min-w-0">
+      <div className="lg:mt-4 lg:grid lg:grid-cols-[minmax(240px,320px)_minmax(0,1fr)] lg:items-start lg:gap-8 xl:grid-cols-[360px_minmax(0,1fr)] xl:gap-10">
+        <div className="sticky top-0 z-10 bg-surface-raised lg:self-start">
           <SidePreview
             side={side}
             schema={schema}
@@ -79,11 +63,10 @@ export function SideEditorStep({
             draggableIndex={isEditingDisplay ? editingDisplayIndex : null}
             onSelectIndex={onEditDisplay}
             onElementChange={(index, next) => onChange(updateDisplayElement(side, index, next))}
-            hint={previewHint}
           />
         </div>
 
-        <div className={WIZARD_FORM_COLUMN}>
+        <div className={`${WIZARD_FORM_COLUMN} mt-4 lg:mt-0`}>
           {isEditingDisplay ? (
             <DisplayElementEditorPanel
               side={side}

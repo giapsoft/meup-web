@@ -275,7 +275,7 @@ export function SidePreview({
 
                   return (
                     <span
-                      className="relative flex h-full w-full items-center px-1"
+                      className="relative flex h-full w-full items-center"
                       style={{
                         borderRadius: el.borderRadius ? `${el.borderRadius}px` : undefined,
                       }}
@@ -288,19 +288,14 @@ export function SidePreview({
                         }}
                       />
                       <span
-                        className="pointer-events-none relative z-[1] w-full break-words"
+                        className="pointer-events-none relative z-[1] w-full overflow-hidden break-words"
                         style={{
                           color: baseColor,
                           fontSize: `${scaledFontPx}px`,
                           lineHeight: `${scaledLineHeight}px`,
                           textAlign: (el.textAlign as CSSProperties['textAlign']) || 'left',
                           ...(maxLines
-                            ? {
-                                display: '-webkit-box',
-                                WebkitBoxOrient: 'vertical',
-                                WebkitLineClamp: maxLines,
-                                overflow: 'hidden',
-                              }
+                            ? { maxHeight: `${maxLines * scaledLineHeight}px` }
                             : {}),
                         }}
                       >
