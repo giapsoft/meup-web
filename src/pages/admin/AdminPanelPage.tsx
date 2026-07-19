@@ -178,7 +178,7 @@ export function AdminPanelPage() {
       return
     }
     const parsedTargets = parseAdminUserTargets(creditTarget, t)
-    if (!parsedTargets.ok) {
+    if (parsedTargets.ok === false) {
       setCreditMessage(parsedTargets.message)
       return
     }
