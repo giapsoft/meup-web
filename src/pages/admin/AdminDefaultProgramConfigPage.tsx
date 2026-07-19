@@ -94,11 +94,11 @@ export function AdminDefaultProgramConfigPage() {
   }, [toastMessage])
 
   const generateDescriptions = useCallback(
-    async (attrs: SchemaAttrWeb[]) => {
+    async (attrs: SchemaAttrWeb[], opts?: { keys?: string[] }) => {
       if (!secret) {
         throw new ApiError(401, 'unauthorized')
       }
-      const result = await adminGenerateDescription(secret, attrs)
+      const result = await adminGenerateDescription(secret, attrs, opts?.keys)
       return result.attrs
     },
     [secret],

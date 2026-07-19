@@ -81,6 +81,8 @@ export async function generateProductCreateImage(input: {
 
 export async function generateProductCreateDescription(input: {
   attrs: SchemaAttrWeb[]
+  /** When set, fill or upgrade these keys only (still send full attrs for context). */
+  keys?: string[]
 }): Promise<GenerateDescriptionResult> {
   return authJsonRequest<GenerateDescriptionResult>(`${API_PRODUCT_CREATE}/generate-description`, input)
 }

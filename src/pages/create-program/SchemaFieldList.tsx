@@ -28,6 +28,13 @@ type SchemaFieldListProps = {
   onUpdate: (id: string, patch: Partial<SchemaFieldRow>) => void
   onRemove: (id: string) => void
   t: (key: TranslationKey, params?: MessageParams) => string
+  /** Show per-row AI fill/upgrade description button. */
+  showAiDescription?: boolean
+  /** Row id currently running AI description. */
+  aiDescriptionBusyId?: string | null
+  /** Disable all AI buttons (batch running or any row busy). */
+  aiDescriptionDisabled?: boolean
+  onAiDescription?: (id: string) => void
 }
 
 /** Combined uiType + langType choices exposed by the cycle button. */
@@ -121,6 +128,10 @@ type SortableFieldRowProps = {
   onUpdate: (id: string, patch: Partial<SchemaFieldRow>) => void
   onRemove: (id: string) => void
   t: (key: TranslationKey, params?: MessageParams) => string
+  showAiDescription?: boolean
+  aiDescriptionBusy?: boolean
+  aiDescriptionDisabled?: boolean
+  onAiDescription?: (id: string) => void
 }
 
 function SortableFieldRow({
@@ -130,6 +141,10 @@ function SortableFieldRow({
   onUpdate,
   onRemove,
   t,
+  showAiDescription = false,
+  aiDescriptionBusy = false,
+  aiDescriptionDisabled = false,
+  onAiDescription,
 }: SortableFieldRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: row.id,
@@ -148,6 +163,10 @@ function SortableFieldRow({
         ? nativeLangLabel
         : t('createProgram.stepSchema.role.noAudio')
   const hasAudioLang = mode !== 'text'
+  const hasDescription = Boolean(row.description?.trim())
+  const aiLabel = hasDescription
+    ? t('createProgram.stepSchema.aiDescriptionImprove')
+    : t('createProgram.stepSchema.aiDescriptionGenerate')
 
   return (
     <li
@@ -204,13 +223,29 @@ function SortableFieldRow({
         </button>
       </div>
 
-      <input
-        type="text"
-        value={row.description ?? ''}
-        onChange={(e) => onUpdate(row.id, { description: e.target.value })}
-        placeholder={t('createProgram.stepSchema.fieldDescription')}
-        className="mt-2 min-h-11 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text"
-      />
+      <div className="mt-2 flex gap-2">
+        <input
+          type="text"
+          value={row.description ?? ''}
+          onChange={(e) => onUpdate(row.id, { description: e.target.value })}
+          placeholder={t('createProgram.stepSchema.fieldDescription')}
+          className="min-h-11 min-w-0 flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text"
+        />
+        {showAiDescription && (
+          <button
+            type="button"
+            onClick={() => onAiDescription?.(row.id)}
+            disabled={aiDescriptionDisabled || !row.key.trim()}
+            title={aiLabel}
+            aria-label={aiLabel}
+            className="flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-border bg-surface px-2.5 text-xs font-medium text-accent hover:bg-surface-hover disabled:opacity-50"
+          >
+            {aiDescriptionBusy
+              ? t('createProgram.stepSchema.aiDescriptionLoading')
+              : t('createProgram.stepSchema.aiDescription')}
+          </button>
+        )}
+      </div>
     </li>
   )
 }
@@ -223,6 +258,10 @@ export function SchemaFieldList({
   onUpdate,
   onRemove,
   t,
+  showAiDescription = false,
+  aiDescriptionBusyId = null,
+  aiDescriptionDisabled = false,
+  onAiDescription,
 }: SchemaFieldListProps) {
   const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null)
   const sensors = useSensors(
@@ -263,6 +302,10 @@ export function SchemaFieldList({
                 onUpdate={onUpdate}
                 onRemove={setPendingRemoveId}
                 t={t}
+                showAiDescription={showAiDescription}
+                aiDescriptionBusy={aiDescriptionBusyId === row.id}
+                aiDescriptionDisabled={aiDescriptionDisabled}
+                onAiDescription={onAiDescription}
               />
             ))}
           </ul>

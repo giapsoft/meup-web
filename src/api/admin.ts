@@ -136,14 +136,15 @@ export type AdminGenerateDescriptionResult = {
   attrs: SchemaAttrWeb[]
 }
 
-/** Fill missing attr descriptions — admin secret, no credit charge. */
+/** Fill or upgrade attr descriptions — admin secret, no credit charge. */
 export async function adminGenerateDescription(
   secret: string,
   attrs: SchemaAttrWeb[],
+  keys?: string[],
 ): Promise<AdminGenerateDescriptionResult> {
   return adminRequest<AdminGenerateDescriptionResult>(secret, API_ADMIN_GENERATE_DESCRIPTION, {
     method: 'POST',
-    body: { attrs },
+    body: keys?.length ? { attrs, keys } : { attrs },
   })
 }
 

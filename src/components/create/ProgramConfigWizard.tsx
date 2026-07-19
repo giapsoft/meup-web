@@ -3,7 +3,7 @@ import type { MessageParams, TranslationKey } from '../../i18n/types'
 import { useWizardWideLayout } from '../../hooks/useMediaQuery'
 import { CardSetupStep } from '../../pages/create-program/CardSetupStep'
 import { DisplayElementEditorStep } from '../../pages/create-program/DisplayElementEditorStep'
-import { ItemSchemaEditor } from '../../pages/create-program/ItemSchemaEditor'
+import { ItemSchemaEditor, type GenerateDescriptionsFn } from '../../pages/create-program/ItemSchemaEditor'
 import { SideEditorStep } from '../../pages/create-program/SideEditorStep'
 import {
   WIZARD_ACTION_PRIMARY,
@@ -15,7 +15,7 @@ import type {
   LevelRangeDraft,
   SideDraft,
 } from '../../types/program'
-import type { ProgramConfigWeb, SchemaAttrWeb } from '../../types/webConfig'
+import type { ProgramConfigWeb } from '../../types/webConfig'
 import { editorStateFromWebConfig } from '../../utils/customConfigState'
 import {
   validateCustomConfigLevels,
@@ -34,7 +34,7 @@ export type ProgramConfigWizardProps = {
   t: (key: TranslationKey, params?: MessageParams) => string
   showGenerateDescriptions?: boolean
   /** Override product-create generate (e.g. admin free endpoint). */
-  generateDescriptions?: (attrs: SchemaAttrWeb[]) => Promise<SchemaAttrWeb[]>
+  generateDescriptions?: GenerateDescriptionsFn
   studyLangLabel?: string
   nativeLangLabel?: string
   /** Primary action on levels step (Apply / Save). */
