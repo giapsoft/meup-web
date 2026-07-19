@@ -16,16 +16,48 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { MessageParams, TranslationKey } from '../../i18n/types'
-import type { SchemaFieldRow, SchemaFieldUiType } from '../../types/program'
-import { SCHEMA_UI_TYPES } from '../../utils/schemaField'
+import type { LangType, SchemaFieldRow } from '../../types/program'
 
 type SchemaFieldListProps = {
   fields: SchemaFieldRow[]
-  fieldTypeKeys: Record<SchemaFieldUiType, TranslationKey>
+  studyLangLabel: string
+  nativeLangLabel: string
   onReorder: (fields: SchemaFieldRow[]) => void
   onUpdate: (id: string, patch: Partial<SchemaFieldRow>) => void
   onRemove: (id: string) => void
   t: (key: TranslationKey, params?: MessageParams) => string
+}
+
+/** Combined uiType + langType choices exposed by the cycle button. */
+type FieldRoleMode = 'text' | 'studyAudio' | 'nativeAudio'
+
+const ROLE_CYCLE: FieldRoleMode[] = ['text', 'studyAudio', 'nativeAudio']
+
+function resolveRoleMode(row: SchemaFieldRow): FieldRoleMode {
+  if (row.uiType === 'text+audio' && row.langType === 'study') {
+    return 'studyAudio'
+  }
+  if (row.uiType === 'text+audio' && row.langType === 'native') {
+    return 'nativeAudio'
+  }
+  return 'text'
+}
+
+function patchForRoleMode(mode: FieldRoleMode): Pick<SchemaFieldRow, 'uiType'> & {
+  langType: LangType | undefined
+} {
+  if (mode === 'studyAudio') {
+    return { uiType: 'text+audio', langType: 'study' }
+  }
+  if (mode === 'nativeAudio') {
+    return { uiType: 'text+audio', langType: 'native' }
+  }
+  return { uiType: 'text', langType: undefined }
+}
+
+function nextRoleMode(mode: FieldRoleMode): FieldRoleMode {
+  const index = ROLE_CYCLE.indexOf(mode)
+  return ROLE_CYCLE[(index + 1) % ROLE_CYCLE.length] ?? 'text'
 }
 
 function DragHandleIcon() {
@@ -48,15 +80,55 @@ function DragHandleIcon() {
   )
 }
 
+function TextLinesIcon() {
+  return (
+    <svg className="h-[18px] w-[18px] shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M4 7h16M4 12h10M4 17h13"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+function VolumeIcon() {
+  return (
+    <svg className="h-[18px] w-[18px] shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M11 5 6 9H3v6h3l5 4V5z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M15.5 8.5a4.5 4.5 0 0 1 0 7M18.5 5.5a8.5 8.5 0 0 1 0 13"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
 type SortableFieldRowProps = {
   row: SchemaFieldRow
-  fieldTypeKeys: Record<SchemaFieldUiType, TranslationKey>
+  studyLangLabel: string
+  nativeLangLabel: string
   onUpdate: (id: string, patch: Partial<SchemaFieldRow>) => void
   onRemove: (id: string) => void
   t: (key: TranslationKey, params?: MessageParams) => string
 }
 
-function SortableFieldRow({ row, fieldTypeKeys, onUpdate, onRemove, t }: SortableFieldRowProps) {
+function SortableFieldRow({
+  row,
+  studyLangLabel,
+  nativeLangLabel,
+  onUpdate,
+  onRemove,
+  t,
+}: SortableFieldRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: row.id,
   })
@@ -66,80 +138,89 @@ function SortableFieldRow({ row, fieldTypeKeys, onUpdate, onRemove, t }: Sortabl
     transition,
   }
 
+  const mode = resolveRoleMode(row)
+  const roleLabel =
+    mode === 'studyAudio'
+      ? studyLangLabel
+      : mode === 'nativeAudio'
+        ? nativeLangLabel
+        : t('createProgram.stepSchema.role.noAudio')
+  const hasAudioLang = mode !== 'text'
+
   return (
     <li
       ref={setNodeRef}
       style={style}
-      className={`flex flex-col gap-2 rounded-xl border border-border bg-surface-card p-3 sm:flex-row sm:items-center ${
+      className={`rounded-xl border border-border bg-surface-card p-3 ${
         isDragging ? 'z-10 opacity-60 shadow-lg' : ''
       }`}
     >
-      <input
-        type="text"
-        value={row.label}
-        onChange={(e) => onUpdate(row.id, { label: e.target.value })}
-        placeholder={t('createProgram.stepSchema.fieldLabel')}
-        className="order-1 min-w-0 w-full flex-1 rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-text sm:order-2"
-      />
-      <input
-        type="text"
-        value={row.description ?? ''}
-        onChange={(e) => onUpdate(row.id, { description: e.target.value })}
-        placeholder={t('createProgram.stepSchema.fieldDescription')}
-        className="order-4 min-w-0 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text sm:order-5"
-      />
-      <div className="order-2 flex items-center gap-2 sm:contents">
+      <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          className="order-1 flex min-h-11 min-w-11 shrink-0 cursor-grab touch-none items-center justify-center rounded-lg border border-border active:cursor-grabbing sm:order-1"
+          className="flex min-h-11 min-w-11 shrink-0 cursor-grab touch-none items-center justify-center rounded-lg border border-border active:cursor-grabbing"
           aria-label={t('createProgram.stepSchema.dragHandle')}
           {...attributes}
           {...listeners}
         >
           <DragHandleIcon />
         </button>
-        <select
-          value={row.uiType}
-          onChange={(e) => onUpdate(row.id, { uiType: e.target.value as SchemaFieldUiType })}
-          className="order-2 min-h-11 min-w-0 flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text sm:order-3 sm:w-auto sm:flex-none"
-        >
-          {SCHEMA_UI_TYPES.map((type) => (
-            <option key={type} value={type}>
-              {t(fieldTypeKeys[type])}
-            </option>
-          ))}
-        </select>
-        <select
-          value={row.langType ?? ''}
-          onChange={(e) => {
-            const value = e.target.value
-            onUpdate(row.id, {
-              langType: value === 'study' || value === 'native' ? value : undefined,
-            })
-          }}
-          className="order-3 min-h-11 min-w-0 flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text sm:order-4 sm:w-auto sm:flex-none"
-          aria-label={t('createProgram.stepSchema.langTypeLabel')}
-        >
-          <option value="">{t('createProgram.stepSchema.langType.none')}</option>
-          <option value="study">{t('createProgram.stepSchema.langType.study')}</option>
-          <option value="native">{t('createProgram.stepSchema.langType.native')}</option>
-        </select>
+
+        <input
+          type="text"
+          value={row.label}
+          onChange={(e) => onUpdate(row.id, { label: e.target.value })}
+          placeholder={t('createProgram.stepSchema.fieldLabel')}
+          aria-label={t('createProgram.stepSchema.fieldLabel')}
+          className="min-h-11 min-w-[8rem] flex-1 basis-40 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text"
+        />
+
         <button
           type="button"
-          onClick={() => onRemove(row.id)}
-          className="order-5 flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-red-400 active:bg-red-500/10 sm:order-6"
+          onClick={() => onUpdate(row.id, patchForRoleMode(nextRoleMode(mode)))}
+          title={roleLabel}
+          aria-label={roleLabel}
+          className={`flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-lg border px-2.5 transition active:scale-[0.98] ${
+            hasAudioLang
+              ? 'border-accent/40 bg-accent/10 text-accent'
+              : 'border-border bg-surface text-text-muted hover:text-text'
+          }`}
+        >
+          {hasAudioLang ? <VolumeIcon /> : <TextLinesIcon />}
+          <span className="max-w-[7rem] truncate text-xs font-medium sm:max-w-[9rem]">
+            {roleLabel}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            if (window.confirm(t('createProgram.stepSchema.confirmDelete'))) {
+              onRemove(row.id)
+            }
+          }}
+          className="ml-auto flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-red-400 active:bg-red-500/10 sm:ml-0"
           aria-label={t('createProgram.stepSchema.remove')}
         >
           ✕
         </button>
       </div>
+
+      <input
+        type="text"
+        value={row.description ?? ''}
+        onChange={(e) => onUpdate(row.id, { description: e.target.value })}
+        placeholder={t('createProgram.stepSchema.fieldDescription')}
+        className="mt-2 min-h-11 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text"
+      />
     </li>
   )
 }
 
 export function SchemaFieldList({
   fields,
-  fieldTypeKeys,
+  studyLangLabel,
+  nativeLangLabel,
   onReorder,
   onUpdate,
   onRemove,
@@ -173,7 +254,8 @@ export function SchemaFieldList({
             <SortableFieldRow
               key={row.id}
               row={row}
-              fieldTypeKeys={fieldTypeKeys}
+              studyLangLabel={studyLangLabel}
+              nativeLangLabel={nativeLangLabel}
               onUpdate={onUpdate}
               onRemove={onRemove}
               t={t}

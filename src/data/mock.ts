@@ -66,7 +66,7 @@ export const LANGUAGES: Language[] = [
   lang('sv', 'Thụy Điển'),
   lang('uk', 'Ukraina'),
   lang('ur', 'Urdu'),
-
+  lang('vi', 'Việt'),
   lang('it', 'Ý'),
 ]
 

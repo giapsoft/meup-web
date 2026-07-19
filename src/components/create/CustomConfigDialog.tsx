@@ -13,7 +13,6 @@ import {
 import type {
   ItemSchemaEditorState,
   LevelRangeDraft,
-  SchemaFieldUiType,
   SideDraft,
 } from '../../types/program'
 import type { ProgramConfigWeb } from '../../types/webConfig'
@@ -26,11 +25,6 @@ import { programConfigWebFromEditor } from '../../utils/programConfigWeb'
 import { itemSchemaFromEditor } from '../../utils/schemaField'
 
 type DialogStep = 'schema' | 'levels' | 'sideEdit' | 'displayEdit'
-
-const FIELD_TYPE_KEYS: Record<SchemaFieldUiType, TranslationKey> = {
-  text: 'createProgram.fieldType.text',
-  'text+audio': 'createProgram.fieldType.textAudio',
-}
 
 type CustomConfigDialogProps = {
   open: boolean
@@ -175,7 +169,6 @@ export function CustomConfigDialog({
                 <ItemSchemaEditor
                   value={itemSchemaEditor}
                   onChange={setItemSchemaEditor}
-                  fieldTypeKeys={FIELD_TYPE_KEYS}
                   t={t}
                   showGenerateDescriptions
                 />

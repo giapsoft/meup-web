@@ -83,5 +83,5 @@ export const PRESET_SCHEMA_ROW_SPECS: Array<{
 ]
 
 export function newEmptySchemaRow(): SchemaFieldRow {
-  return createSchemaRow({ label: '', uiType: 'text' })
+  return createSchemaRow({ label: '', uiType: 'text+audio', langType: 'study' })
 }
