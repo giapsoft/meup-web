@@ -19,6 +19,8 @@
 
 @layer base {
   html {
+    /* Base 16px → ~17px: mọi text-* (rem) to lên một chút. */
+    font-size: 120%;
     @apply antialiased;
   }
 
