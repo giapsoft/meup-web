@@ -9,6 +9,7 @@ import {
 } from '../../components/create/AiCreateFooter'
 import { AiCreatePageShell } from '../../components/create/AiCreatePageShell'
 import { CustomConfigDialog } from '../../components/create/CustomConfigDialog'
+import { WordCountSlider, defaultWordCount } from '../../components/create/WordCountSlider'
 import { useAccount } from '../../context/AccountProvider'
 import { useLanguagePair } from '../../context/LanguagePairProvider'
 import { findLanguage } from '../../data/mock'
@@ -21,7 +22,6 @@ import {
   isAcceptedImageFile,
   type CompressedImage,
 } from '../../utils/compressImageForApi'
-import { parseWordCountInput, validateWordCountInput } from '../../utils/aiVocabWordCount'
 import { estimateAIVocabCredits } from '../../utils/pricing'
 import { aiVocabErrorMessage, isInsufficientCreditsError } from './aiVocabError'
 
@@ -47,9 +47,8 @@ export function CreateProgramFromImagePage() {
   const [image, setImage] = useState<CompressedImage | null>(null)
   const [imageFileName, setImageFileName] = useState('')
   const [compressing, setCompressing] = useState(false)
-  const [wordCountText, setWordCountText] = useState('')
+  const [wordCount, setWordCount] = useState(defaultWordCount)
   const [imageError, setImageError] = useState('')
-  const [wordCountError, setWordCountError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -61,13 +60,7 @@ export function CreateProgramFromImagePage() {
     [image],
   )
 
-  const estimatedCredits = useMemo(() => {
-    const parsed = parseWordCountInput(wordCountText)
-    if (parsed === null || parsed < App.get().itemMinCount()) {
-      return null
-    }
-    return estimateAIVocabCredits(parsed)
-  }, [wordCountText])
+  const estimatedCredits = useMemo(() => estimateAIVocabCredits(wordCount), [wordCount])
 
   const creditsError = isInsufficientCreditsError(errorCode)
 
@@ -108,16 +101,10 @@ export function CreateProgramFromImagePage() {
       return null
     }
     setImageError('')
-    const wordCountResult = validateWordCountInput(wordCountText, t)
-    if (!wordCountResult.ok) {
-      setWordCountError(wordCountResult.message)
-      return null
-    }
-    setWordCountError('')
     if (!ready || !programConfig) {
       return null
     }
-    if (estimatedCredits !== null && estimatedCredits > creditBalance) {
+    if (estimatedCredits > creditBalance) {
       setErrorCode('insufficient_credits')
       setMissingCredits(estimatedCredits - creditBalance)
       setErrorMessage(null)
@@ -126,7 +113,7 @@ export function CreateProgramFromImagePage() {
     setErrorCode(null)
     setMissingCredits(0)
     setErrorMessage(null)
-    return wordCountResult.value
+    return wordCount
   }
 
   async function handleSubmit() {
@@ -244,35 +231,25 @@ export function CreateProgramFromImagePage() {
         className="mt-2 w-full rounded-xl border border-border bg-surface-card px-4 py-3 text-sm text-text focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25 sm:text-base"
       />
 
-      <label className="mt-5 block text-sm font-medium text-text" htmlFor="ai-image-word-count">
-        {t('createAiTitle.setup.wordCountLabel')}
-      </label>
-      <input
+      <WordCountSlider
         id="ai-image-word-count"
-        type="number"
-        min={App.get().itemMinCount()}
-        max={App.get().itemMaxCount()}
-        step={1}
-        inputMode="numeric"
-        value={wordCountText}
-        onChange={(e) => {
-          setWordCountText(e.target.value)
-          if (wordCountError) {
-            setWordCountError('')
-          }
-        }}
-        className="mt-2 w-full max-w-[8rem] rounded-xl border border-border bg-surface-card px-4 py-3 text-sm text-text focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25 sm:text-base"
+        label={t('createAiTitle.setup.wordCountLabel')}
+        value={wordCount}
+        onChange={setWordCount}
+        hint={t('createAiTitle.setup.wordCountHint', {
+          min: App.get().itemMinCount(),
+          max: App.get().itemMaxCount(),
+        })}
+        decreaseLabel={t('createAiTitle.setup.wordCountDecrease')}
+        increaseLabel={t('createAiTitle.setup.wordCountIncrease')}
       />
-      {wordCountError && <p className="mt-2 text-sm text-warning">{wordCountError}</p>}
-      {estimatedCredits != null && (
-        <p className="mt-2 text-xs text-text-muted">
-          {t('createAiTitle.setup.creditsEstimate', {
-            credits: new Intl.NumberFormat(uiLocale === 'vi' ? 'vi-VN' : 'en-US').format(
-              estimatedCredits,
-            ),
-          })}
-        </p>
-      )}
+      <p className="mt-2 text-xs text-text-muted">
+        {t('createAiTitle.setup.creditsEstimate', {
+          credits: new Intl.NumberFormat(uiLocale === 'vi' ? 'vi-VN' : 'en-US').format(
+            estimatedCredits,
+          ),
+        })}
+      </p>
 
       <AiCreateRefundNote t={t} />
       {creditsError ? (

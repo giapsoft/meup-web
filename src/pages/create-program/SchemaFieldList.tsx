@@ -15,6 +15,8 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { useState } from 'react'
+import { ConfirmDialog } from '../../components/ConfirmDialog'
 import type { MessageParams, TranslationKey } from '../../i18n/types'
 import type { LangType, SchemaFieldRow } from '../../types/program'
 
@@ -194,11 +196,7 @@ function SortableFieldRow({
 
         <button
           type="button"
-          onClick={() => {
-            if (window.confirm(t('createProgram.stepSchema.confirmDelete'))) {
-              onRemove(row.id)
-            }
-          }}
+          onClick={() => onRemove(row.id)}
           className="ml-auto flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-red-400 active:bg-red-500/10 sm:ml-0"
           aria-label={t('createProgram.stepSchema.remove')}
         >
@@ -226,6 +224,7 @@ export function SchemaFieldList({
   onRemove,
   t,
 }: SchemaFieldListProps) {
+  const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null)
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -246,23 +245,45 @@ export function SchemaFieldList({
     onReorder(arrayMove(fields, oldIndex, newIndex))
   }
 
+  const pendingRow = pendingRemoveId
+    ? fields.find((row) => row.id === pendingRemoveId)
+    : undefined
+
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <SortableContext items={fields.map((row) => row.id)} strategy={verticalListSortingStrategy}>
-        <ul className="space-y-3">
-          {fields.map((row) => (
-            <SortableFieldRow
-              key={row.id}
-              row={row}
-              studyLangLabel={studyLangLabel}
-              nativeLangLabel={nativeLangLabel}
-              onUpdate={onUpdate}
-              onRemove={onRemove}
-              t={t}
-            />
-          ))}
-        </ul>
-      </SortableContext>
-    </DndContext>
+    <>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={fields.map((row) => row.id)} strategy={verticalListSortingStrategy}>
+          <ul className="space-y-3">
+            {fields.map((row) => (
+              <SortableFieldRow
+                key={row.id}
+                row={row}
+                studyLangLabel={studyLangLabel}
+                nativeLangLabel={nativeLangLabel}
+                onUpdate={onUpdate}
+                onRemove={setPendingRemoveId}
+                t={t}
+              />
+            ))}
+          </ul>
+        </SortableContext>
+      </DndContext>
+
+      <ConfirmDialog
+        open={pendingRemoveId !== null}
+        title={t('createProgram.stepSchema.confirmDelete')}
+        message={pendingRow?.label.trim() || undefined}
+        confirmLabel={t('createProgram.stepSchema.remove')}
+        cancelLabel={t('createProgram.color.cancel')}
+        danger
+        onCancel={() => setPendingRemoveId(null)}
+        onConfirm={() => {
+          if (pendingRemoveId) {
+            onRemove(pendingRemoveId)
+          }
+          setPendingRemoveId(null)
+        }}
+      />
+    </>
   )
 }

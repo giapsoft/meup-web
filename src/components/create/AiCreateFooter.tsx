@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
 import type { MessageParams, TranslationKey } from '../../i18n/types'
-import {
-  WIZARD_ACTION_PRIMARY,
-  WIZARD_ACTION_SECONDARY,
-  WIZARD_ACTIONS,
-} from '../../pages/create-program/wizardLayout'
+
+const FOOTER_BTN =
+  'min-h-12 w-full shrink-0 rounded-xl px-4 py-3 text-sm transition sm:w-auto'
+const FOOTER_PRIMARY = `${FOOTER_BTN} bg-accent font-semibold text-surface hover:opacity-90`
+const FOOTER_SECONDARY = `${FOOTER_BTN} border border-border bg-surface-card font-medium text-text-muted hover:bg-surface-hover`
 
 type AiCreateFooterProps = {
   onConfig: () => void
@@ -28,27 +28,25 @@ export function AiCreateFooter({
   t,
 }: AiCreateFooterProps) {
   return (
-    <div className={`${WIZARD_ACTIONS} sm:justify-between`}>
+    <div className="mt-6 flex flex-col-reverse gap-3 sm:mt-8 sm:flex-row sm:flex-nowrap sm:justify-end">
       <button
         type="button"
         onClick={onConfig}
-        className={configIsCustom ? WIZARD_ACTION_PRIMARY : WIZARD_ACTION_SECONDARY}
+        className={configIsCustom ? FOOTER_PRIMARY : FOOTER_SECONDARY}
       >
         {t('createAi.footer.config')}
       </button>
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <button type="button" onClick={onBack} className={WIZARD_ACTION_SECONDARY}>
-          {t('createAi.footer.back')}
-        </button>
-        <button
-          type="button"
-          onClick={onSubmit}
-          disabled={submitDisabled || submitting}
-          className={`${WIZARD_ACTION_PRIMARY} disabled:cursor-not-allowed disabled:opacity-50`}
-        >
-          {submitting ? t('createAi.footer.submitting') : t(submitLabel)}
-        </button>
-      </div>
+      <button type="button" onClick={onBack} className={FOOTER_SECONDARY}>
+        {t('createAi.footer.back')}
+      </button>
+      <button
+        type="button"
+        onClick={onSubmit}
+        disabled={submitDisabled || submitting}
+        className={`${FOOTER_PRIMARY} disabled:cursor-not-allowed disabled:opacity-50`}
+      >
+        {submitting ? t('createAi.footer.submitting') : t(submitLabel)}
+      </button>
     </div>
   )
 }

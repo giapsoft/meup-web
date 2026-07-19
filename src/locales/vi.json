@@ -463,6 +463,8 @@
   "createAiTitle.setup.wordCountLabel": "Số từ",
   "createAiTitle.setup.wordCountPlaceholder": "Nhập số",
   "createAiTitle.setup.wordCountHint": "Chọn số từ cần sinh (tối thiểu {min}, tối đa {max}). Trừ upfront theo count × giá vocab.",
+  "createAiTitle.setup.wordCountDecrease": "Giảm 1 từ",
+  "createAiTitle.setup.wordCountIncrease": "Tăng 1 từ",
   "createAiTitle.setup.creditsEstimate": "Ước tính phí job vocab: ~{credits} credits (server tính số cuối).",
   "createAiTitle.review.submit": "Sinh từ vựng",
   "createAiTitle.validation.topicRequired": "Vui lòng nhập chủ đề.",

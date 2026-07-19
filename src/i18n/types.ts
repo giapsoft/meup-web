@@ -465,6 +465,8 @@ export type TranslationKey =
   | 'createAiTitle.setup.wordCountLabel'
   | 'createAiTitle.setup.wordCountPlaceholder'
   | 'createAiTitle.setup.wordCountHint'
+  | 'createAiTitle.setup.wordCountDecrease'
+  | 'createAiTitle.setup.wordCountIncrease'
   | 'createAiTitle.setup.creditsEstimate'
   | 'createAiTitle.review.submit'
   | 'createAiTitle.validation.topicRequired'

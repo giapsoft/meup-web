@@ -473,6 +473,8 @@
   "createAiTitle.setup.wordCountLabel": "Word count",
   "createAiTitle.setup.wordCountPlaceholder": "Enter a number",
   "createAiTitle.setup.wordCountHint": "Choose how many words to generate (min {min}, max {max}). Charged upfront as count × vocab price.",
+  "createAiTitle.setup.wordCountDecrease": "Decrease by 1",
+  "createAiTitle.setup.wordCountIncrease": "Increase by 1",
   "createAiTitle.setup.creditsEstimate": "Estimated vocab job cost: ~{credits} credits (server calculates final amount).",
   "createAiTitle.review.submit": "Generate vocabulary",
   "createAiTitle.validation.topicRequired": "Please enter a topic.",
