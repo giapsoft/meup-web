@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import {
   WEB_DEFAULT_PROGRAM_CONFIG_KEY,
   adminGenerateDescription,
@@ -93,11 +93,6 @@ export function AdminDefaultProgramConfigPage() {
     return () => window.clearTimeout(id)
   }, [toastMessage])
 
-  const handleExit = useCallback(() => {
-    clearAdminSecret()
-    navigate('/admin', { replace: true })
-  }, [navigate])
-
   const generateDescriptions = useCallback(
     async (attrs: SchemaAttrWeb[]) => {
       if (!secret) {
@@ -144,117 +139,94 @@ export function AdminDefaultProgramConfigPage() {
   }
 
   return (
-    <div className="flex min-h-svh flex-col bg-surface">
-      <header className="sticky top-0 z-50 border-b border-border bg-surface/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-3 py-2 sm:px-6 sm:py-3">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-warning">Admin</p>
-            <h1 className="text-lg font-semibold text-text">{t('admin.defaultProgramConfig.title')}</h1>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              to="/admin/panel"
-              className="rounded-lg border border-border bg-surface-raised px-3 py-1.5 text-sm text-text-muted no-underline transition hover:border-accent/40 hover:text-text"
-            >
-              {t('admin.config.backPanel')}
-            </Link>
-            <button
-              type="button"
-              onClick={handleExit}
-              className="rounded-lg border border-border bg-surface-raised px-3 py-1.5 text-sm text-text-muted transition hover:border-warning/40 hover:text-text"
-            >
-              {t('admin.panel.exit')}
-            </button>
-          </div>
+    <div>
+      <h2 className="text-lg font-semibold text-text">{t('admin.defaultProgramConfig.title')}</h2>
+      <p className="mt-1 text-sm leading-relaxed text-text-muted">
+        {t('admin.defaultProgramConfig.hint')}
+      </p>
+
+      <div className="mt-4 grid gap-3 rounded-xl border border-border bg-surface-raised p-3 sm:grid-cols-2 sm:p-4">
+        <label className="block text-sm">
+          <span className="mb-1 block font-medium text-text">
+            {t('admin.defaultProgramConfig.nativeLang')}
+          </span>
+          <select
+            value={nativeLang}
+            onChange={(e) => setNativeLang(e.target.value)}
+            className="min-h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-text"
+          >
+            {langOptions.map((lang) => (
+              <option key={lang.code} value={lang.code}>
+                {lang.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block text-sm">
+          <span className="mb-1 block font-medium text-text">
+            {t('admin.defaultProgramConfig.studyLang')}
+          </span>
+          <select
+            value={studyLang}
+            onChange={(e) => setStudyLang(e.target.value)}
+            className="min-h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-text"
+          >
+            {langOptions.map((lang) => (
+              <option key={lang.code} value={lang.code}>
+                {lang.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <p className="text-xs text-text-muted sm:col-span-2">
+          {t('admin.defaultProgramConfig.langHint')}
+        </p>
+      </div>
+
+      {loadState.phase === 'loading' && (
+        <p className="mt-4 text-sm text-text-muted">{t('admin.loading')}</p>
+      )}
+      {loadState.phase === 'error' && (
+        <div className="mt-4 rounded-xl border border-warning/40 bg-warning-muted px-4 py-3 text-sm text-warning">
+          <p>{loadState.message}</p>
+          <button
+            type="button"
+            onClick={() => void load()}
+            className="mt-2 rounded-lg border border-border px-3 py-1.5 text-sm text-text"
+          >
+            {t('admin.retryLoad')}
+          </button>
         </div>
-      </header>
-
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-4 sm:px-6 sm:py-8">
-        <p className="text-sm leading-relaxed text-text-muted">{t('admin.defaultProgramConfig.hint')}</p>
-
-        <div className="mt-4 grid gap-3 rounded-xl border border-border bg-surface-raised p-3 sm:grid-cols-2 sm:p-4">
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium text-text">
-              {t('admin.defaultProgramConfig.nativeLang')}
-            </span>
-            <select
-              value={nativeLang}
-              onChange={(e) => setNativeLang(e.target.value)}
-              className="min-h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-text"
-            >
-              {langOptions.map((lang) => (
-                <option key={lang.code} value={lang.code}>
-                  {lang.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium text-text">
-              {t('admin.defaultProgramConfig.studyLang')}
-            </span>
-            <select
-              value={studyLang}
-              onChange={(e) => setStudyLang(e.target.value)}
-              className="min-h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-text"
-            >
-              {langOptions.map((lang) => (
-                <option key={lang.code} value={lang.code}>
-                  {lang.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <p className="text-xs text-text-muted sm:col-span-2">
-            {t('admin.defaultProgramConfig.langHint')}
+      )}
+      {loadState.phase === 'ready' && (
+        <>
+          <p className="mt-3 text-xs text-text-muted">
+            {loadState.inDatabase
+              ? t('admin.config.modified')
+              : t('admin.config.usingDefault')}{' '}
+            · {WEB_DEFAULT_PROGRAM_CONFIG_KEY}
           </p>
-        </div>
-
-        {loadState.phase === 'loading' && (
-          <p className="mt-4 text-sm text-text-muted">{t('admin.loading')}</p>
-        )}
-        {loadState.phase === 'error' && (
-          <div className="mt-4 rounded-xl border border-warning/40 bg-warning-muted px-4 py-3 text-sm text-warning">
-            <p>{loadState.message}</p>
-            <button
-              type="button"
-              onClick={() => void load()}
-              className="mt-2 rounded-lg border border-border px-3 py-1.5 text-sm text-text"
-            >
-              {t('admin.retryLoad')}
-            </button>
+          <div className="mt-4 rounded-2xl border border-border bg-surface-raised p-4 sm:p-6">
+            <ProgramConfigWizard
+              resetKey={resetKey}
+              initialConfig={loadState.config}
+              programName={t('admin.defaultProgramConfig.programName')}
+              t={t}
+              showGenerateDescriptions
+              generateDescriptions={generateDescriptions}
+              studyLangLabel={studyLangLabel}
+              nativeLangLabel={nativeLangLabel}
+              finishLabel={
+                saveBusy
+                  ? t('admin.defaultProgramConfig.saving')
+                  : t('admin.defaultProgramConfig.save')
+              }
+              finishDisabled={saveBusy}
+              onFinish={(config) => void handleSave(config)}
+            />
           </div>
-        )}
-        {loadState.phase === 'ready' && (
-          <>
-            <p className="mt-3 text-xs text-text-muted">
-              {loadState.inDatabase
-                ? t('admin.config.modified')
-                : t('admin.config.usingDefault')}{' '}
-              · {WEB_DEFAULT_PROGRAM_CONFIG_KEY}
-            </p>
-            <div className="mt-4 rounded-2xl border border-border bg-surface-raised p-4 sm:p-6">
-              <ProgramConfigWizard
-                resetKey={resetKey}
-                initialConfig={loadState.config}
-                programName={t('admin.defaultProgramConfig.programName')}
-                t={t}
-                showGenerateDescriptions
-                generateDescriptions={generateDescriptions}
-                studyLangLabel={studyLangLabel}
-                nativeLangLabel={nativeLangLabel}
-                finishLabel={
-                  saveBusy
-                    ? t('admin.defaultProgramConfig.saving')
-                    : t('admin.defaultProgramConfig.save')
-                }
-                finishDisabled={saveBusy}
-                onFinish={(config) => void handleSave(config)}
-              />
-            </div>
-          </>
-        )}
-      </main>
+        </>
+      )}
 
       {toastMessage && (
         <div

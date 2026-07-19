@@ -31,7 +31,7 @@ export function AdminGatePage() {
 
   const stored = loadAdminSecret()
   if (stored) {
-    return <Navigate to="/admin/panel" replace />
+    return <Navigate to="/admin/panel/balances" replace />
   }
 
   async function handleSubmit(event: FormEvent) {
@@ -45,7 +45,7 @@ export function AdminGatePage() {
     try {
       await verifyAdminSecret(trimmed)
       saveAdminSecret(trimmed)
-      navigate('/admin/panel', { replace: true })
+      navigate('/admin/panel/balances', { replace: true })
     } catch (err) {
       setError(gateErrorMessage(t, err))
     } finally {
