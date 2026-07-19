@@ -62,6 +62,8 @@
   "auth.loading": "Đang xác thực liên kết thiết bị…",
   "auth.notFoundTitle": "Không vào được",
   "auth.notFoundMessage": "Mã QR không hợp lệ, đã dùng, hoặc hết hạn (mỗi mã chỉ dùng một lần trong ~1 phút). Đợi mã mới trên thiết bị MeUp rồi quét lại.",
+  "auth.guide.headline": "Quét QR Code trên MeUp để quản lý từ vựng",
+  "auth.guide.subtitle": "Mở thiết bị MeUp, quét mã QR trên màn hình — trình duyệt sẽ mở phiên quản lý từ vựng. Không cần đăng ký email.",
   "auth.login.title": "Đăng nhập",
   "auth.login.subtitle": "Đăng nhập để quản lý các từ vựng MeUp của bạn.",
   "auth.login.submit": "Đăng nhập",

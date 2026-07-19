@@ -1,283 +1,70 @@
-import { useState, type FormEvent, type ReactNode } from 'react'
-import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { ApiError } from '../../api/client'
-import { GoogleSignInButton, GoogleSignInDivider } from '../../components/GoogleSignInButton'
-import { loginEmail, registerEmail } from '../../api/emailAuth'
-import { useReauthorize } from '../../context/DeviceSessionProvider'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useLanguagePair } from '../../context/LanguagePairProvider'
-import type { TranslationKey } from '../../i18n/types'
 import { parseDeviceLinkPath } from '../../utils/linkParams'
 
-/** Mã lỗi từ API có thông điệp i18n riêng; còn lại dùng thông điệp chung. */
-const KNOWN_ERROR_CODES = new Set([
-  'invalid_credentials',
-  'email_taken',
-  'invalid_email',
-  'weak_password',
-  'too_many_requests',
-])
-
-function errorKey(err: unknown): TranslationKey {
-  if (err instanceof ApiError) {
-    if (err.code === 'network_error') {
-      return 'auth.error.network'
-    }
-    if (KNOWN_ERROR_CODES.has(err.code)) {
-      return `auth.error.${err.code}` as TranslationKey
-    }
-  }
-  return 'auth.error.generic'
-}
-
-type AuthShellProps = {
-  title: string
-  subtitle: string
-  children: ReactNode
-  footer: ReactNode
-}
-
-function AuthShell({ title, subtitle, children, footer }: AuthShellProps) {
+/** Decorative QR-frame mark — not a real code. */
+function QrMark({ className = '' }: { className?: string }) {
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center px-4 py-10">
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-surface-raised p-6 shadow-xl sm:p-8">
-        <div className="mb-6 flex flex-col items-center text-center">
-          <span
-            className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-soft text-2xl font-bold text-accent"
-            aria-hidden
-          >
-            M
-          </span>
-          <h1 className="text-xl font-semibold text-text">{title}</h1>
-          <p className="mt-1 text-sm text-text-muted">{subtitle}</p>
+    <svg
+      className={className}
+      viewBox="0 0 120 120"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <rect x="8" y="8" width="40" height="40" rx="6" stroke="currentColor" strokeWidth="5" />
+      <rect x="18" y="18" width="20" height="20" rx="3" fill="currentColor" />
+      <rect x="72" y="8" width="40" height="40" rx="6" stroke="currentColor" strokeWidth="5" />
+      <rect x="82" y="18" width="20" height="20" rx="3" fill="currentColor" />
+      <rect x="8" y="72" width="40" height="40" rx="6" stroke="currentColor" strokeWidth="5" />
+      <rect x="18" y="82" width="20" height="20" rx="3" fill="currentColor" />
+      <rect x="72" y="72" width="14" height="14" rx="2" fill="currentColor" />
+      <rect x="92" y="72" width="14" height="14" rx="2" fill="currentColor" />
+      <rect x="72" y="92" width="14" height="14" rx="2" fill="currentColor" />
+      <rect x="98" y="98" width="14" height="14" rx="2" fill="currentColor" />
+      <path
+        d="M56 28h8v8h-8V28Zm0 16h8v8h-8V44Zm16 16h8v8h-8V60Zm-16 0h8v8h-8V60Z"
+        fill="currentColor"
+        opacity="0.45"
+      />
+    </svg>
+  )
+}
+
+/** Trang hướng dẫn khi chưa có phiên QR — không form, không nút. */
+function DeviceLinkGuidePage() {
+  const { t } = useLanguagePair()
+
+  return (
+    <main className="auth-guide relative flex min-h-svh flex-col overflow-hidden">
+      {/* Atmosphere */}
+      <div className="pointer-events-none absolute inset-0" aria-hidden>
+        <div className="auth-guide-grid absolute inset-0 opacity-[0.35]" />
+        <div className="auth-guide-orb auth-guide-orb-a absolute -left-24 top-[-10%] h-[42vmax] w-[42vmax] rounded-full bg-accent/25 blur-3xl" />
+        <div className="auth-guide-orb auth-guide-orb-b absolute -right-16 bottom-[-5%] h-[36vmax] w-[36vmax] rounded-full bg-accent-muted/20 blur-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-surface/40 to-surface" />
+      </div>
+
+      <div className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col items-center justify-center px-6 py-16 text-center sm:px-8">
+        <p className="auth-guide-rise auth-guide-rise-1 text-3xl font-semibold tracking-tight text-accent sm:text-4xl">
+          MeUp
+        </p>
+
+        <div className="auth-guide-rise auth-guide-rise-2 mt-10 text-accent">
+          <div className="auth-guide-breathe mx-auto flex h-28 w-28 items-center justify-center rounded-[1.75rem] border border-accent/25 bg-accent-soft sm:h-32 sm:w-32">
+            <QrMark className="h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem]" />
+          </div>
         </div>
-        {children}
-        <p className="mt-6 text-center text-sm text-text-muted">{footer}</p>
+
+        <h1 className="auth-guide-rise auth-guide-rise-3 mt-10 text-balance text-xl font-semibold leading-snug text-text sm:text-2xl">
+          {t('auth.guide.headline')}
+        </h1>
+
+        <p className="auth-guide-rise auth-guide-rise-4 mt-4 max-w-md text-pretty text-sm leading-relaxed text-text-muted sm:text-base">
+          {t('auth.guide.subtitle')}
+        </p>
       </div>
     </main>
-  )
-}
-
-type FieldProps = {
-  id: string
-  label: string
-  type: string
-  value: string
-  placeholder: string
-  autoComplete: string
-  onChange: (value: string) => void
-}
-
-function Field({ id, label, type, value, placeholder, autoComplete, onChange }: FieldProps) {
-  return (
-    <label htmlFor={id} className="block">
-      <span className="mb-1.5 block text-sm font-medium text-text">{label}</span>
-      <input
-        id={id}
-        type={type}
-        value={value}
-        placeholder={placeholder}
-        autoComplete={autoComplete}
-        onChange={(e) => onChange(e.target.value)}
-        required
-        className="w-full rounded-xl border border-border bg-surface px-3.5 py-2.5 text-sm text-text outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30"
-      />
-    </label>
-  )
-}
-
-function ErrorBanner({ message }: { message: string }) {
-  return (
-    <p
-      role="alert"
-      className="rounded-xl border border-red-500/30 bg-red-500/10 px-3.5 py-2.5 text-sm text-red-500"
-    >
-      {message}
-    </p>
-  )
-}
-
-function SubmitButton({ label, busy }: { label: string; busy: boolean }) {
-  return (
-    <button
-      type="submit"
-      disabled={busy}
-      className="w-full rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-60"
-    >
-      {label}
-    </button>
-  )
-}
-
-function LoginPage() {
-  const { t } = useLanguagePair()
-  const reauthorize = useReauthorize()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<TranslationKey | null>(null)
-  const [busy, setBusy] = useState(false)
-
-  function handleAuthenticated() {
-    reauthorize()
-  }
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    if (busy) {
-      return
-    }
-    setError(null)
-    setBusy(true)
-    try {
-      await loginEmail(email.trim(), password)
-      handleAuthenticated()
-    } catch (err) {
-      setError(errorKey(err))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return (
-    <AuthShell
-      title={t('auth.login.title')}
-      subtitle={t('auth.login.subtitle')}
-      footer={
-        <>
-          {t('auth.login.noAccount')}{' '}
-          <Link to="/register" className="font-semibold text-accent hover:underline">
-            {t('auth.login.toRegister')}
-          </Link>
-        </>
-      }
-    >
-      <div className="flex flex-col gap-4">
-        {error && <ErrorBanner message={t(error)} />}
-        <GoogleSignInButton
-          text="signin_with"
-          disabled={busy}
-          onAuthenticated={handleAuthenticated}
-          onError={setError}
-          onBusyChange={setBusy}
-        />
-        <GoogleSignInDivider />
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <Field
-          id="login-email"
-          label={t('auth.field.emailLabel')}
-          type="email"
-          value={email}
-          placeholder={t('auth.field.emailPlaceholder')}
-          autoComplete="email"
-          onChange={setEmail}
-        />
-        <Field
-          id="login-password"
-          label={t('auth.field.passwordLabel')}
-          type="password"
-          value={password}
-          placeholder={t('auth.field.passwordPlaceholder')}
-          autoComplete="current-password"
-          onChange={setPassword}
-        />
-        <SubmitButton label={busy ? t('auth.login.submitting') : t('auth.login.submit')} busy={busy} />
-        </form>
-      </div>
-    </AuthShell>
-  )
-}
-
-function RegisterPage() {
-  const { t } = useLanguagePair()
-  const reauthorize = useReauthorize()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirm, setConfirm] = useState('')
-  const [error, setError] = useState<TranslationKey | null>(null)
-  const [busy, setBusy] = useState(false)
-
-  function handleAuthenticated() {
-    reauthorize()
-  }
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    if (busy) {
-      return
-    }
-    if (password !== confirm) {
-      setError('auth.error.passwordMismatch')
-      return
-    }
-    setError(null)
-    setBusy(true)
-    try {
-      await registerEmail(email.trim(), password)
-      handleAuthenticated()
-    } catch (err) {
-      setError(errorKey(err))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return (
-    <AuthShell
-      title={t('auth.register.title')}
-      subtitle={t('auth.register.subtitle')}
-      footer={
-        <>
-          {t('auth.register.haveAccount')}{' '}
-          <Link to="/login" className="font-semibold text-accent hover:underline">
-            {t('auth.register.toLogin')}
-          </Link>
-        </>
-      }
-    >
-      <div className="flex flex-col gap-4">
-        {error && <ErrorBanner message={t(error)} />}
-        <GoogleSignInButton
-          text="signup_with"
-          disabled={busy}
-          onAuthenticated={handleAuthenticated}
-          onError={setError}
-          onBusyChange={setBusy}
-        />
-        <GoogleSignInDivider />
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <Field
-          id="register-email"
-          label={t('auth.field.emailLabel')}
-          type="email"
-          value={email}
-          placeholder={t('auth.field.emailPlaceholder')}
-          autoComplete="email"
-          onChange={setEmail}
-        />
-        <Field
-          id="register-password"
-          label={t('auth.field.passwordLabel')}
-          type="password"
-          value={password}
-          placeholder={t('auth.field.passwordPlaceholder')}
-          autoComplete="new-password"
-          onChange={setPassword}
-        />
-        <Field
-          id="register-confirm"
-          label={t('auth.register.confirmLabel')}
-          type="password"
-          value={confirm}
-          placeholder={t('auth.register.confirmPlaceholder')}
-          autoComplete="new-password"
-          onChange={setConfirm}
-        />
-        <SubmitButton
-          label={busy ? t('auth.register.submitting') : t('auth.register.submit')}
-          busy={busy}
-        />
-        </form>
-      </div>
-    </AuthShell>
   )
 }
 
@@ -290,12 +77,12 @@ function RedirectUnknownToLogin() {
   return <Navigate to="/login" replace />
 }
 
-/** Routes công khai khi chưa đăng nhập: /login, /register; còn lại đưa về /login. */
+/** Routes công khai khi chưa có phiên: hướng dẫn QR; /register → cùng trang. */
 export function AuthPages() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/login" element={<DeviceLinkGuidePage />} />
+      <Route path="/register" element={<Navigate to="/login" replace />} />
       <Route path="*" element={<RedirectUnknownToLogin />} />
     </Routes>
   )

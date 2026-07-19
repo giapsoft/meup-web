@@ -62,6 +62,8 @@
   "auth.loading": "Verifying device link…",
   "auth.notFoundTitle": "Can't sign in",
   "auth.notFoundMessage": "This QR code is invalid, already used, or expired (each code works once per ~1 minute window). Wait for a new code on your MeUp device, then scan again.",
+  "auth.guide.headline": "Scan the QR code on MeUp to manage vocabulary",
+  "auth.guide.subtitle": "Open your MeUp device, scan the on-screen QR code, and this browser will open a session to manage your word lists.",
   "auth.login.title": "Sign in",
   "auth.login.subtitle": "Sign in to manage your MeUp products.",
   "auth.login.submit": "Sign in",

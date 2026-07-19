@@ -48,3 +48,86 @@
     @apply min-h-svh;
   }
 }
+
+/* Device-link guide (/login) — atmosphere + entrance motion */
+@keyframes auth-guide-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes auth-guide-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 0.92;
+  }
+}
+
+@keyframes auth-guide-drift {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(12px, -18px);
+  }
+}
+
+.auth-guide-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--color-border) 55%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--color-border) 55%, transparent) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 20%, transparent 75%);
+}
+
+.auth-guide-orb-a {
+  animation: auth-guide-drift 14s ease-in-out infinite;
+}
+
+.auth-guide-orb-b {
+  animation: auth-guide-drift 18s ease-in-out infinite reverse;
+}
+
+.auth-guide-breathe {
+  animation: auth-guide-breathe 4.5s ease-in-out infinite;
+}
+
+.auth-guide-rise {
+  opacity: 0;
+  animation: auth-guide-fade-up 0.7s ease-out forwards;
+}
+
+.auth-guide-rise-1 {
+  animation-delay: 0.05s;
+}
+.auth-guide-rise-2 {
+  animation-delay: 0.15s;
+}
+.auth-guide-rise-3 {
+  animation-delay: 0.28s;
+}
+.auth-guide-rise-4 {
+  animation-delay: 0.4s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-guide-orb-a,
+  .auth-guide-orb-b,
+  .auth-guide-breathe,
+  .auth-guide-rise {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

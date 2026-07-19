@@ -64,6 +64,8 @@ export type TranslationKey =
   | 'auth.loading'
   | 'auth.notFoundTitle'
   | 'auth.notFoundMessage'
+  | 'auth.guide.headline'
+  | 'auth.guide.subtitle'
   | 'auth.login.title'
   | 'auth.login.subtitle'
   | 'auth.login.submit'
