@@ -15,7 +15,7 @@ import { getAccount, updateLangPrefs } from '../api/emailAuth'
 import { redeemLink } from '../api/deviceLink'
 import { LanguagePairProvider, useLanguagePair } from './LanguagePairProvider'
 import { AccountProvider } from './AccountProvider'
-import { AuthLoadingPage } from '../pages/AuthGatePages'
+import { AuthLoadingPage, NotFoundPage } from '../pages/AuthGatePages'
 import { SelectStudyLangPage } from '../pages/SelectStudyLangPage'
 import { AdminRoutes } from '../pages/admin/AdminRoutes'
 import { AuthPages } from '../pages/auth/AuthPages'
@@ -60,6 +60,8 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<SessionStatus>('loading')
   const [langs, setLangs] = useState<DeviceSession | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
+  /** Mã QR đã redeem fail — tránh mount AuthPages (redirect `/login` nuốt path) và tránh spinner vô hạn. */
+  const [failedAuthCode, setFailedAuthCode] = useState<string | null>(null)
   const statusRef = useRef(status)
   statusRef.current = status
 
@@ -70,6 +72,8 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
   const pathRedeemCode = parsedLink?.redeemCode ?? null
   const queryAuthCode = getAuthCode(searchParams)
   const pendingAuthCode = pathRedeemCode ?? queryAuthCode
+  const linkRedeemFailed =
+    Boolean(pendingAuthCode) && failedAuthCode !== null && failedAuthCode === pendingAuthCode
 
   const reauthorize = useCallback(() => setReloadToken((n) => n + 1), [])
 
@@ -90,6 +94,17 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
         return
       }
 
+      if (!pendingAuthCode && failedAuthCode) {
+        setFailedAuthCode(null)
+      }
+
+      // Mã này vừa fail → không redeem lại cho đến khi URL/mã đổi.
+      if (pendingAuthCode && failedAuthCode === pendingAuthCode) {
+        setStatus('unauthorized')
+        setLangs(null)
+        return
+      }
+
       setStatus('loading')
       const fromQr = parsedLink ? langPairFromDeviceLink(parsedLink) : null
       const langPair = fromQr ?? resolveLangPair(searchParams, loadDeviceSession())
@@ -98,6 +113,7 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
         return
       }
       if (authorized) {
+        setFailedAuthCode(null)
         let finalPair = langPair
         if (fromQr) {
           // QR path: ép lang theo path — không lấy account để ghi đè.
@@ -141,10 +157,26 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
         setStatus('authorized')
         void App.get().config()
       } else {
-        clearAuthTokens()
-        clearDeviceSession()
-        setLangs(null)
-        setStatus('unauthorized')
+        // Chỉ xoá phiên khi thực sự không còn token — tránh race redeem OK rồi retry 401
+        // làm clearAuthTokens mất session vừa tạo.
+        if (!(await ensureAccessToken())) {
+          clearAuthTokens()
+          clearDeviceSession()
+          setLangs(null)
+          setStatus('unauthorized')
+          if (pendingAuthCode) {
+            setFailedAuthCode(pendingAuthCode)
+          }
+        } else {
+          setFailedAuthCode(null)
+          saveDeviceSession(langPair)
+          if (parsedLink || location.pathname === '/login' || location.pathname === '/register') {
+            navigate('/', { replace: true })
+          }
+          setLangs(langPair)
+          setStatus('authorized')
+          void App.get().config()
+        }
       }
     }
 
@@ -159,6 +191,7 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
     navigate,
     searchParams,
     location.pathname,
+    failedAuthCode,
   ])
 
   const actions = useMemo(() => ({ reauthorize }), [reauthorize])
@@ -182,10 +215,13 @@ export function DeviceSessionProvider({ children }: { children: ReactNode }) {
         <VerifyEmailPage />
       </LanguagePairProvider>
     )
-  } else if (status === 'loading') {
-    content = (
-      <AuthLoadingPage locale={langPreview.nativeLangCode || 'vi'} />
-    )
+  } else if (linkRedeemFailed) {
+    // Không mount AuthPages: `*` → /login sẽ xoá path QR trước khi user kịp đọc lỗi.
+    content = <NotFoundPage locale={langPreview.nativeLangCode || 'vi'} />
+  } else if (status === 'loading' || (pendingAuthCode && status !== 'authorized')) {
+    // Sau logout (unauthorized) + mở QR mới: KHÔNG render AuthPages trong 1 frame —
+    // nếu không, Navigate `*` → /login nuốt redeem code trước khi effect chạy.
+    content = <AuthLoadingPage locale={langPreview.nativeLangCode || 'vi'} />
   } else if (status === 'unauthorized' || !langs) {
     content = (
       <LanguagePairProvider
@@ -253,7 +289,10 @@ async function authorizeSession(authCode: string | null): Promise<boolean> {
     await redeemLink(authCode)
     return true
   } catch {
-    return false
+    // StrictMode / effect re-run: lần 1 có thể đã redeem OK + lưu token, lần 2 bị
+    // invalid_link_code (cửa sổ đã consume). Đừng coi là thất bại nếu đã có phiên.
+    const again = await ensureAccessToken()
+    return Boolean(again)
   }
 }
 

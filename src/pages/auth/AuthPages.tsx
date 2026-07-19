@@ -1,11 +1,12 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
-import { Link, Navigate, Route, Routes } from 'react-router-dom'
+import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { ApiError } from '../../api/client'
 import { GoogleSignInButton, GoogleSignInDivider } from '../../components/GoogleSignInButton'
 import { loginEmail, registerEmail } from '../../api/emailAuth'
 import { useReauthorize } from '../../context/DeviceSessionProvider'
 import { useLanguagePair } from '../../context/LanguagePairProvider'
 import type { TranslationKey } from '../../i18n/types'
+import { parseDeviceLinkPath } from '../../utils/linkParams'
 
 /** Mã lỗi từ API có thông điệp i18n riêng; còn lại dùng thông điệp chung. */
 const KNOWN_ERROR_CODES = new Set([
@@ -280,13 +281,22 @@ function RegisterPage() {
   )
 }
 
+/** Redirect mọi path lạ về /login, trừ path QR device-link (để gate còn redeem được). */
+function RedirectUnknownToLogin() {
+  const location = useLocation()
+  if (parseDeviceLinkPath(location.pathname)) {
+    return null
+  }
+  return <Navigate to="/login" replace />
+}
+
 /** Routes công khai khi chưa đăng nhập: /login, /register; còn lại đưa về /login. */
 export function AuthPages() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<RedirectUnknownToLogin />} />
     </Routes>
   )
 }
