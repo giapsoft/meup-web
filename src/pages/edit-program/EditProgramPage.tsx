@@ -420,25 +420,11 @@ export function EditProgramPage() {
           open={configDialogOpen}
           programName={title.trim() || productMeta?.name || t('editProgram.title')}
           initialConfig={programConfig}
+          lockSchema
           onClose={() => setConfigDialogOpen(false)}
           onApply={(config) => {
             setProgramConfig(config)
             setConfigDialogOpen(false)
-            const nextSchema = itemSchemaFromWebConfig(config)
-            setVocabItems((prev) => {
-              if (prev.length === 0) {
-                return [createEmptyVocabItem(nextSchema)]
-              }
-              return prev.map((item) => {
-                const values = { ...item.values }
-                for (const attr of nextSchema.attrs) {
-                  if (!(attr.key in values)) {
-                    values[attr.key] = ''
-                  }
-                }
-                return { ...item, values }
-              })
-            })
           }}
           t={t}
         />

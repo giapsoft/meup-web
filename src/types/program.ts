@@ -11,13 +11,14 @@ export type LangType = 'native' | 'study'
 export type SchemaFieldRow = {
   /** Stable row id for React / drag-and-drop. */
   id: string
-  /** User-facing label (web `SchemaAttrWeb.label`). */
-  label: string
+  /**
+   * Identity + display text (web/API `SchemaAttrWeb.key`).
+   * User-authored; Unicode letters/numbers/spaces, 1–30 runes.
+   */
+  key: string
   /** Optional AI hint for image/description generation. */
   description?: string
   uiType: SchemaFieldUiType
-  /** Auto-generated stable key. */
-  key: string
   /** Preset fields only — required for API validate (≥1 native or study). */
   langType?: LangType
 }
@@ -27,7 +28,6 @@ export type SchemaAttrType = 'text' | 'text+audio'
 /** One logical column in API itemSchema (no separate image/audio attrs). */
 export type SchemaAttr = {
   key: string
-  name: string
   description?: string
   type: SchemaAttrType
   langType?: LangType

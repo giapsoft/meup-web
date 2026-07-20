@@ -1,14 +1,12 @@
 import type { ItemSchema, ItemSchemaEditorState, LangType, LevelRangeDraft } from '../types/program'
 import type { ProgramConfigWeb } from '../types/webConfig'
-import { generateSchemaKey } from './schemaField'
 
 /** Build `ItemSchema` from API `ProgramConfigWeb`. */
 export function itemSchemaFromWebConfig(config: ProgramConfigWeb): ItemSchema {
   return {
     hasImage: config.itemSchema.hasImage,
     attrs: config.itemSchema.attrs.map((attr) => ({
-      key: attr.key,
-      name: attr.label.trim() || attr.key,
+      key: attr.key.trim(),
       ...(attr.description?.trim() ? { description: attr.description.trim() } : {}),
       type: attr.type === 'text+audio' ? 'text+audio' : 'text',
       langType:
@@ -26,8 +24,7 @@ export function programConfigWebFromEditor(
     itemSchema: {
       hasImage: editor.hasImage,
       attrs: editor.fields.map((row) => ({
-        key: row.key.trim() || generateSchemaKey(),
-        label: row.label.trim(),
+        key: row.key.trim(),
         ...(row.description?.trim() ? { description: row.description.trim() } : {}),
         type: row.uiType,
         ...(row.langType ? { langType: row.langType } : {}),
@@ -72,10 +69,9 @@ export function programConfigWebFromSchema(
       hasImage: schema.hasImage,
       fields: schema.attrs.map((attr) => ({
         id: '',
-        label: attr.name,
+        key: attr.key,
         description: attr.description,
         uiType: attr.type === 'text+audio' ? 'text+audio' : 'text',
-        key: attr.key,
         langType: attr.langType,
       })),
     },

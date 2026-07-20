@@ -189,10 +189,11 @@ function SortableFieldRow({
 
         <input
           type="text"
-          value={row.label}
-          onChange={(e) => onUpdate(row.id, { label: e.target.value })}
+          value={row.key}
+          onChange={(e) => onUpdate(row.id, { key: e.target.value })}
           placeholder={t('createProgram.stepSchema.fieldLabel')}
           aria-label={t('createProgram.stepSchema.fieldLabel')}
+          maxLength={60}
           className="min-h-11 min-w-[8rem] flex-1 basis-40 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text"
         />
 
@@ -315,7 +316,7 @@ export function SchemaFieldList({
       <ConfirmDialog
         open={pendingRemoveId !== null}
         title={t('createProgram.stepSchema.confirmDelete')}
-        message={pendingRow?.label.trim() || undefined}
+        message={pendingRow?.key.trim() || undefined}
         confirmLabel={t('createProgram.stepSchema.remove')}
         cancelLabel={t('createProgram.color.cancel')}
         danger

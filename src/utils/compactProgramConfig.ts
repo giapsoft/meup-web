@@ -162,7 +162,7 @@ function unmarshalCompactAttr(row: unknown): ItemSchema['attrs'][number] {
   const key = asString(row[0], 'attribute key')
   const type = attrTypeFromIndex(asNumber(row[1], 'attribute type'))
   const langType = langTypeFromIndex(asNumber(row[2], 'attribute langType'))
-  return { key, name: key, type, langType }
+  return { key, type, langType }
 }
 
 function unmarshalCompactDisplay(row: unknown): DisplayElement {

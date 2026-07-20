@@ -38,8 +38,7 @@ type ItemSchemaEditorProps = {
 
 function fieldsToAttrs(fields: SchemaFieldRow[]): SchemaAttrWeb[] {
   return fields.map((row) => ({
-    key: row.key,
-    label: row.label.trim() || row.key,
+    key: row.key.trim(),
     description: row.description ?? '',
     type: row.uiType,
     ...(row.langType ? { langType: row.langType } : {}),

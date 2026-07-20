@@ -20,10 +20,10 @@ function escapeCsvCell(value: string): string {
 }
 
 function headerLabel(attr: ItemSchema['attrs'][number]): string {
-  return attr.name.trim() || attr.key
+  return attr.key.trim()
 }
 
-/** CSV template: header row uses display names; one blank example row. */
+/** CSV template: header row uses attr keys; one blank example row. */
 export function buildVocabCsvTemplate(schema: ItemSchema): string {
   const cols = textAttrs(schema)
   const header = cols.map((attr) => escapeCsvCell(headerLabel(attr))).join(',')
@@ -103,17 +103,15 @@ function mapHeadersToKeys(
   schema: ItemSchema,
 ): Map<number, string> | null {
   const cols = textAttrs(schema)
-  const byName = new Map<string, string>()
   const byKey = new Map<string, string>()
   for (const attr of cols) {
-    byName.set(normalizeHeader(headerLabel(attr)), attr.key)
     byKey.set(normalizeHeader(attr.key), attr.key)
   }
 
   const mapping = new Map<number, string>()
   for (let i = 0; i < headers.length; i++) {
     const h = normalizeHeader(headers[i])
-    const key = byName.get(h) ?? byKey.get(h)
+    const key = byKey.get(h)
     if (key) {
       mapping.set(i, key)
     }

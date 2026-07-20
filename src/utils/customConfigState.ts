@@ -13,10 +13,9 @@ export function editorStateFromWebConfig(config: ProgramConfigWeb): {
     hasImage: config.itemSchema.hasImage,
     fields: config.itemSchema.attrs.map((attr) => ({
       id: randomUUID(),
-      label: attr.label.trim() || attr.key,
+      key: attr.key.trim(),
       description: attr.description ?? '',
       uiType: attr.type === 'text+audio' ? 'text+audio' : 'text',
-      key: attr.key,
       langType:
         attr.langType === 'native' || attr.langType === 'study' ? attr.langType : undefined,
     })),

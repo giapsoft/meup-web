@@ -22,6 +22,7 @@ import {
   validateCustomConfigSchema,
 } from '../../utils/customConfigValidation'
 import { programConfigWebFromEditor } from '../../utils/programConfigWeb'
+import { validateSchemaAttrKeysUnique } from '../../utils/schemaAttrKey'
 import { itemSchemaFromEditor } from '../../utils/schemaField'
 
 export type ProgramConfigWizardStep = 'schema' | 'levels' | 'sideEdit' | 'displayEdit'
@@ -48,6 +49,11 @@ export type ProgramConfigWizardProps = {
   className?: string
   /** Disable finish while parent is saving. */
   finishDisabled?: boolean
+  /**
+   * When true (edit existing product): skip schema step; levels/sides only.
+   * Finish always reuses `initialConfig.itemSchema`.
+   */
+  lockSchema?: boolean
 }
 
 function findSide(levels: LevelRangeDraft[], sideId: string): SideDraft | undefined {
@@ -76,9 +82,10 @@ export function ProgramConfigWizard({
   onFinish,
   className,
   finishDisabled = false,
+  lockSchema = false,
 }: ProgramConfigWizardProps) {
   const isWideLayout = useWizardWideLayout()
-  const [step, setStep] = useState<ProgramConfigWizardStep>('schema')
+  const [step, setStep] = useState<ProgramConfigWizardStep>(lockSchema ? 'levels' : 'schema')
   const [itemSchemaEditor, setItemSchemaEditor] = useState<ItemSchemaEditorState>(() =>
     editorStateFromWebConfig(initialConfig).itemSchemaEditor,
   )
@@ -94,7 +101,7 @@ export function ProgramConfigWizard({
     setItemSchemaEditor(editor)
     setLevels(nextLevels)
     setActiveLevelId(nextLevels[0]?.id ?? '')
-    setStep('schema')
+    setStep(lockSchema ? 'levels' : 'schema')
     setEditingSideId(null)
     setEditingDisplayIndex(null)
     // Only reset when parent bumps resetKey (open dialog / reload from API).
@@ -115,7 +122,7 @@ export function ProgramConfigWizard({
 
   function handleContinueSchema() {
     if (!validateCustomConfigSchema(itemSchemaEditor)) {
-      if (!itemSchemaEditor.fields.every((f) => f.label.trim())) {
+      if (validateSchemaAttrKeysUnique(itemSchemaEditor.fields.map((f) => f.key)) !== null) {
         window.alert(t('createProgram.validation.fieldsRequired'))
         return
       }
@@ -128,6 +135,13 @@ export function ProgramConfigWizard({
   function handleFinishLevels() {
     if (!validateCustomConfigLevels(levels)) {
       window.alert(t('createProgram.customConfig.validation.levels'))
+      return
+    }
+    if (lockSchema) {
+      onFinish({
+        itemSchema: initialConfig.itemSchema,
+        levels: programConfigWebFromEditor(itemSchemaEditor, levels).levels,
+      })
       return
     }
     onFinish(programConfigWebFromEditor(itemSchemaEditor, levels))
@@ -155,7 +169,7 @@ export function ProgramConfigWizard({
           step === 'sideEdit' || step === 'displayEdit' ? 'pt-0' : 'pt-4',
         ].join(' ')}
       >
-        {step === 'schema' && (
+        {step === 'schema' && !lockSchema && (
           <>
             <p className="text-sm text-text-muted">{t('createProgram.stepSchema.hint')}</p>
             <div className="mt-4">
@@ -196,7 +210,14 @@ export function ProgramConfigWizard({
               setEditingSideId(sideId)
               setStep('sideEdit')
             }}
-            onBack={() => setStep('schema')}
+            onBack={() => {
+              if (lockSchema) {
+                onCancel?.()
+                return
+              }
+              setStep('schema')
+            }}
+            backLabel={lockSchema ? cancelLabel : undefined}
             onContinue={handleFinishLevels}
             continueLabel={finishLabel}
             continueDisabled={finishDisabled}

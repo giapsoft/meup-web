@@ -144,13 +144,13 @@ export function layoutSlotLabel(schema: ItemSchema, layoutIndex: number, audioSu
   }
   if (prop === 'text') {
     const attr = schema.attrs[layoutIndex]
-    return attr?.name.trim() || attr?.key || 'Text'
+    return attr?.key.trim() || 'Text'
   }
   if (prop === 'audio') {
     const offset = layoutIndex - schema.attrs.length
     const textAudio = textAudioAttrs(schema)[offset]
-    if (textAudio?.name.trim()) {
-      return audioSuffix ? `${textAudio.name.trim()} ${audioSuffix}` : textAudio.name.trim()
+    if (textAudio?.key.trim()) {
+      return audioSuffix ? `${textAudio.key.trim()} ${audioSuffix}` : textAudio.key.trim()
     }
     return audioSuffix ? `Audio ${audioSuffix}` : 'Audio'
   }

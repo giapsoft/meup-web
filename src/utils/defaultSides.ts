@@ -1,8 +1,9 @@
-import type { DisplayElement, ItemSchema, LevelRangeDraft, SideDraft } from '../types/program'
+import type { DisplayElement, ItemSchema, LangType, LevelRangeDraft, SideDraft } from '../types/program'
 import { randomUUID } from './id'
 import {
+  audioLayoutIndexForKey,
   imageLayoutIndex,
-  layoutIndexForAttrKey,
+  textLayoutIndexForKey,
 } from './itemSchemaLayout'
 import {
   createDefaultLevel,
@@ -12,14 +13,19 @@ import {
 } from './programConfig'
 import { imageSquareDisplayRatios } from './sideConfig'
 
-type DisplayTemplate = Omit<DisplayElement, 'attributeIndex'> & { layoutKey: string; slot?: 'text' | 'audio' | 'image' }
+type LayoutRole = 'study' | 'native' | 'plainText' | 'image'
+
+type DisplayTemplate = Omit<DisplayElement, 'attributeIndex'> & {
+  role: LayoutRole
+  slot?: 'text' | 'audio' | 'image'
+}
 
 type SideTemplateSpec = {
   backgroundColor: string
   display: DisplayTemplate[]
   playSteps: Array<{
     kind: 'play' | 'pause'
-    layoutKey?: string
+    role?: LayoutRole
     slot?: 'text' | 'audio' | 'image'
     durationSeconds?: number
   }>
@@ -29,9 +35,9 @@ const PRESET_SIDE_TEMPLATES: SideTemplateSpec[] = [
   {
     backgroundColor: '#1a1a2e',
     display: [
-      { layoutKey: 'image', slot: 'image', x: 0, y: 0, ...imageSquareDisplayRatios(), order: 0 },
+      { role: 'image', slot: 'image', x: 0, y: 0, ...imageSquareDisplayRatios(), order: 0 },
       {
-        layoutKey: 'studyText',
+        role: 'study',
         slot: 'text',
         x: 0.05,
         y: 0.05,
@@ -42,7 +48,7 @@ const PRESET_SIDE_TEMPLATES: SideTemplateSpec[] = [
         order: 1,
       },
       {
-        layoutKey: 'ipa',
+        role: 'plainText',
         slot: 'text',
         x: 0.05,
         y: 0.6,
@@ -54,7 +60,7 @@ const PRESET_SIDE_TEMPLATES: SideTemplateSpec[] = [
       },
     ],
     playSteps: [
-      { kind: 'play', layoutKey: 'studyText', slot: 'audio' },
+      { kind: 'play', role: 'study', slot: 'audio' },
       { kind: 'pause', durationSeconds: 1 },
     ],
   },
@@ -62,7 +68,7 @@ const PRESET_SIDE_TEMPLATES: SideTemplateSpec[] = [
     backgroundColor: '#16213e',
     display: [
       {
-        layoutKey: 'nativeText',
+        role: 'native',
         slot: 'text',
         x: 0.05,
         y: 0.1,
@@ -73,29 +79,47 @@ const PRESET_SIDE_TEMPLATES: SideTemplateSpec[] = [
         order: 0,
       },
     ],
-    playSteps: [{ kind: 'play', layoutKey: 'nativeText', slot: 'audio' }],
+    playSteps: [{ kind: 'play', role: 'native', slot: 'audio' }],
   },
 ]
 
+function attrKeyForRole(schema: ItemSchema, role: LayoutRole): string | undefined {
+  if (role === 'image') {
+    return undefined
+  }
+  if (role === 'study' || role === 'native') {
+    const langType: LangType = role
+    return schema.attrs.find((a) => a.langType === langType)?.key
+  }
+  return schema.attrs.find((a) => a.type === 'text' && !a.langType)?.key
+}
+
 function resolveLayoutIndex(
   schema: ItemSchema,
-  layoutKey: string,
+  role: LayoutRole,
   slot: 'text' | 'audio' | 'image' = 'text',
 ): number {
-  if (slot === 'image' || layoutKey === 'image') {
+  if (slot === 'image' || role === 'image') {
     return imageLayoutIndex(schema)
   }
-  return layoutIndexForAttrKey(schema, layoutKey, slot)
+  const key = attrKeyForRole(schema, role)
+  if (!key) {
+    return -1
+  }
+  if (slot === 'audio') {
+    return audioLayoutIndexForKey(schema, key)
+  }
+  return textLayoutIndexForKey(schema, key)
 }
 
 function mapDisplayTemplate(templates: DisplayTemplate[], schema: ItemSchema): DisplayElement[] {
   const out: DisplayElement[] = []
   for (const tpl of templates) {
-    const attributeIndex = resolveLayoutIndex(schema, tpl.layoutKey, tpl.slot ?? 'text')
+    const attributeIndex = resolveLayoutIndex(schema, tpl.role, tpl.slot ?? 'text')
     if (attributeIndex < 0) {
       continue
     }
-    const { layoutKey: _layoutKey, slot: _slot, ...rest } = tpl
+    const { role: _role, slot: _slot, ...rest } = tpl
     out.push({ ...rest, attributeIndex })
   }
   return out.sort((a, b) => a.order - b.order)
@@ -112,10 +136,10 @@ function mapSideTemplate(
       if (step.kind === 'pause') {
         return true
       }
-      if (!step.layoutKey) {
+      if (!step.role) {
         return false
       }
-      return resolveLayoutIndex(schema, step.layoutKey, step.slot ?? 'audio') >= 0
+      return resolveLayoutIndex(schema, step.role, step.slot ?? 'audio') >= 0
     })
     .map((step) => {
       if (step.kind === 'pause') {
@@ -124,7 +148,7 @@ function mapSideTemplate(
           durationSeconds: step.durationSeconds,
         })
       }
-      const attributeIndex = resolveLayoutIndex(schema, step.layoutKey!, step.slot ?? 'audio')
+      const attributeIndex = resolveLayoutIndex(schema, step.role!, step.slot ?? 'audio')
       return createPlayStep({ kind: 'play', attributeIndex })
     })
 

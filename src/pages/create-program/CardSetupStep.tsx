@@ -29,6 +29,12 @@ import {
   removeLevelRange,
 } from '../../utils/levelConfig'
 import { createEmptySide, normalizePlayOrder, sideNumberLabel } from '../../utils/programConfig'
+import {
+  DEFAULT_PAUSE_SECONDS,
+  attributeLabel,
+  displayElementPreviewText,
+  resolvePlayStepAttributeIndex,
+} from '../../utils/sideConfig'
 import { previewTapHintKey } from './previewHints'
 import { SidePreview } from './SidePreview'
 import {
@@ -47,6 +53,8 @@ type CardSetupStepProps = {
   onActiveLevelChange: (levelId: string) => void
   onEditSide: (sideId: string) => void
   onBack: () => void
+  /** Override back button label (default: schema back). */
+  backLabel?: string
   onContinue: () => void
   /** Override primary button label (default: continue). */
   continueLabel?: string
@@ -69,6 +77,7 @@ function DragHandleIcon() {
 
 type SortableSideRowProps = {
   side: SideDraft
+  schema: ItemSchema
   isPreviewSelected: boolean
   onPreviewSelect: () => void
   onEdit: () => void
@@ -76,8 +85,75 @@ type SortableSideRowProps = {
   t: (key: TranslationKey, params?: MessageParams) => string
 }
 
+function sideDisplaySummary(
+  side: SideDraft,
+  schema: ItemSchema,
+  t: (key: TranslationKey, params?: MessageParams) => string,
+): string {
+  if (side.display.length === 0) {
+    return t('createProgram.stepCardSetup.sideMetaEmptyFields')
+  }
+  return side.display.map((el) => displayElementPreviewText(el, schema)).join(' · ')
+}
+
+function PlayStepGlyph() {
+  return (
+    <svg className="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M8 5.5v13l11-6.5-11-6.5z" />
+    </svg>
+  )
+}
+
+function PauseStepGlyph() {
+  return (
+    <svg className="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M6 2v6l4 4-4 4v6h12v-6l-4-4 4-4V2H6zm2 1.5h8V7l-3.2 3.2h-1.6L8 7V3.5zm0 17V17l3.2-3.2h1.6L16 17v3.5H8z" />
+    </svg>
+  )
+}
+
+function SidePlaybackSummary({
+  side,
+  schema,
+  t,
+}: {
+  side: SideDraft
+  schema: ItemSchema
+  t: (key: TranslationKey, params?: MessageParams) => string
+}) {
+  if (side.playSteps.length === 0) {
+    return t('createProgram.stepCardSetup.sideMetaEmptySteps')
+  }
+
+  return (
+    <span className="flex min-w-0 items-center gap-1 overflow-hidden">
+      {side.playSteps.map((step, index) => (
+        <span key={step.id} className="flex min-w-0 shrink items-center gap-1 overflow-hidden">
+          {index > 0 ? <span className="shrink-0 opacity-60">·</span> : null}
+          {step.kind === 'play' ? (
+            <span className="flex min-w-0 items-center gap-0.5 overflow-hidden">
+              <PlayStepGlyph />
+              <span className="truncate">
+                {attributeLabel(schema, resolvePlayStepAttributeIndex(step))}
+              </span>
+            </span>
+          ) : (
+            <span className="flex shrink-0 items-center gap-0.5">
+              <PauseStepGlyph />
+              <span className="tabular-nums">
+                {step.durationSeconds ?? DEFAULT_PAUSE_SECONDS}s
+              </span>
+            </span>
+          )}
+        </span>
+      ))}
+    </span>
+  )
+}
+
 function SortableSideRow({
   side,
+  schema,
   isPreviewSelected,
   onPreviewSelect,
   onEdit,
@@ -116,12 +192,12 @@ function SortableSideRow({
         <p className="truncate text-sm font-medium text-text">
           {sideNumberLabel(side.playOrder, t)}
         </p>
-        <p className="text-xs text-text-muted">
-          {t('createProgram.stepCardSetup.sideMeta', {
-            fields: side.display.length,
-            steps: side.playSteps.length,
-          })}
+        <p className="truncate text-xs text-text-muted">
+          {sideDisplaySummary(side, schema, t)}
         </p>
+        <div className="text-xs text-text-muted">
+          <SidePlaybackSummary side={side} schema={schema} t={t} />
+        </div>
       </button>
       <button
         type="button"
@@ -151,6 +227,7 @@ export function CardSetupStep({
   onActiveLevelChange,
   onEditSide,
   onBack,
+  backLabel,
   onContinue,
   continueLabel,
   continueDisabled = false,
@@ -377,6 +454,7 @@ export function CardSetupStep({
                   <SortableSideRow
                     key={side.id}
                     side={side}
+                    schema={schema}
                     isPreviewSelected={side.id === previewSide?.id}
                     onPreviewSelect={() => setPreviewSideId(side.id)}
                     onEdit={() => onEditSide(side.id)}
@@ -404,7 +482,7 @@ export function CardSetupStep({
           onClick={onBack}
           className={WIZARD_ACTION_SECONDARY}
         >
-          {t('createProgram.stepSchema.back')}
+          {backLabel ?? t('createProgram.stepSchema.back')}
         </button>
         <button
           type="button"

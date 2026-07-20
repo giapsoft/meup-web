@@ -10,6 +10,8 @@ type CustomConfigDialogProps = {
   onClose: () => void
   onApply: (config: ProgramConfigWeb) => void
   t: (key: TranslationKey, params?: MessageParams) => string
+  /** Existing product: levels/sides only — schema locked. */
+  lockSchema?: boolean
 }
 
 export function CustomConfigDialog({
@@ -19,6 +21,7 @@ export function CustomConfigDialog({
   onClose,
   onApply,
   t,
+  lockSchema = false,
 }: CustomConfigDialogProps) {
   const titleId = useId()
 
@@ -62,7 +65,8 @@ export function CustomConfigDialog({
             initialConfig={initialConfig}
             programName={programName}
             t={t}
-            showGenerateDescriptions
+            showGenerateDescriptions={!lockSchema}
+            lockSchema={lockSchema}
             finishLabel={t('createProgram.stepSchema.continue')}
             cancelLabel={t('createProgram.customConfig.close')}
             onCancel={onClose}

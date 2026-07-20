@@ -2,7 +2,6 @@ import type { DisplayElement } from './program'
 
 export type SchemaAttrWeb = {
   key: string
-  label: string
   description?: string
   type: string
   langType?: string

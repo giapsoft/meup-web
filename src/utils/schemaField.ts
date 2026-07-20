@@ -16,19 +16,12 @@ export function slugProgramId(name: string): string {
   return base || 'program'
 }
 
-/** Stable machine id for one schema attribute (independent of display label). */
-export function generateSchemaKey(): string {
-  const hex = randomUUID().replace(/-/g, '').slice(0, 8)
-  return `attr_${hex}`
-}
-
 /** Build API `ItemSchema` from wizard editor state. */
 export function itemSchemaFromEditor(state: ItemSchemaEditorState): ItemSchema {
   return {
     hasImage: state.hasImage,
     attrs: state.fields.map((row) => ({
-      key: row.key.trim() || generateSchemaKey(),
-      name: row.label.trim(),
+      key: row.key.trim(),
       ...(row.description?.trim() ? { description: row.description.trim() } : {}),
       type: row.uiType === 'text+audio' ? 'text+audio' : 'text',
       langType: row.langType,
@@ -46,9 +39,8 @@ export function createPresetItemSchemaEditor(t: (key: TranslationKey) => string)
     hasImage: true,
     fields: PRESET_SCHEMA_ROW_SPECS.map((spec) =>
       createSchemaRow({
-        label: t(spec.labelKey),
+        key: t(spec.labelKey),
         uiType: spec.uiType,
-        key: spec.key,
         langType: spec.langType,
       }),
     ),
@@ -56,32 +48,28 @@ export function createPresetItemSchemaEditor(t: (key: TranslationKey) => string)
 }
 
 export function createSchemaRow(
-  partial: Partial<SchemaFieldRow> & Pick<SchemaFieldRow, 'label' | 'uiType'>,
+  partial: Partial<SchemaFieldRow> & Pick<SchemaFieldRow, 'uiType'>,
 ): SchemaFieldRow {
-  const label = partial.label.trim()
-  const key = partial.key?.trim() || generateSchemaKey()
   return {
     id: partial.id ?? randomUUID(),
-    label,
+    key: partial.key?.trim() ?? '',
     description: partial.description ?? '',
     uiType: partial.uiType,
-    key,
     langType: partial.langType,
   }
 }
 
-/** Default row specs — labels from i18n; langType fixed for presets. */
+/** Default row specs — key text from i18n; langType fixed for presets. */
 export const PRESET_SCHEMA_ROW_SPECS: Array<{
   labelKey: TranslationKey
   uiType: SchemaFieldUiType
-  key: string
   langType?: LangType
 }> = [
-  { labelKey: 'createProgram.preset.studyText', uiType: 'text+audio', key: 'studyText', langType: 'study' },
-  { labelKey: 'createProgram.preset.ipa', uiType: 'text', key: 'ipa' },
-  { labelKey: 'createProgram.preset.nativeText', uiType: 'text+audio', key: 'nativeText', langType: 'native' },
+  { labelKey: 'createProgram.preset.studyText', uiType: 'text+audio', langType: 'study' },
+  { labelKey: 'createProgram.preset.ipa', uiType: 'text' },
+  { labelKey: 'createProgram.preset.nativeText', uiType: 'text+audio', langType: 'native' },
 ]
 
 export function newEmptySchemaRow(): SchemaFieldRow {
-  return createSchemaRow({ label: '', uiType: 'text+audio', langType: 'study' })
+  return createSchemaRow({ key: '', uiType: 'text+audio', langType: 'study' })
 }

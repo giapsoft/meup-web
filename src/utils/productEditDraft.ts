@@ -42,18 +42,15 @@ export type ParsedProductEditDraft =
   | { ok: true; draft: ProductEditDraft }
   | { ok: false; reason: 'empty' | 'invalid' }
 
-/** Migrate legacy draft fields (`name` → `label`). */
+/** Normalize editor fields (ensure description string). */
 function normalizeItemSchemaEditor(editor: ItemSchemaEditorState): ItemSchemaEditorState {
   return {
     ...editor,
-    fields: editor.fields.map((field) => {
-      const legacy = field as (typeof field) & { name?: string }
-      return {
-        ...field,
-        label: field.label ?? legacy.name ?? '',
-        description: field.description ?? '',
-      }
-    }),
+    fields: editor.fields.map((field) => ({
+      ...field,
+      key: field.key ?? '',
+      description: field.description ?? '',
+    })),
   }
 }
 

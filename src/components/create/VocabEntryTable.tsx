@@ -348,7 +348,7 @@ export function VocabEntryTable({
               <th className="w-10 px-2 py-2 font-medium">#</th>
               {textFields.map((attr) => (
                 <th key={attr.key} className="min-w-[140px] px-2 py-2 font-medium">
-                  {attr.name}
+                  {attr.key}
                 </th>
               ))}
               {imageSlot && (
@@ -377,7 +377,7 @@ export function VocabEntryTable({
                           type="text"
                           value={item.values[attr.key] ?? ''}
                           onChange={(e) => updateCell(item.id, attr.key, e.target.value)}
-                          placeholder={attr.name}
+                          placeholder={attr.key}
                           className="min-h-10 min-w-0 flex-1 rounded-lg border border-border bg-surface px-2 py-1.5 text-sm text-text focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
                         />
                         {audioSlot && (

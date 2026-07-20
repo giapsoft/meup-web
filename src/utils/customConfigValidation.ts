@@ -1,12 +1,13 @@
 import type { ItemSchemaEditorState, LevelRangeDraft } from '../types/program'
 import { schemaHasLangRole } from './itemSchemaLayout'
 import { itemSchemaFromEditor } from './schemaField'
+import { validateSchemaAttrKeysUnique } from './schemaAttrKey'
 
 export function validateCustomConfigSchema(editor: ItemSchemaEditorState): boolean {
   if (editor.fields.length === 0) {
     return false
   }
-  if (!editor.fields.every((field) => field.label.trim())) {
+  if (validateSchemaAttrKeysUnique(editor.fields.map((f) => f.key)) !== null) {
     return false
   }
   return schemaHasLangRole(itemSchemaFromEditor(editor))
