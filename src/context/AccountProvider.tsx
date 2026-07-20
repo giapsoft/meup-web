@@ -18,17 +18,28 @@ function normalizeCreditBalance(value: unknown): number {
 
 type AccountContextValue = {
   creditBalance: number
+  /** Linked device serial, or null when unknown / none. */
+  deviceOrder: number | null
   refreshAccount: () => Promise<AccountDto | null>
   setCreditBalance: (balance: number) => void
 }
 
 const AccountContext = createContext<AccountContextValue | null>(null)
 
+function normalizeDeviceOrder(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+    return Math.trunc(value)
+  }
+  return null
+}
+
 export function AccountProvider({ children }: { children: ReactNode }) {
   const [creditBalance, setCreditBalance] = useState(0)
+  const [deviceOrder, setDeviceOrder] = useState<number | null>(null)
 
   const applyAccount = useCallback((account: AccountDto) => {
     setCreditBalance(normalizeCreditBalance(account.creditBalance))
+    setDeviceOrder(normalizeDeviceOrder(account.deviceOrder))
   }, [])
 
   const refreshAccount = useCallback(async (): Promise<AccountDto | null> => {
@@ -38,6 +49,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       return account
     } catch {
       setCreditBalance(0)
+      setDeviceOrder(null)
       return null
     }
   }, [applyAccount])
@@ -49,10 +61,11 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       creditBalance,
+      deviceOrder,
       refreshAccount,
       setCreditBalance,
     }),
-    [creditBalance, refreshAccount],
+    [creditBalance, deviceOrder, refreshAccount],
   )
 
   return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>

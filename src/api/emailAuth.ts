@@ -18,6 +18,8 @@ export type AccountDto = {
   nativeLangCode: string
   studyLangCode: string
   creditBalance: number
+  /** Linked MeUp device serial; omitted when user has no device. */
+  deviceOrder?: number | null
 }
 
 /** Token + userId + lang prefs + credits từ `/api/auth/login` và `/api/auth/register`. */

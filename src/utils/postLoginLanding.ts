@@ -1,26 +1,15 @@
 import { getAccount } from '../api/emailAuth'
 import {
-  getDevicePrograms,
   listOwnedProducts,
   listPurchasedProducts,
+  listSharedProducts,
 } from '../api/product'
-import type { DeviceProgramsDto } from '../utils/deviceProgramsCompact'
 
 export type PostLoginLandingPath = '/products' | '/explore'
 
-function deviceProgramsHasVocabulary(programs: DeviceProgramsDto): boolean {
-  return programs.pairs.some(
-    (pair) =>
-      pair.myProducts.length > 0 ||
-      pair.sharedWithMe.length > 0 ||
-      pair.buyed.length > 0,
-  )
-}
-
 /**
  * Chọn landing sau đăng nhập / quét QR:
- * - Có owned / purchased / shared (bất kỳ cặp ngôn ngữ trên device-programs, hoặc owned/purchased theo cặp hiện tại)
- *   → Quản lý (`/products`)
+ * - Có owned / purchased / shared (theo cặp ngôn ngữ hiện tại) → Quản lý (`/products`)
  * - Chưa có → Khám phá (`/explore`)
  */
 export async function resolvePostLoginLandingPath(
@@ -29,16 +18,16 @@ export async function resolvePostLoginLandingPath(
 ): Promise<PostLoginLandingPath> {
   try {
     const account = await getAccount()
-    const [ownedRes, purchasedRes, programs] = await Promise.all([
+    const [ownedRes, purchasedRes, sharedRes] = await Promise.all([
       listOwnedProducts(account.userId, { nativeLang, studyLang }),
       listPurchasedProducts(account.userId, { nativeLang, studyLang }),
-      getDevicePrograms(),
+      listSharedProducts({ nativeLang, studyLang }),
     ])
 
     if (
       ownedRes.products.length > 0 ||
       purchasedRes.products.length > 0 ||
-      deviceProgramsHasVocabulary(programs)
+      sharedRes.products.length > 0
     ) {
       return '/products'
     }

@@ -25,7 +25,7 @@ export function NavDrawer({
 }: NavDrawerProps) {
   const { pathname } = useLocation()
   const { t } = useLanguagePair()
-  const { creditBalance } = useAccount()
+  const { creditBalance, deviceOrder } = useAccount()
   const { darkMode, setDarkMode } = useTheme()
   const titleId = useId()
   const panelRef = useRef<HTMLDivElement>(null)
@@ -91,14 +91,21 @@ export function NavDrawer({
         className="absolute inset-y-0 left-0 flex w-[min(86vw,20rem)] flex-col border-r border-border bg-surface-raised pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] shadow-xl"
       >
         <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2 sm:px-4 sm:py-3">
-          <p id={titleId} className="text-base font-semibold text-text">
-            MeUp
-          </p>
+          <div className="min-w-0">
+            <p id={titleId} className="text-base font-semibold text-text">
+              MeUp
+            </p>
+            {deviceOrder != null ? (
+              <p className="mt-0.5 text-xs font-semibold tabular-nums text-text-muted">
+                {t('nav.deviceOrder', { order: deviceOrder })}
+              </p>
+            ) : null}
+          </div>
           <button
             ref={closeRef}
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition hover:bg-surface-hover hover:text-text sm:h-10 sm:w-10"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-text-muted transition hover:bg-surface-hover hover:text-text sm:h-10 sm:w-10"
             aria-label={t('nav.closeMenu')}
           >
             <span aria-hidden className="text-xl leading-none">

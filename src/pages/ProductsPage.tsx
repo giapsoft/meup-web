@@ -1,28 +1,27 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { getAccount } from '../api/emailAuth'
 import {
-  getDevicePrograms,
   listOwnedProducts,
   listProductCreateRequests,
   listPurchasedProducts,
+  listSharedProducts,
+  setProductDeviceSync,
   type OwnedProductDto,
   type ProductCreateRequestSummaryDto,
   type ProductSettingsDto,
   type PurchasedProductDto,
+  type SharedProductDto,
 } from '../api/product'
 import { getProductCreateProgress, type ProductCreateProgressDto } from '../api/productCreate'
-import { ActionSheet } from '../components/ActionSheet'
+import { DeviceSyncSwitch } from '../components/DeviceSyncSwitch'
+import { EditIcon, InviteIcon, SettingsIcon } from '../components/ProductActionIcons'
 import { ProductSettingsModal } from '../components/ProductSettingsModal'
 import { ProductShareModal } from '../components/ProductShareModal'
 import { useLanguagePair } from '../context/LanguagePairProvider'
 import { findLanguage } from '../data/mock'
 import type { TranslationKey } from '../i18n/types'
-import {
-  sharedProductsForLangPair,
-  type DeviceProgramProductDto,
-} from '../utils/deviceProgramsCompact'
 
 type PrimaryTab = 'owned' | 'collected'
 type CollectedFilter = 'all' | 'purchased' | 'shared'
@@ -130,81 +129,87 @@ function ProgressPanel({ progress }: { progress: ProductCreateProgressDto }) {
 function OwnedProductCard({
   product,
   locale,
+  syncBusy,
+  onToggleSync,
   onOpenSettings,
   onOpenShare,
-  onOpenActions,
 }: {
   product: OwnedProductDto
   locale: string
+  syncBusy: boolean
+  onToggleSync: (enabled: boolean) => void
   onOpenSettings: () => void
   onOpenShare: () => void
-  onOpenActions: () => void
 }) {
   const { t } = useLanguagePair()
   const shareKey = SHARE_MODE_KEYS[product.shareMode]
+  const syncOn = product.deviceSyncEnabled !== false
 
   return (
-    <article className="rounded-2xl border border-border bg-surface-card p-4 sm:p-5">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-base font-semibold text-text">{product.name}</h3>
-            {shareKey ? (
-              <span className="rounded-md border border-border bg-surface-raised px-2 py-0.5 text-xs font-medium text-text-muted">
-                {t(shareKey)}
-              </span>
-            ) : (
-              <span className="rounded-md border border-border bg-surface-raised px-2 py-0.5 text-xs text-text-muted">
-                {product.shareMode}
-              </span>
-            )}
-          </div>
-          {product.description ? (
-            <p className="mt-2 text-sm leading-relaxed text-text-muted line-clamp-2">
-              {product.description}
-            </p>
+    <article
+      className={[
+        'rounded-2xl border border-border bg-surface-card p-4 sm:p-5 transition-opacity',
+        syncOn ? '' : 'opacity-70',
+      ].join(' ')}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          <h3 className="text-base font-semibold text-text">{product.name}</h3>
+          {shareKey ? (
+            <span className="rounded-md border border-border bg-surface-raised px-2 py-0.5 text-xs font-medium text-text-muted">
+              {t(shareKey)}
+            </span>
+          ) : (
+            <span className="rounded-md border border-border bg-surface-raised px-2 py-0.5 text-xs text-text-muted">
+              {product.shareMode}
+            </span>
+          )}
+          {!syncOn ? (
+            <span className="rounded-md border border-border bg-surface-raised px-2 py-0.5 text-xs font-medium text-text-muted">
+              {t('products.deviceSync.offBadge')}
+            </span>
           ) : null}
-          <p className="mt-2 text-xs text-text-muted">
-            {t('products.updatedAt')}: {formatWhen(product.updatedAt, locale)}
-          </p>
         </div>
+        <DeviceSyncSwitch enabled={syncOn} busy={syncBusy} onChange={onToggleSync} />
+      </div>
 
-        {/* Mobile: overflow → action sheet */}
+      {product.description ? (
+        <p className="mt-2 text-sm leading-relaxed text-text-muted line-clamp-2">
+          {product.description}
+        </p>
+      ) : null}
+      <p className="mt-2 text-xs text-text-muted">
+        {t('products.updatedAt')}: {formatWhen(product.updatedAt, locale)}
+      </p>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <Link
+          to={`/products/${product.productId}/edit`}
+          state={{ product }}
+          title={t('products.edit.open')}
+          aria-label={t('products.edit.open')}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-accent/40 bg-accent-soft text-accent no-underline transition hover:border-accent hover:bg-accent/20"
+        >
+          <EditIcon />
+        </Link>
         <button
           type="button"
-          onClick={onOpenActions}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-raised text-text md:hidden"
-          aria-label={t('products.actionsMenu')}
+          onClick={onOpenShare}
+          title={t('products.share.open')}
+          aria-label={t('products.share.open')}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-surface-raised text-text transition hover:border-accent/40 hover:bg-surface-hover"
         >
-          <span aria-hidden className="text-lg leading-none">
-            ⋯
-          </span>
+          <InviteIcon />
         </button>
-
-        {/* Desktop: inline actions */}
-        <div className="hidden shrink-0 flex-wrap items-center gap-2 md:flex">
-          <Link
-            to={`/products/${product.productId}/edit`}
-            state={{ product }}
-            className="rounded-lg border border-accent/40 bg-accent-soft px-3 py-1.5 text-xs font-medium text-accent no-underline transition hover:border-accent hover:bg-accent/20"
-          >
-            {t('products.edit.open')}
-          </Link>
-          <button
-            type="button"
-            onClick={onOpenShare}
-            className="rounded-lg border border-border bg-surface-raised px-3 py-1.5 text-xs font-medium text-text transition hover:border-accent/40 hover:bg-surface-hover"
-          >
-            {t('products.share.open')}
-          </button>
-          <button
-            type="button"
-            onClick={onOpenSettings}
-            className="rounded-lg border border-border bg-surface-raised px-3 py-1.5 text-xs font-medium text-text transition hover:border-accent/40 hover:bg-surface-hover"
-          >
-            {t('products.settings.open')}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={onOpenSettings}
+          title={t('products.settings.open')}
+          aria-label={t('products.settings.open')}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-surface-raised text-text transition hover:border-accent/40 hover:bg-surface-hover"
+        >
+          <SettingsIcon />
+        </button>
       </div>
       {product.shareMode === 'public' && (
         <Link
@@ -228,17 +233,40 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function SharedProductCard({ product }: { product: DeviceProgramProductDto }) {
+function SharedProductCard({
+  product,
+  syncBusy,
+  onToggleSync,
+}: {
+  product: SharedProductDto
+  syncBusy: boolean
+  onToggleSync: (enabled: boolean) => void
+}) {
   const { t } = useLanguagePair()
+  const syncOn = product.deviceSyncEnabled !== false
 
   return (
-    <article className="rounded-2xl border border-border bg-surface-card p-4 sm:p-5">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <h3 className="text-base font-semibold text-text">{product.name}</h3>
-        <span className="rounded-md border border-accent/40 bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent">
-          {t('products.shared.badge')}
-        </span>
+    <article
+      className={[
+        'rounded-2xl border border-border bg-surface-card p-4 sm:p-5 transition-opacity',
+        syncOn ? '' : 'opacity-70',
+      ].join(' ')}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          <h3 className="text-base font-semibold text-text">{product.name}</h3>
+          <span className="rounded-md border border-accent/40 bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent">
+            {t('products.shared.badge')}
+          </span>
+          {!syncOn ? (
+            <span className="rounded-md border border-border bg-surface-raised px-2 py-0.5 text-xs font-medium text-text-muted">
+              {t('products.deviceSync.offBadge')}
+            </span>
+          ) : null}
+        </div>
+        <DeviceSyncSwitch enabled={syncOn} busy={syncBusy} onChange={onToggleSync} />
       </div>
+
       {product.description ? (
         <p className="mt-2 text-sm leading-relaxed text-text-muted">{product.description}</p>
       ) : null}
@@ -247,22 +275,45 @@ function SharedProductCard({ product }: { product: DeviceProgramProductDto }) {
           <dt className="inline">{t('products.shared.packageSize')}: </dt>
           <dd className="inline tabular-nums">{formatBytes(product.totalSize)}</dd>
         </div>
-        <div>
-          <dt className="inline">{t('products.shared.fileCount')}: </dt>
-          <dd className="inline tabular-nums">{product.files.length}</dd>
-        </div>
       </dl>
       <p className="mt-3 text-xs leading-relaxed text-text-muted">{t('products.shared.hint')}</p>
     </article>
   )
 }
 
-function PurchasedProductCard({ product, locale }: { product: PurchasedProductDto; locale: string }) {
+function PurchasedProductCard({
+  product,
+  locale,
+  syncBusy,
+  onToggleSync,
+}: {
+  product: PurchasedProductDto
+  locale: string
+  syncBusy: boolean
+  onToggleSync: (enabled: boolean) => void
+}) {
   const { t } = useLanguagePair()
+  const syncOn = product.deviceSyncEnabled !== false
 
   return (
-    <article className="rounded-2xl border border-border bg-surface-card p-4 sm:p-5">
-      <h3 className="text-base font-semibold text-text">{product.name}</h3>
+    <article
+      className={[
+        'rounded-2xl border border-border bg-surface-card p-4 sm:p-5 transition-opacity',
+        syncOn ? '' : 'opacity-70',
+      ].join(' ')}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          <h3 className="text-base font-semibold text-text">{product.name}</h3>
+          {!syncOn ? (
+            <span className="rounded-md border border-border bg-surface-raised px-2 py-0.5 text-xs font-medium text-text-muted">
+              {t('products.deviceSync.offBadge')}
+            </span>
+          ) : null}
+        </div>
+        <DeviceSyncSwitch enabled={syncOn} busy={syncBusy} onChange={onToggleSync} />
+      </div>
+
       {product.description ? (
         <p className="mt-2 text-sm leading-relaxed text-text-muted">{product.description}</p>
       ) : null}
@@ -323,16 +374,12 @@ function CreateRequestCard({
       {description ? (
         <p className="mt-2 text-sm leading-relaxed text-text-muted">{description}</p>
       ) : null}
-      <dl className="mt-3 grid gap-1 text-xs text-text-muted sm:grid-cols-2">
+      <dl className="mt-3 grid gap-1 text-xs text-text-muted">
         <div>
           <dt className="inline">{t('products.langPair')}: </dt>
           <dd className="inline font-mono">{request.studyLangId}</dd>
         </div>
         <div>
-          <dt className="inline">{t('products.totalCredits')}: </dt>
-          <dd className="inline tabular-nums">{request.totalCredits}</dd>
-        </div>
-        <div className="sm:col-span-2">
           <dt className="inline">{t('products.updatedAt')}: </dt>
           <dd className="inline">{formatWhen(request.updatedAt, locale)}</dd>
         </div>
@@ -406,9 +453,8 @@ function IncompleteCreateJobsSection({
 }
 
 export function ProductsPage() {
-  const { t, uiLocale, nativeLang, studyLang, langPair } = useLanguagePair()
+  const { t, uiLocale, nativeLang, studyLang } = useLanguagePair()
   const studyLabel = findLanguage(studyLang)?.name ?? studyLang
-  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const tab = useMemo((): PrimaryTab => {
@@ -429,14 +475,15 @@ export function ProductsPage() {
   const [loadState, setLoadState] = useState<LoadState>({ phase: 'loading' })
   const [owned, setOwned] = useState<OwnedProductDto[]>([])
   const [purchased, setPurchased] = useState<PurchasedProductDto[]>([])
-  const [shared, setShared] = useState<DeviceProgramProductDto[]>([])
+  const [shared, setShared] = useState<SharedProductDto[]>([])
+  const [syncBusyId, setSyncBusyId] = useState<string | null>(null)
+  const [syncToast, setSyncToast] = useState<string | null>(null)
   const [incompleteRequests, setIncompleteRequests] = useState<ProductCreateRequestSummaryDto[]>([])
   const [progressById, setProgressById] = useState<Record<string, ProductCreateProgressDto>>({})
   const [requestsRefreshing, setRequestsRefreshing] = useState(false)
   const [requestsToast, setRequestsToast] = useState<string | null>(null)
   const [settingsProduct, setSettingsProduct] = useState<OwnedProductDto | null>(null)
   const [shareProductState, setShareProductState] = useState<OwnedProductDto | null>(null)
-  const [actionsProduct, setActionsProduct] = useState<OwnedProductDto | null>(null)
   const [activeJobsCount, setActiveJobsCount] = useState(0)
   const langPairKey = `${nativeLang}_${studyLang}`
   const lastRequestsRefreshAtRef = useRef(0)
@@ -552,12 +599,12 @@ export function ProductsPage() {
         lastRequestsRefreshAtRef.current = 0
         await fetchProgressForActive(incomplete)
       } else {
-        const [purchasedRes, programs] = await Promise.all([
+        const [purchasedRes, sharedRes] = await Promise.all([
           listPurchasedProducts(account.userId, { nativeLang, studyLang }),
-          getDevicePrograms(),
+          listSharedProducts({ nativeLang, studyLang }),
         ])
         setPurchased(purchasedRes.products)
-        setShared(sharedProductsForLangPair(programs, langPair))
+        setShared(sharedRes.products)
       }
       setLoadState({ phase: 'ready' })
     } catch (err) {
@@ -567,19 +614,52 @@ export function ProductsPage() {
           : t('products.errorGeneric')
       setLoadState({ phase: 'error', message })
     }
-  }, [tab, nativeLang, studyLang, langPair, t, loadIncompleteRequests, fetchProgressForActive])
+  }, [tab, nativeLang, studyLang, t, loadIncompleteRequests, fetchProgressForActive])
+
+  const toggleDeviceSync = useCallback(
+    async (productId: string, enabled: boolean) => {
+      setSyncBusyId(productId)
+      setSyncToast(null)
+      const prevOwned = owned
+      const prevPurchased = purchased
+      const prevShared = shared
+      setOwned((list) =>
+        list.map((p) => (p.productId === productId ? { ...p, deviceSyncEnabled: enabled } : p)),
+      )
+      setPurchased((list) =>
+        list.map((p) => (p.productId === productId ? { ...p, deviceSyncEnabled: enabled } : p)),
+      )
+      setShared((list) =>
+        list.map((p) => (p.productId === productId ? { ...p, deviceSyncEnabled: enabled } : p)),
+      )
+      try {
+        await setProductDeviceSync(productId, enabled)
+      } catch {
+        setOwned(prevOwned)
+        setPurchased(prevPurchased)
+        setShared(prevShared)
+        setSyncToast(t('products.deviceSync.error'))
+      } finally {
+        setSyncBusyId(null)
+      }
+    },
+    [owned, purchased, shared, t],
+  )
 
   useEffect(() => {
     void load()
   }, [load, langPairKey])
 
   useEffect(() => {
-    if (!requestsToast) {
+    if (!requestsToast && !syncToast) {
       return
     }
-    const timer = window.setTimeout(() => setRequestsToast(null), 4000)
+    const timer = window.setTimeout(() => {
+      setRequestsToast(null)
+      setSyncToast(null)
+    }, 4000)
     return () => window.clearTimeout(timer)
-  }, [requestsToast])
+  }, [requestsToast, syncToast])
 
   // Keep active-job badge fresh even when not on owned tab.
   useEffect(() => {
@@ -630,6 +710,15 @@ export function ProductsPage() {
           {t('products.createCta')}
         </Link>
       </div>
+
+      {syncToast ? (
+        <p
+          className="mt-3 rounded-xl border border-warning/40 bg-warning-muted px-3 py-2 text-sm text-warning"
+          role="status"
+        >
+          {syncToast}
+        </p>
+      ) : null}
 
       <div
         className="mt-4 flex gap-1 overflow-x-auto rounded-xl border border-border bg-surface-raised p-0.5 sm:mt-6 sm:p-1"
@@ -730,9 +819,10 @@ export function ProductsPage() {
                     <OwnedProductCard
                       product={product}
                       locale={locale}
+                      syncBusy={syncBusyId === product.productId}
+                      onToggleSync={(enabled) => void toggleDeviceSync(product.productId, enabled)}
                       onOpenSettings={() => setSettingsProduct(product)}
                       onOpenShare={() => setShareProductState(product)}
-                      onOpenActions={() => setActionsProduct(product)}
                     />
                   </li>
                 ))}
@@ -762,13 +852,22 @@ export function ProductsPage() {
               {showPurchased &&
                 purchased.map((product) => (
                   <li key={`p-${product.transactionId}`}>
-                    <PurchasedProductCard product={product} locale={locale} />
+                    <PurchasedProductCard
+                      product={product}
+                      locale={locale}
+                      syncBusy={syncBusyId === product.productId}
+                      onToggleSync={(enabled) => void toggleDeviceSync(product.productId, enabled)}
+                    />
                   </li>
                 ))}
               {showShared &&
                 shared.map((product) => (
-                  <li key={`s-${product.id}`}>
-                    <SharedProductCard product={product} />
+                  <li key={`s-${product.productId}`}>
+                    <SharedProductCard
+                      product={product}
+                      syncBusy={syncBusyId === product.productId}
+                      onToggleSync={(enabled) => void toggleDeviceSync(product.productId, enabled)}
+                    />
                   </li>
                 ))}
             </ul>
@@ -790,37 +889,6 @@ export function ProductsPage() {
           onClose={() => setShareProductState(null)}
         />
       )}
-
-      <ActionSheet
-        open={actionsProduct != null}
-        title={actionsProduct?.name ?? ''}
-        onClose={() => setActionsProduct(null)}
-        items={
-          actionsProduct
-            ? [
-                {
-                  id: 'edit',
-                  label: t('products.edit.open'),
-                  variant: 'accent',
-                  onSelect: () =>
-                    navigate(`/products/${actionsProduct.productId}/edit`, {
-                      state: { product: actionsProduct },
-                    }),
-                },
-                {
-                  id: 'share',
-                  label: t('products.share.open'),
-                  onSelect: () => setShareProductState(actionsProduct),
-                },
-                {
-                  id: 'settings',
-                  label: t('products.settings.open'),
-                  onSelect: () => setSettingsProduct(actionsProduct),
-                },
-              ]
-            : []
-        }
-      />
     </main>
   )
 }

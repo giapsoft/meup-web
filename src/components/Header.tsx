@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CreditIcon } from './CreditIcon'
+import { DeviceOrderChip } from './DeviceOrderChip'
 import { LanguagePairChip } from './LanguagePairChip'
 import { MainNav } from './MainNav'
 import { NavDrawer } from './NavDrawer'
@@ -19,7 +20,7 @@ type HeaderProps = {
 
 export function Header({ onLogout }: HeaderProps) {
   const { t } = useLanguagePair()
-  const { creditBalance } = useAccount()
+  const { creditBalance, deviceOrder } = useAccount()
   const { darkMode, setDarkMode } = useTheme()
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const { count: activeCreateRequestCount, refresh: refreshActiveJobs } =
@@ -96,7 +97,7 @@ export function Header({ onLogout }: HeaderProps) {
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-border bg-surface/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center gap-2 px-3 py-2 sm:gap-3 sm:px-6 sm:py-4 lg:px-8">
+        <div className="mx-auto flex max-w-6xl items-center gap-1.5 px-3 py-2 sm:gap-3 sm:px-6 sm:py-4 lg:px-8">
           <button
             type="button"
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-raised text-text transition hover:border-accent/40 sm:h-10 sm:w-10 md:hidden"
@@ -121,7 +122,11 @@ export function Header({ onLogout }: HeaderProps) {
             />
           </div>
 
-          <div className="ml-auto flex shrink-0 items-center gap-2">
+          <div className="ml-auto flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2">
+            {deviceOrder != null ? (
+              <DeviceOrderChip deviceOrder={deviceOrder} compact={!isDesktop} />
+            ) : null}
+
             <LanguagePairChip
               open={pairOpen}
               onOpenChange={setPairOpen}
@@ -178,6 +183,14 @@ export function Header({ onLogout }: HeaderProps) {
                   role="menu"
                   className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-border bg-surface-raised py-1 shadow-xl"
                 >
+                  {deviceOrder != null ? (
+                    <div
+                      role="none"
+                      className="border-b border-border px-4 py-3 text-sm font-semibold tabular-nums text-text"
+                    >
+                      {t('nav.deviceOrder', { order: deviceOrder })}
+                    </div>
+                  ) : null}
                   <div role="none" className="border-b border-border px-2 py-2 empty:hidden">
                     <VerifyEmailNotice />
                   </div>

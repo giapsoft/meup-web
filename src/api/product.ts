@@ -18,6 +18,7 @@ export type OwnedProductDto = {
   langPair: string
   createdAt: string
   updatedAt: string
+  deviceSyncEnabled: boolean
 }
 
 /** Matches `GET /api/product/owned` response `data`. */
@@ -38,11 +39,31 @@ export type PurchasedProductDto = {
   nativeLang: string
   studyLang: string
   langPair: string
+  deviceSyncEnabled: boolean
 }
 
 /** Matches `GET /api/product/purchased` response `data`. */
 export type PurchasedProductsResponse = {
   products: PurchasedProductDto[]
+}
+
+/** Matches `GET /api/product/shared` list item. */
+export type SharedProductDto = {
+  productId: string
+  name: string
+  description: string
+  totalSize: number
+  creatorId: string
+  nativeLang: string
+  studyLang: string
+  langPair: string
+  sharedAt: string
+  deviceSyncEnabled: boolean
+}
+
+/** Matches `GET /api/product/shared` response `data`. */
+export type SharedProductsResponse = {
+  products: SharedProductDto[]
 }
 
 /** Matches `GET /api/product-create` list item. */
@@ -177,6 +198,37 @@ export async function listPurchasedProducts(
     studyLang: params.studyLang,
   })
   return apiRequest<PurchasedProductsResponse>(`/api/product/purchased?${q.toString()}`)
+}
+
+export type ListSharedProductsParams = {
+  nativeLang: string
+  studyLang: string
+}
+
+export async function listSharedProducts(
+  params: ListSharedProductsParams,
+): Promise<SharedProductsResponse> {
+  const q = new URLSearchParams({
+    nativeLang: params.nativeLang,
+    studyLang: params.studyLang,
+  })
+  return apiRequest<SharedProductsResponse>(`/api/product/shared?${q.toString()}`)
+}
+
+export type DeviceSyncResultDto = {
+  productId: string
+  enabled: boolean
+}
+
+/** Toggle whether a product syncs to the device (ServerApp catalog). */
+export async function setProductDeviceSync(
+  productId: string,
+  enabled: boolean,
+): Promise<DeviceSyncResultDto> {
+  return apiRequest<DeviceSyncResultDto>('/api/product/device-sync', {
+    method: 'PATCH',
+    body: { productId, enabled },
+  })
 }
 
 export async function listProductCreateRequests(
