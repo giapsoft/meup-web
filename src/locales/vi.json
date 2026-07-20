@@ -613,6 +613,8 @@
   "createProgram.stepCardSetup.editSide": "Sửa",
   "createProgram.stepCardSetup.removeSide": "Xóa mặt",
   "createProgram.stepCardSetup.addLevel": "Thêm cấp độ",
+  "createProgram.stepCardSetup.removeLevel": "Xóa cấp độ",
+  "createProgram.stepCardSetup.confirmDeleteLevel": "Xóa cấp độ này và các mặt thẻ của nó?",
   "createProgram.stepCardSetup.adjustLeft": "Thu biên trái",
   "createProgram.stepCardSetup.adjustRight": "Nới biên phải",
   "createProgram.stepCardSetup.sideMeta": "{fields} trường · {steps} bước phát",

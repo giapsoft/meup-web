@@ -107,6 +107,23 @@ export function insertedLevelId(
   return after[after.length - 2]?.id
 }
 
+/**
+ * Remove a level band by index. Keeps remaining `maxLvl` breakpoints;
+ * SRS ranges of neighbors expand to cover the gap.
+ * Returns null if the level cannot be removed (must keep ≥ 1).
+ */
+export function removeLevelRange(
+  levels: LevelRangeDraft[],
+  index: number,
+): LevelRangeDraft[] | null {
+  if (levels.length <= 1 || index < 0 || index >= levels.length) {
+    return null
+  }
+  const copy = cloneLevels(levels)
+  copy.splice(index, 1)
+  return copy
+}
+
 export type ProgramPreviewSide = {
   side: SideDraft
   levelIndex: number

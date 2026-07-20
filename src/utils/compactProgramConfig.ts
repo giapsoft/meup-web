@@ -179,7 +179,9 @@ function unmarshalCompactDisplay(row: unknown): DisplayElement {
     color: asString(tail[0], 'display color') || undefined,
     outstandingColor: asString(tail[1], 'display outstandingColor') || undefined,
     backgroundColor: asString(tail[2], 'display backgroundColor') || undefined,
-    backgroundOpacity: asNumber(tail[3] ?? 0, 'display backgroundOpacity') || undefined,
+    // Keep 0 — it means fully transparent; `|| undefined` would drop it and preview
+    // would fall back to color alpha (background reappears after reload).
+    backgroundOpacity: asNumber(tail[3] ?? 0, 'display backgroundOpacity'),
     order: asNumber(tail[4] ?? 0, 'display order'),
     maxLines: asNumber(tail[5] ?? 0, 'display maxLines') || undefined,
     textAlign: textAlignFromIndex(asNumber(tail[6] ?? 0, 'display textAlign')),

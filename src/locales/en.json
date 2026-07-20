@@ -623,6 +623,8 @@
   "createProgram.stepCardSetup.editSide": "Edit",
   "createProgram.stepCardSetup.removeSide": "Remove face",
   "createProgram.stepCardSetup.addLevel": "Add level",
+  "createProgram.stepCardSetup.removeLevel": "Remove level",
+  "createProgram.stepCardSetup.confirmDeleteLevel": "Delete this level and its card faces?",
   "createProgram.stepCardSetup.adjustLeft": "Shrink left boundary",
   "createProgram.stepCardSetup.adjustRight": "Expand right boundary",
   "createProgram.stepCardSetup.sideMeta": "{fields} fields · {steps} play steps",

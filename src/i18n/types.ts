@@ -615,6 +615,8 @@ export type TranslationKey =
   | 'createProgram.stepCardSetup.editSide'
   | 'createProgram.stepCardSetup.removeSide'
   | 'createProgram.stepCardSetup.addLevel'
+  | 'createProgram.stepCardSetup.removeLevel'
+  | 'createProgram.stepCardSetup.confirmDeleteLevel'
   | 'createProgram.stepCardSetup.adjustLeft'
   | 'createProgram.stepCardSetup.adjustRight'
   | 'createProgram.stepCardSetup.sideMeta'

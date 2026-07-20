@@ -16,6 +16,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useEffect, useMemo, useState } from 'react'
+import { ConfirmDialog } from '../../components/ConfirmDialog'
 import type { MessageParams, TranslationKey } from '../../i18n/types'
 import { useWizardWideLayout } from '../../hooks/useMediaQuery'
 import type { ItemSchema, LevelRangeDraft, SideDraft } from '../../types/program'
@@ -25,6 +26,7 @@ import {
   configLevelItemLabel,
   insertNewLevelRange,
   insertedLevelId,
+  removeLevelRange,
 } from '../../utils/levelConfig'
 import { createEmptySide, normalizePlayOrder, sideNumberLabel } from '../../utils/programConfig'
 import { previewTapHintKey } from './previewHints'
@@ -156,6 +158,7 @@ export function CardSetupStep({
 }: CardSetupStepProps) {
   const isWideLayout = useWizardWideLayout()
   const [previewSideId, setPreviewSideId] = useState<string | null>(null)
+  const [confirmRemoveLevel, setConfirmRemoveLevel] = useState(false)
   const levelItems = useMemo(() => buildConfigLevelItems(levels), [levels])
   const activeLevel = levels.find((l) => l.id === activeLevelId) ?? levels[0]
   const activeLevelIndex = levels.findIndex((l) => l.id === activeLevel?.id)
@@ -244,6 +247,23 @@ export function CardSetupStep({
     }
   }
 
+  function handleRemoveLevel() {
+    if (activeLevelIndex < 0) {
+      return
+    }
+    const next = removeLevelRange(levels, activeLevelIndex)
+    if (!next) {
+      return
+    }
+    const focusIndex = Math.min(activeLevelIndex, next.length - 1)
+    onLevelsChange(next)
+    const focus = next[focusIndex]
+    if (focus) {
+      onActiveLevelChange(focus.id)
+    }
+    setConfirmRemoveLevel(false)
+  }
+
   function adjustBoundary(delta: number) {
     if (activeLevelIndex < 0) {
       return
@@ -320,6 +340,14 @@ export function CardSetupStep({
                 >
                   →
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmRemoveLevel(true)}
+                  className="rounded-lg px-2 py-1.5 text-sm text-red-400 hover:bg-red-500/10"
+                  aria-label={t('createProgram.stepCardSetup.removeLevel')}
+                >
+                  ✕
+                </button>
               </div>
             </div>
           )}
@@ -387,6 +415,17 @@ export function CardSetupStep({
           {continueLabel ?? t('createProgram.stepSchema.continue')}
         </button>
       </div>
+
+      <ConfirmDialog
+        open={confirmRemoveLevel}
+        title={t('createProgram.stepCardSetup.confirmDeleteLevel')}
+        message={activeLevelItem ? configLevelItemLabel(activeLevelItem, t) : undefined}
+        confirmLabel={t('createProgram.stepCardSetup.removeLevel')}
+        cancelLabel={t('createProgram.color.cancel')}
+        danger
+        onCancel={() => setConfirmRemoveLevel(false)}
+        onConfirm={handleRemoveLevel}
+      />
     </section>
   )
 }
