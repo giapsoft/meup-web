@@ -86,9 +86,9 @@ function isActiveCreateRequest(status: string): boolean {
   return status === 'pending' || status === 'working'
 }
 
-/** Still in flight or failed — hide success (already became a product). */
+/** In-flight create jobs only — hide success (đã thành product) và failed. */
 function isIncompleteCreateRequest(status: string): boolean {
-  return status !== 'success'
+  return status === 'pending' || status === 'working'
 }
 
 function requestTitle(request: ProductCreateRequestSummaryDto): string {
