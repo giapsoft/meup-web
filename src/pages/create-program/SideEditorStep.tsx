@@ -10,7 +10,6 @@ import {
   updateDisplayElement,
 } from '../../utils/sideConfig'
 import { defaultPaletteColor, displayColorOr } from '../../utils/colorPalette'
-import { useWizardWideLayout } from '../../hooks/useMediaQuery'
 import { ColorPickerField } from './ColorPickerField'
 import { DisplayElementEditorPanel } from './DisplayElementEditorPanel'
 import { PlayStepEditor } from './PlayStepEditor'
@@ -42,7 +41,6 @@ export function SideEditorStep({
   onBack,
   t,
 }: SideEditorStepProps) {
-  const isWideLayout = useWizardWideLayout()
   const hasAudio = audioAttributeIndexes(schema).length > 0
   const displayIndexes = displayableAttributeIndexes(schema)
   const bgColor = displayColorOr(side.backgroundColor, defaultPaletteColor())

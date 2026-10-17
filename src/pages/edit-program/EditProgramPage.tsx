@@ -32,7 +32,7 @@ import {
   vocabItemsToDraftRows,
   type ProductEditDraft,
 } from '../../utils/productEditDraft'
-import { createEmptyVocabItem, validateVocabItems } from '../../utils/vocabItems'
+import { validateVocabItems } from '../../utils/vocabItems'
 import {
   WIZARD_MAIN,
   WIZARD_NARROW_SECTION,

@@ -127,9 +127,9 @@ export function resolvePreviewFontSizePx(
     return tiny
   }
 
-  let lo = CONTINUOUS_MIN_PX
-  let hi = tiny
-  let best = CONTINUOUS_MIN_PX
+  let lo: number = CONTINUOUS_MIN_PX
+  let hi: number = tiny
+  let best: number = CONTINUOUS_MIN_PX
   for (let i = 0; i < 16; i++) {
     const mid = (lo + hi) / 2
     if (textFitsBox(measuredText, mid, widthPx, heightPx, maxLines)) {
